@@ -1,0 +1,169 @@
+spring:
+  application:
+    name: backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:walletiq}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+    # HikariCP Connection Pool
+    hikari:
+      pool-name: WalletIQHikariPool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000} # 30 seconds
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}   # 10 minutes
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}  # 30 minutes
+      auto-commit: true
+      leak-detection-threshold: 60000 # 1 minute
+
+  # JPA/ Hibernate
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    open-in-view: false # Prevents accidental lazy loading
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: false
+        generate_statistics: false
+        jdbc:
+          batch_size: 20 # Ask driver to send upto 20 DML statements in a batch, Good for bulk insert/update
+          fetch_size: 50 # Ask driver to fetch x number of rows at a time, Good for pagination
+        order_inserts: true
+        order_updates: true
+
+  jackson:
+    time-zone: Asia/Kolkata
+
+# Server Config
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api/${API_VERSION:v1}
+    session:
+      timeout: 30m
+  compression:
+    enabled: true # Enable GZIP compression
+  error:
+    whitelabel:
+      enabled: false
+    # Do not expose internal exception messages
+    include-message: never
+    # Do not expose validation error details
+    # Use "on_param" only for debugging or internal APIs
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+# Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SWAGGER_UI_ENABLED:true}
+    # Prevent loading default restore example
+    disable-swagger-default-url: true
+    # Shows API execution time(ms) in the UI
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    # Controls UI expansion.
+    doc-expansion: none
+    # Enable search bar to filter endpoints
+    filter: true
+    # Controls whether Spring Actuator endpoints appear in Swagger.
+    show-actuator: true
+
+# Assymetric encryption
+security:
+  jwt:
+    issuer: walletiq
+    header: Authorization
+    prefix: Bearer
+    access-token:
+      expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000} # 1 hour
+    refresh-token:
+      expiry: ${JWT_REFRESH_TOKEN_EXPIRY:86400000} # 24 hours
+    rsa:
+      algorithm: RS256
+      private-key-path: classpath:keys/private_key_pkcs8.pem
+      public-key-path: classpath:keys/public_key.pem
+
+  cors:
+    enabled: ${CORS_ENABLED:true}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    exposed-headers: ${CORS_EXPOSED_HEADERS:Authorization}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+    max-age: ${CORS_MAX_AGE:3600}
+
+app:
+  name: walletiq
+  version: ${APPLICATION_VERSION:1.0.0}
+  build-number: ${APPLICATION_BUILD_NUMBER:1.0.0}
+  copyright: ${APPLICATION_COPYRIGHT:© 2026 walletiq. All rights reserved}
+  license:
+    name: Apache License, Version 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.txt
+  support:
+    email: support@walletiq.com
+    working-hours: "Mon-Fri: 9 AM - 6 PM"
+  social:
+    github: ${SOCIAL_GITHUB:https://github.com/ripan-baidya/walletiq}
+  developer:
+    name: Ripan Baidya
+    email: official.ripanbaidya@gmail.com
+
+  api:
+    servers:
+      dev:
+        - http://localhost:${SERVER_PORT:8080}/api${API_VERSION:/v1}
+      prod:
+      # - https://api.walletiq.com
+
+  security:
+    jwt:
+      issuer: "walletiq"
+      header: "Authorization"
+      prefix: "Bearer "
+      access-token:
+        expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000}
+      refresh-token:
+        expiry: ${JWT_REFRESH_TOKEN_EXPIRY:86400000}
+    rsa:
+      algorithm: "RSA"
+      private-key-path: classpath:keys/private_key_pkcs8.pem
+      public-key-path: classpath:keys/public_key.pem
+
+    cors:
+      enabled: ${CORS_ENABLED:true}
+      allowed-origins:
+        - http://localhost:5173
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+      allow-credentials: true
+      max-age: 3600
+
+logging:
+  level:
+    root: INFO
+    com.walletiq: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
