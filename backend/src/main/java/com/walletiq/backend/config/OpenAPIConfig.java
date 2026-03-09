@@ -121,14 +121,14 @@ public class OpenAPIConfig {
             createTag("Admin", "Administration", "Administrative endpoints requiring admin privileges.", false)
         ));
 
-        if (isDevelopment) {
-            tags.add(createTag(
-                "development",
-                "Development",
-                "Development-only endpoints. Not available in production.",
-                false
-            ));
-        }
+//        if (isDevelopment) {
+//            tags.add(createTag(
+//                "Development",
+//                "Development",
+//                "Development-only endpoints. Not available in production.",
+//                false
+//            ));
+//        }
 
         return tags;
     }

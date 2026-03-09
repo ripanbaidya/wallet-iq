@@ -48,6 +48,12 @@ public enum ErrorCode {
     UNAUTHENTICATED(ErrorType.AUTHENTICATION, "Authentication is required to access this resource"),
     ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to access this resource"),
 
+    // Category
+    CATEGORY_NOT_FOUND(ErrorType.NOT_FOUND, "Category not found"),
+    CATEGORY_ALREADY_EXISTS(ErrorType.CONFLICT, "A category with this name already exists"),
+    CATEGORY_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this category"),
+
+
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),
     INTERNAL_ERROR(ErrorType.INTERNAL, "An unexpected error occurred"),
