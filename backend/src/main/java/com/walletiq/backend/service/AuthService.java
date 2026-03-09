@@ -1,10 +1,9 @@
 package com.walletiq.backend.service;
 
-import com.walletiq.backend.payload.request.LoginRequest;
-import com.walletiq.backend.payload.request.LogoutRequest;
-import com.walletiq.backend.payload.request.SignupRequest;
-import com.walletiq.backend.payload.response.AuthResponse;
-import com.walletiq.backend.payload.response.TokenResponse;
+import com.walletiq.backend.dto.auth.LoginRequest;
+import com.walletiq.backend.dto.auth.SignupRequest;
+import com.walletiq.backend.dto.auth.AuthResponse;
+import com.walletiq.backend.dto.auth.TokenResponse;
 
 public interface AuthService {
 

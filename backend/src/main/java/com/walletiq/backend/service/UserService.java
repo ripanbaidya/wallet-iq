@@ -1,6 +1,6 @@
 package com.walletiq.backend.service;
 
-import com.walletiq.backend.payload.response.UserProfileResponse;
+import com.walletiq.backend.dto.user.UserProfileResponse;
 
 import java.util.List;
 

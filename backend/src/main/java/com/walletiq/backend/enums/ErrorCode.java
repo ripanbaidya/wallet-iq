@@ -53,6 +53,14 @@ public enum ErrorCode {
     CATEGORY_ALREADY_EXISTS(ErrorType.CONFLICT, "A category with this name already exists"),
     CATEGORY_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this category"),
 
+    // PaymentMode
+    PAYMENT_MODE_NOT_FOUND(ErrorType.NOT_FOUND, "Payment mode not found"),
+    PAYMENT_MODE_ALREADY_EXISTS(ErrorType.CONFLICT, "A payment mode with this name already exists"),
+
+    // Transaction
+    TRANSACTION_NOT_FOUND(ErrorType.NOT_FOUND, "Transaction not found"),
+    TRANSACTION_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this transaction"),
+    INVALID_TRANSACTION(ErrorType.VALIDATION, "Transaction data is invalid"),
 
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),

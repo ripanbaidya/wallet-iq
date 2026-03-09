@@ -1,7 +1,7 @@
 package com.walletiq.backend.mapper;
 
 import com.walletiq.backend.entity.Category;
-import com.walletiq.backend.payload.response.CategoryResponse;
+import com.walletiq.backend.dto.categories.CategoryResponse;
 
 public final class CategoryMapper {
 

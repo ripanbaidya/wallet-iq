@@ -1,0 +1,40 @@
+package com.walletiq.backend.dto.auth;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+@Schema(description = "Request payload for user registration")
+public record SignupRequest(
+
+    @Schema(
+        description = "Full name of the user",
+        example = "Ripan Baidya",
+        minLength = 2,
+        maxLength = 100
+    )
+    @NotBlank(message = "Full name is required")
+    @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
+    String fullName,
+
+    @Schema(
+        description = "User email address",
+        example = "ripan@gmail.com"
+    )
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @Size(max = 100, message = "Email cannot exceed 100 characters")
+    String email,
+
+    @Schema(
+        description = "User password",
+        example = "12345678",
+        minLength = 8,
+        maxLength = 64
+    )
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters")
+    String password
+) {
+}

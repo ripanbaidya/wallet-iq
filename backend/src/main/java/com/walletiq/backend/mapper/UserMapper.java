@@ -1,7 +1,7 @@
 package com.walletiq.backend.mapper;
 
 import com.walletiq.backend.entity.User;
-import com.walletiq.backend.payload.response.UserProfileResponse;
+import com.walletiq.backend.dto.user.UserProfileResponse;
 
 public final class UserMapper {
 

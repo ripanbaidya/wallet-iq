@@ -2,9 +2,9 @@ package com.walletiq.backend.exception.handler;
 
 import com.walletiq.backend.enums.ErrorCode;
 import com.walletiq.backend.exception.BaseException;
-import com.walletiq.backend.payload.response.error.ErrorDetail;
-import com.walletiq.backend.payload.response.error.ErrorResponse;
-import com.walletiq.backend.payload.response.error.FieldError;
+import com.walletiq.backend.dto.error.ErrorDetail;
+import com.walletiq.backend.dto.error.ErrorResponse;
+import com.walletiq.backend.dto.error.FieldError;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
 package com.walletiq.backend.util;
 
-import com.walletiq.backend.payload.response.success.PageInfo;
-import com.walletiq.backend.payload.response.success.ResponseWrapper;
+import com.walletiq.backend.dto.success.PageInfo;
+import com.walletiq.backend.dto.success.ResponseWrapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

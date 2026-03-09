@@ -49,10 +49,10 @@ public class Transaction extends BaseEntity {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = true)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_mode_id", nullable = false)
+    @JoinColumn(name = "payment_mode_id", nullable = true)
     private PaymentMode paymentMode;
 }

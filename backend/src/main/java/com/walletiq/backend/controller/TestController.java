@@ -1,8 +1,8 @@
 package com.walletiq.backend.controller;
 
-import com.walletiq.backend.payload.request.TestRequest;
-import com.walletiq.backend.payload.response.success.ResponseWrapper;
-import com.walletiq.backend.payload.response.TestResponse;
+import com.walletiq.backend.dto.test.TestRequest;
+import com.walletiq.backend.dto.success.ResponseWrapper;
+import com.walletiq.backend.dto.test.TestResponse;
 import com.walletiq.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -1,7 +1,7 @@
 package com.walletiq.backend.controller;
 
-import com.walletiq.backend.payload.response.UserProfileResponse;
-import com.walletiq.backend.payload.response.success.ResponseWrapper;
+import com.walletiq.backend.dto.user.UserProfileResponse;
+import com.walletiq.backend.dto.success.ResponseWrapper;
 import com.walletiq.backend.service.UserService;
 import com.walletiq.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;

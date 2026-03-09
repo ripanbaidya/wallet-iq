@@ -2,8 +2,8 @@ package com.walletiq.backend.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walletiq.backend.enums.ErrorCode;
-import com.walletiq.backend.payload.response.error.ErrorDetail;
-import com.walletiq.backend.payload.response.error.ErrorResponse;
+import com.walletiq.backend.dto.error.ErrorDetail;
+import com.walletiq.backend.dto.error.ErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

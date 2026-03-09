@@ -4,7 +4,7 @@ import com.walletiq.backend.entity.User;
 import com.walletiq.backend.enums.ErrorCode;
 import com.walletiq.backend.exception.UserException;
 import com.walletiq.backend.mapper.UserMapper;
-import com.walletiq.backend.payload.response.UserProfileResponse;
+import com.walletiq.backend.dto.user.UserProfileResponse;
 import com.walletiq.backend.repository.UserRepository;
 import com.walletiq.backend.service.UserService;
 import lombok.RequiredArgsConstructor;

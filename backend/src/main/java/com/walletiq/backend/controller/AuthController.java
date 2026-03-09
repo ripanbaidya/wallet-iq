@@ -1,12 +1,12 @@
 package com.walletiq.backend.controller;
 
-import com.walletiq.backend.payload.request.LoginRequest;
-import com.walletiq.backend.payload.request.LogoutRequest;
-import com.walletiq.backend.payload.request.RefreshTokenRequest;
-import com.walletiq.backend.payload.request.SignupRequest;
-import com.walletiq.backend.payload.response.AuthResponse;
-import com.walletiq.backend.payload.response.TokenResponse;
-import com.walletiq.backend.payload.response.success.ResponseWrapper;
+import com.walletiq.backend.dto.auth.LoginRequest;
+import com.walletiq.backend.dto.auth.LogoutRequest;
+import com.walletiq.backend.dto.auth.RefreshTokenRequest;
+import com.walletiq.backend.dto.auth.SignupRequest;
+import com.walletiq.backend.dto.auth.AuthResponse;
+import com.walletiq.backend.dto.auth.TokenResponse;
+import com.walletiq.backend.dto.success.ResponseWrapper;
 import com.walletiq.backend.service.AuthService;
 import com.walletiq.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;

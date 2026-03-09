@@ -1,9 +1,9 @@
 package com.walletiq.backend.controller;
 
-import com.walletiq.backend.payload.request.CreateCategoryRequest;
-import com.walletiq.backend.payload.request.UpdateCategoryRequest;
-import com.walletiq.backend.payload.response.CategoryResponse;
-import com.walletiq.backend.payload.response.success.ResponseWrapper;
+import com.walletiq.backend.dto.categories.CreateCategoryRequest;
+import com.walletiq.backend.dto.categories.UpdateCategoryRequest;
+import com.walletiq.backend.dto.categories.CategoryResponse;
+import com.walletiq.backend.dto.success.ResponseWrapper;
 import com.walletiq.backend.service.CategoryService;
 import com.walletiq.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;

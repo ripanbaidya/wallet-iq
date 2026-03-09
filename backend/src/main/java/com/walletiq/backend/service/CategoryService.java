@@ -1,9 +1,9 @@
 package com.walletiq.backend.service;
 
 import com.walletiq.backend.exception.CategoryException;
-import com.walletiq.backend.payload.request.CreateCategoryRequest;
-import com.walletiq.backend.payload.request.UpdateCategoryRequest;
-import com.walletiq.backend.payload.response.CategoryResponse;
+import com.walletiq.backend.dto.categories.CreateCategoryRequest;
+import com.walletiq.backend.dto.categories.UpdateCategoryRequest;
+import com.walletiq.backend.dto.categories.CategoryResponse;
 
 import java.util.List;
 import java.util.UUID;
