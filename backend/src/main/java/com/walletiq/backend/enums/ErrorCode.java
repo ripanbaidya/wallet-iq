@@ -62,6 +62,9 @@ public enum ErrorCode {
     TRANSACTION_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this transaction"),
     INVALID_TRANSACTION(ErrorType.VALIDATION, "Transaction data is invalid"),
 
+    // Chat Session
+    CHAT_SESSION_NOT_FOUND(ErrorType.NOT_FOUND, "Chat session not found"),
+
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),
     INTERNAL_ERROR(ErrorType.INTERNAL, "An unexpected error occurred"),

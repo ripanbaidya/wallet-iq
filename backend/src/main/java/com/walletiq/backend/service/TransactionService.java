@@ -5,8 +5,9 @@ import com.walletiq.backend.dto.transaction.TransactionFilterRequest;
 import com.walletiq.backend.dto.transaction.TransactionResponse;
 import com.walletiq.backend.dto.transaction.UpdateTransactionRequest;
 import com.walletiq.backend.exception.TransactionException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface TransactionService {
@@ -14,7 +15,8 @@ public interface TransactionService {
     /**
      * Returns the current user's transactions, filtered by optional criteria.
      */
-    List<TransactionResponse> getAllTransactions(TransactionFilterRequest filter);
+    Page<TransactionResponse> getAllTransactions(TransactionFilterRequest filter,
+                                                 Pageable pageable);
 
     /**
      * Returns a single transaction owned by the current user.

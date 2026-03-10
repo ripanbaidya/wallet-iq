@@ -37,8 +37,33 @@ spring:
         order_inserts: true
         order_updates: true
 
+  # JSON
   jackson:
     time-zone: Asia/Kolkata
+
+  # /*------------------------------------------
+  # AI
+  # -------------------------------------------*/
+  ai:
+    openai:
+      base-url: https://api.openai.com
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+      embedding:
+        options:
+          model: text-embedding-3-small
+
+    vectorstore:
+      pgvector:
+        dimensions: 1536
+        distance-type: cosine_distance
+        index-type: hnsw
+        initialize-schema: false # We are managing schema manually
+        schema-name: public
+        table-name: vector_store
 
 # Server Config
 server:
@@ -81,30 +106,8 @@ springdoc:
     # Controls whether Spring Actuator endpoints appear in Swagger.
     show-actuator: true
 
-# Assymetric encryption
-security:
-  jwt:
-    issuer: walletiq
-    header: Authorization
-    prefix: Bearer
-    access-token:
-      expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000} # 1 hour
-    refresh-token:
-      expiry: ${JWT_REFRESH_TOKEN_EXPIRY:86400000} # 24 hours
-    rsa:
-      algorithm: RS256
-      private-key-path: classpath:keys/private_key_pkcs8.pem
-      public-key-path: classpath:keys/public_key.pem
 
-  cors:
-    enabled: ${CORS_ENABLED:true}
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
-    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
-    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
-    exposed-headers: ${CORS_EXPOSED_HEADERS:Authorization}
-    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
-    max-age: ${CORS_MAX_AGE:3600}
-
+# Application Specific Config
 app:
   name: walletiq
   version: ${APPLICATION_VERSION:1.0.0}
@@ -167,3 +170,4 @@ logging:
     com.walletiq: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.ai.chat.client.advisor: DEBUG

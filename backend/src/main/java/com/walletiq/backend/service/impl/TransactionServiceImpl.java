@@ -20,8 +20,11 @@ import com.walletiq.backend.repository.TransactionRepository;
 import com.walletiq.backend.repository.UserRepository;
 import com.walletiq.backend.service.EmbeddingService;
 import com.walletiq.backend.service.TransactionService;
+import com.walletiq.backend.util.PageableValidator;
 import com.walletiq.backend.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,17 +46,22 @@ public class TransactionServiceImpl implements TransactionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getAllTransactions(TransactionFilterRequest filter) {
+    public Page<TransactionResponse> getAllTransactions(TransactionFilterRequest filter,
+                                                        Pageable pageable) {
         User currentUser = currentUser();
+
         UUID categoryId = filter.categoryId() != null
             ? UUID.fromString(filter.categoryId())
             : null;
-        return transactionRepository
-            .findAllByFilter(currentUser, filter.type(), categoryId,
-                filter.dateFrom(), filter.dateTo())
-            .stream()
-            .map(TransactionMapper::toResponse)
-            .toList();
+
+        Pageable safePageable = PageableValidator.validateTransactionPageable(pageable);
+
+        Page<Transaction> page = transactionRepository.findAllByFilter(
+            currentUser, filter.type(), categoryId,
+            filter.dateFrom(), filter.dateTo(), pageable
+        );
+
+        return page.map(TransactionMapper::toResponse);
     }
 
     /**

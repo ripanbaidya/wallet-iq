@@ -15,12 +15,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -40,30 +44,33 @@ public class TransactionController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping
-    public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getAllTransactions(
-
-        @Parameter(description = "Transaction type filter (INCOME or EXPENSE)")
+    public ResponseEntity<ResponseWrapper<Map<String, Object>>> getAllTransactions(
         @RequestParam(required = false) TxnType type,
-
-        @Parameter(description = "Filter by category ID")
         @RequestParam(required = false) String categoryId,
 
-        @Parameter(description = "Start date filter (yyyy-MM-dd)")
         @RequestParam(required = false)
-        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate dateFrom,
 
-        @Parameter(description = "End date filter (yyyy-MM-dd)")
         @RequestParam(required = false)
-        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate dateTo,
+
+        @Parameter(hidden = true)
+        @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC)
+        Pageable pageable
     ) {
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom must not be after dateTo");
+        }
 
         TransactionFilterRequest filter =
             new TransactionFilterRequest(type, categoryId, dateFrom, dateTo);
 
-        return ResponseUtil.ok(
-            "Transactions fetched successfully",
-            transactionService.getAllTransactions(filter)
-        );
+        Page<TransactionResponse> page =
+            transactionService.getAllTransactions(filter, pageable);
+
+        return ResponseUtil.paginated("Transactions fetched successfully", page);
     }
 
     @Operation(

@@ -19,7 +19,7 @@ public class ChatSession extends BaseEntity {
     @Column(name = "title", length = 255, nullable = false)
     private String title = "New Chat";
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

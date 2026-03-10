@@ -1,0 +1,29 @@
+package com.walletiq.backend.mapper;
+
+import com.walletiq.backend.dto.chat.ChatMessageResponse;
+import com.walletiq.backend.dto.chat.ChatSessionResponse;
+import com.walletiq.backend.entity.ChatMessage;
+import com.walletiq.backend.entity.ChatSession;
+
+public final class ChatMapper {
+
+    private ChatMapper() {}
+
+    public static ChatSessionResponse toSessionResponse(ChatSession session) {
+        return new ChatSessionResponse(
+            session.getId(),
+            session.getTitle(),
+            session.getCreatedAt(),
+            session.getUpdatedAt()
+        );
+    }
+
+    public static ChatMessageResponse toMessageResponse(ChatMessage message) {
+        return new ChatMessageResponse(
+            message.getId(),
+            message.getRole(),
+            message.getContent(),
+            message.getCreatedAt()
+        );
+    }
+}
