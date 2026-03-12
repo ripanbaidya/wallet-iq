@@ -1,9 +1,11 @@
 package com.walletiq.backend.service;
 
+import com.walletiq.backend.dto.mail.DailySummaryMailData;
 import com.walletiq.backend.dto.transaction.CreateTransactionRequest;
 import com.walletiq.backend.dto.transaction.TransactionFilterRequest;
 import com.walletiq.backend.dto.transaction.TransactionResponse;
 import com.walletiq.backend.dto.transaction.UpdateTransactionRequest;
+import com.walletiq.backend.entity.User;
 import com.walletiq.backend.exception.TransactionException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,4 +45,6 @@ public interface TransactionService {
      * @throws TransactionException if not found or not owned by user.
      */
     void deleteTransaction(UUID id);
+
+    DailySummaryMailData buildDailySummaryMailData(User user);
 }

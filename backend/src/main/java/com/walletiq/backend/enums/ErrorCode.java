@@ -35,6 +35,12 @@ public enum ErrorCode {
     TOKEN_SIGNATURE_INVALID(ErrorType.AUTHENTICATION, "Token signature verification failed"),
     TOKEN_UNSUPPORTED(ErrorType.AUTHENTICATION, "Token format is not supported"),
 
+    // OTP Verification
+    OTP_INVALID(ErrorType.VALIDATION, "The OTP entered is invalid or has already been used."),
+    OTP_EXPIRED(ErrorType.VALIDATION, "The OTP has expired. Please request a new one."),
+    OTP_SEND_FAILED(ErrorType.INTERNAL, "Failed to send verification email. Please try again."),
+    EMAIL_ALREADY_VERIFIED(ErrorType.VALIDATION, "Your email address is already verified."),
+
     // Auth domain
     INVALID_CREDENTIALS(ErrorType.AUTHENTICATION, "Invalid email or password"),
     EMAIL_ALREADY_EXISTS(ErrorType.CONFLICT, "An account with this email already exists"),

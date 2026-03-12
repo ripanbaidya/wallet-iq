@@ -1,5 +1,6 @@
 package com.walletiq.backend.service.impl;
 
+import com.walletiq.backend.dto.mail.DailySummaryMailData;
 import com.walletiq.backend.dto.transaction.CreateTransactionRequest;
 import com.walletiq.backend.dto.transaction.TransactionFilterRequest;
 import com.walletiq.backend.dto.transaction.TransactionResponse;
@@ -28,11 +29,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
+        .ofPattern("EEEE, d MMMM yyyy");
 
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
@@ -200,6 +208,28 @@ public class TransactionServiceImpl implements TransactionService {
         embeddingService.delete(transaction.getEmbeddingId());
 
         transactionRepository.delete(transaction);
+    }
+
+    @Override
+    public DailySummaryMailData buildDailySummaryMailData(User user) {
+        LocalDate today = LocalDate.now();
+
+        List<Transaction> todaysTransaction = transactionRepository.findByUserAndDate(user, today);
+
+        // Extract income and expense amounts
+        BigDecimal income = todaysTransaction.stream()
+            .filter(t -> t.getType() == TxnType.INCOME)
+            .map(Transaction::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal expenses = todaysTransaction.stream()
+            .filter(t -> t.getType() == TxnType.EXPENSE)
+            .map(Transaction::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new DailySummaryMailData(user.getFullName(), user.getEmail(), today.format(DATE_FORMAT),
+            income, expenses, income.subtract(expenses), todaysTransaction.size()
+        );
     }
 
     // Helper Methods

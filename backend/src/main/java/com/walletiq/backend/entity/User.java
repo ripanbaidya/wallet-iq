@@ -32,6 +32,12 @@ public class User extends BaseEntity {
     @Column(name = "role", length = 20, nullable = false)
     private Role role = Role.USER;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = false;
+
+    @Column(name = "is_email_verified", nullable = false)
+    private boolean isEmailVerified = false;
+
     // Domain behaviors
 
     public void setUserInfo(String fullName, String email, String passwordHash) {

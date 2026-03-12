@@ -134,6 +134,11 @@ public class AuthServiceImpl implements AuthService {
         log.info("User logged out successfully: {}", token.getUser().getId());
     }
 
+    @Override
+    public String getPasswordHash(String password) {
+        return passwordEncoder.encode(password);
+    }
+
     // Helpers
 
     /**

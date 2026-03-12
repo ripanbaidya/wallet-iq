@@ -2,6 +2,7 @@ package com.walletiq.backend.repository;
 
 import com.walletiq.backend.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,4 +27,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
         """)
     Optional<RefreshToken> findActiveByUserId(@Param("userId") UUID userId,
                                               @Param("now") Instant now);
+
+    @Modifying
+    @Query("delete from RefreshToken rt where rt.revoked = true or rt.expiresAt < :now")
+    int deleteAllInactiveTokens(@Param("now") Instant now);
+
 }

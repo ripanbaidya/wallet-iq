@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -67,4 +68,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
         @Param("id") UUID id,
         @Param("user") User user
     );
+
+    List<Transaction> findByUserAndDate(User user, LocalDate date);
 }

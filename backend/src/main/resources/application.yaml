@@ -37,13 +37,11 @@ spring:
         order_inserts: true
         order_updates: true
 
-  # JSON
+  # Json
   jackson:
     time-zone: Asia/Kolkata
 
-  # /*------------------------------------------
-  # AI
-  # -------------------------------------------*/
+  # AI - Ollama + PgVector
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -63,6 +61,30 @@ spring:
         initialize-schema: false # We are managing schema manually
         schema-name: public
         table-name: vector_store
+
+  # Mail Config
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    # your gmail address
+    username: ${MAIL_USERNAME}
+    # This is not the password of gmail, but app-specific password
+    # Visit - https://myaccount.google.com/security, enable two-step verification, after enabling
+    # Visit - https://myaccount.google.com/apppasswords, create app-specific password and use it
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: ${MAIL_SSL_TRUST:*}
+          quitwait: false
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
 
 # Server Config
 server:
@@ -123,6 +145,13 @@ app:
   developer:
     name: Ripan Baidya
     email: official.ripanbaidya@gmail.com
+
+  otp:
+    expiry-minutes: 5 # Otp is valid for 5 minutes
+
+  mail:
+    from: ${MAIL_USERNAME}
+    from-name: WalletIQ
 
   api:
     servers:
