@@ -45,20 +45,19 @@ spring:
   # AI
   # -------------------------------------------*/
   ai:
-    openai:
-      base-url: https://api.openai.com
-      api-key: ${OPENAI_API_KEY}
+    ollama:
+      base-url: http://localhost:11434
       chat:
         options:
-          model: gpt-4o-mini
+          model: llama3.1:8b
           temperature: 0.7
       embedding:
         options:
-          model: text-embedding-3-small
+          model: nomic-embed-text:v1.5
 
     vectorstore:
       pgvector:
-        dimensions: 1536
+        dimensions: 768
         distance-type: cosine_distance
         index-type: hnsw
         initialize-schema: false # We are managing schema manually

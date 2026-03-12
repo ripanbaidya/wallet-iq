@@ -65,6 +65,12 @@ public enum ErrorCode {
     // Chat Session
     CHAT_SESSION_NOT_FOUND(ErrorType.NOT_FOUND, "Chat session not found"),
 
+    // RAG / AI
+    RAG_QUERY_FAILED(ErrorType.INTERNAL, "Failed to process your question. Please try again."),
+    RAG_NO_CONTEXT(ErrorType.NOT_FOUND, "No relevant transactions found to answer that question."),
+    RAG_PROMPT_LOAD_FAILED(ErrorType.INTERNAL, "Failed to load AI system configuration."),
+    VECTOR_SEARCH_FAILED(ErrorType.INTERNAL, "Vector search failed. Please try again."),
+
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),
     INTERNAL_ERROR(ErrorType.INTERNAL, "An unexpected error occurred"),

@@ -49,7 +49,10 @@ public class ChatServiceImpl implements ChatService {
         session.setUser(user);
         session.setTitle(req.title() != null ? req.title() : "New Chat");
 
-        return ChatMapper.toSessionResponse(chatSessionRepository.save(session));
+        var createdSession = chatSessionRepository.save(session);
+        log.debug("Chat session created: {}", createdSession);
+
+        return ChatMapper.toSessionResponse(createdSession);
     }
 
     @Override

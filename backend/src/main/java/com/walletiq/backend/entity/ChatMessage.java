@@ -1,5 +1,6 @@
 package com.walletiq.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.walletiq.backend.enums.MessageRole;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -39,6 +40,7 @@ public class ChatMessage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
+    @JsonBackReference
     private ChatSession session;
 
     // Drives message ordering within a session

@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 /**
  * No-op stub for EmbeddingService.
  * Used until Spring AI + PgVector is configured.
- * Replace this with PgVectorEmbeddingServiceImpl when ready.
- * TransactionServiceImpl does not need to change at all.
  */
 @Slf4j
 @Service
