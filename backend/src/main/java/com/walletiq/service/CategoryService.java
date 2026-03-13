@@ -1,5 +1,7 @@
 package com.walletiq.service;
 
+import com.walletiq.entity.Category;
+import com.walletiq.enums.CategoryType;
 import com.walletiq.exception.CategoryException;
 import com.walletiq.dto.categories.CreateCategoryRequest;
 import com.walletiq.dto.categories.UpdateCategoryRequest;
@@ -11,9 +13,10 @@ import java.util.UUID;
 public interface CategoryService {
 
     /**
-     * Returns system default categories + the current user's own categories.
+     * Returns system default categories + the current user's own categories based
+     * on the category types
      */
-    List<CategoryResponse> getAllCategories();
+    List<CategoryResponse> getAllCategories(CategoryType type);
 
     /**
      * Creates a new category owned by the current user.
@@ -35,4 +38,12 @@ public interface CategoryService {
      * @throws CategoryException if not found or not owned by user.
      */
     void deleteCategory(UUID id);
+
+    /**
+     * find category by id
+     *
+     * @throws CategoryException if not found
+     */
+    Category findById(UUID id);
+
 }

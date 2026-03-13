@@ -4,9 +4,12 @@ import com.walletiq.dto.categories.CreateCategoryRequest;
 import com.walletiq.dto.categories.UpdateCategoryRequest;
 import com.walletiq.dto.categories.CategoryResponse;
 import com.walletiq.dto.success.ResponseWrapper;
+import com.walletiq.enums.CategoryType;
 import com.walletiq.service.CategoryService;
 import com.walletiq.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +31,23 @@ public class CategoryController {
         summary = "Get all categories",
         description = "Fetches all categories available for the authenticated user."
     )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Transactions fetched successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     @GetMapping
-    public ResponseEntity<ResponseWrapper<List<CategoryResponse>>> getAllCategories() {
+    public ResponseEntity<ResponseWrapper<List<CategoryResponse>>> getAllCategories(
+        @RequestParam(required = true) CategoryType type
+    ) {
         return ResponseUtil.ok("Categories fetched successfully",
-            categoryService.getAllCategories());
+            categoryService.getAllCategories(type));
     }
 
     @Operation(summary = "Create a new category")
     @PostMapping
     public ResponseEntity<ResponseWrapper<CategoryResponse>> createCategory(
-        @Valid @RequestBody CreateCategoryRequest request) {
+        @Valid @RequestBody CreateCategoryRequest request
+    ) {
         return ResponseUtil.created("Category created successfully",
             categoryService.createCategory(request));
     }
@@ -46,7 +56,8 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseWrapper<CategoryResponse>> updateCategory(
         @PathVariable UUID id,
-        @Valid @RequestBody UpdateCategoryRequest request) {
+        @Valid @RequestBody UpdateCategoryRequest request
+    ) {
         return ResponseUtil.ok("Category updated successfully",
             categoryService.updateCategory(id, request));
     }

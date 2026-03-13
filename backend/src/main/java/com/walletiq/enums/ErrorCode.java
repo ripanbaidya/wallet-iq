@@ -58,6 +58,7 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(ErrorType.NOT_FOUND, "Category not found"),
     CATEGORY_ALREADY_EXISTS(ErrorType.CONFLICT, "A category with this name already exists"),
     CATEGORY_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this category"),
+    INVALID_CATEGORY_TYPE(ErrorType.VALIDATION, "Invalid category type"),
 
     // PaymentMode
     PAYMENT_MODE_NOT_FOUND(ErrorType.NOT_FOUND, "Payment mode not found"),
@@ -80,10 +81,18 @@ public enum ErrorCode {
     // CSV
     CSV_EXPORT_FAILED(ErrorType.INTERNAL, "Failed to generate CSV export. Please try again."),
 
+    // Recurring Transaction errors
+    RECURRING_NOT_FOUND(ErrorType.NOT_FOUND, "Recurring transaction not found"),
+    RECURRING_ALREADY_INACTIVE(ErrorType.VALIDATION, "Recurring transaction is already inactive"),
+    RECURRING_END_DATE_BEFORE_START( ErrorType.VALIDATION, "End date must be after start date"),
+    RECURRING_INVALID_FREQUENCY(ErrorType.VALIDATION, "Invalid frequency provided"),
+    RECURRING_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this recurring transaction"),
+
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),
     INTERNAL_ERROR(ErrorType.INTERNAL, "An unexpected error occurred"),
     SERVICE_UNAVAILABLE(ErrorType.SERVICE_UNAVAILABLE, "The service is temporarily unavailable");
+
 
     private final ErrorType type;
     private final String defaultMessage;

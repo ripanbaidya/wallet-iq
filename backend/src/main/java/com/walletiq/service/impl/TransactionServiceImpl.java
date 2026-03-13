@@ -9,6 +9,7 @@ import com.walletiq.entity.Category;
 import com.walletiq.entity.PaymentMode;
 import com.walletiq.entity.Transaction;
 import com.walletiq.entity.User;
+import com.walletiq.enums.CategoryType;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.TxnType;
 import com.walletiq.exception.CategoryException;
@@ -41,7 +42,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy");
+    private static final DateTimeFormatter DATE_FORMAT =
+        DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy");
 
     private final EmbeddingService embeddingService;
 
@@ -49,8 +51,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final PaymentModeRepository paymentModeRepository;
-
-    // Implementations
 
     /**
      * Returns transactions for the current user using optional filters.
@@ -62,10 +62,13 @@ public class TransactionServiceImpl implements TransactionService {
         User currentUser = currentUser();
 
         UUID categoryId = filter.categoryId() != null ? UUID.fromString(filter.categoryId()) : null;
+
         Pageable safePageable = PageableValidator.validateTransactionPageable(pageable);
 
-        Page<Transaction> page = transactionRepository.findAllByFilter(currentUser, filter.type(),
-            categoryId, filter.dateFrom(), filter.dateTo(), safePageable);
+        Page<Transaction> page = transactionRepository.findAllByFilter(
+            currentUser, filter.type(), categoryId,
+            filter.dateFrom(), filter.dateTo(), safePageable
+        );
 
         return page.map(TransactionMapper::toResponse);
     }
@@ -77,6 +80,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional(readOnly = true)
     public TransactionResponse getTransactionById(UUID id) {
         User user = currentUser();
+
         Transaction transaction = findTransactionByIdAndUser(id, user.getId());
 
         return TransactionMapper.toResponse(transaction);
@@ -91,9 +95,6 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponse createTransaction(CreateTransactionRequest request) {
         User currentUser = currentUser();
 
-        // Validate required fields for EXPENSE transactions
-        validateExpenseFields(request.type(), request.categoryId(), request.paymentModeId());
-
         Transaction transaction = new Transaction();
         transaction.setAmount(request.amount());
         transaction.setType(request.type());
@@ -101,15 +102,13 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setNote(request.note());
         transaction.setUser(currentUser);
 
-        // Only set category and payment mode for EXPENSE transactions
-        if (request.type() == TxnType.EXPENSE) {
-            transaction.setCategory(resolveCategory(request.categoryId(), currentUser));
-            transaction.setPaymentMode(resolvePaymentMode(request.paymentModeId(), currentUser));
-        }
+        CategoryType categoryType = getCategoryType(request.type());
+
+        transaction.setCategory(resolveCategory(request.categoryId(), currentUser, categoryType));
+        transaction.setPaymentMode(resolvePaymentMode(request.paymentModeId(), currentUser));
 
         transaction = transactionRepository.save(transaction);
 
-        // Store embedding
         String embeddingId = embeddingService.store(transaction);
 
         if (embeddingId != null) {
@@ -121,49 +120,56 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     /**
-     * Updates an existing transaction.
-     * Supports partial updates — only provided fields are modified.
+     * Updates an existing transaction, supports partial updates.
      */
     @Override
     @Transactional
     public TransactionResponse updateTransaction(UUID id, UpdateTransactionRequest request) {
-        User currentUser = currentUser();
-        Transaction transaction = findTransactionByIdAndUser(id, currentUser.getId());
+        User user = currentUser();
 
-        // Determine the effective type and identifiers after update.
-        // This ensures validation works even for partial updates.
+        Transaction transaction = findTransactionByIdAndUser(id, user.getId());
+
         TxnType effectiveType = request.type() != null ? request.type() : transaction.getType();
 
-        String effectiveCategoryId = request.categoryId() != null ? request.categoryId()
-            : (transaction.getCategory() != null ? transaction.getCategory().getId().toString() : null);
+        Category category = transaction.getCategory();
+        if (request.categoryId() != null) {
+            category = resolveCategory(request.categoryId(), user,
+                getCategoryType(effectiveType)
+            );
+        }
 
-        String effectivePaymentModeId = request.paymentModeId() != null ? request.paymentModeId() :
-            (transaction.getPaymentMode() != null ? transaction.getPaymentMode().getId().toString() : null);
+        PaymentMode paymentMode = transaction.getPaymentMode();
+        if (request.paymentModeId() != null) {
+            paymentMode = resolvePaymentMode(request.paymentModeId(), user);
+        }
 
-        // Validate required fields if transaction is EXPENSE
-        validateExpenseFields(effectiveType, effectiveCategoryId, effectivePaymentModeId);
+        if (category != null &&
+            category.getCategoryType() != getCategoryType(effectiveType)) {
 
-        // Apply only provided fields
+            throw new TransactionException(ErrorCode.INVALID_CATEGORY_TYPE,
+                "Category type does not match transaction type"
+            );
+        }
+
         if (request.amount() != null) transaction.setAmount(request.amount());
         if (request.type() != null) transaction.setType(request.type());
         if (request.date() != null) transaction.setDate(request.date());
         if (request.note() != null) transaction.setNote(request.note());
 
-        if (request.categoryId() != null) transaction.setCategory(resolveCategory(request.categoryId(), currentUser));
-        if (request.paymentModeId() != null)
-            transaction.setPaymentMode(resolvePaymentMode(request.paymentModeId(), currentUser));
-
-        // If switched to INCOME, category and payment mode are irrelevant
         if (effectiveType == TxnType.INCOME) {
             transaction.setCategory(null);
             transaction.setPaymentMode(null);
+        } else {
+            transaction.setCategory(category);
+            transaction.setPaymentMode(paymentMode);
         }
 
-        // Update embedding
         String newEmbeddingId = embeddingService.update(transaction.getEmbeddingId(), transaction);
-        if (newEmbeddingId != null) transaction.setEmbeddingId(newEmbeddingId);
+        if (newEmbeddingId != null) {
+            transaction.setEmbeddingId(newEmbeddingId);
+        }
 
-        return TransactionMapper.toResponse(transactionRepository.save(transaction));
+        return TransactionMapper.toResponse(transaction);
     }
 
     /**
@@ -173,38 +179,50 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     public void deleteTransaction(UUID transactionId) {
         User currentUser = currentUser();
+
         Transaction transaction = findTransactionByIdAndUser(transactionId, currentUser.getId());
 
-        // Remove embedding if present
         embeddingService.delete(transaction.getEmbeddingId());
 
         transactionRepository.delete(transaction);
     }
 
+    /**
+     * Builds daily summary email data.
+     */
     @Override
+    @Transactional(readOnly = true)
     public DailySummaryMailData buildDailySummaryMailData(User user) {
         LocalDate today = LocalDate.now();
-        List<Transaction> todaysTransaction = transactionRepository.findByUserAndDate(user, today);
 
-        // Extract income and expense amounts
-        BigDecimal income = todaysTransaction.stream()
+        List<Transaction> todaysTransactions = transactionRepository.findByUserAndDate(user, today);
+
+        // Calculate the income and expenses
+        BigDecimal income = todaysTransactions.stream()
             .filter(t -> t.getType() == TxnType.INCOME)
             .map(Transaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal expenses = todaysTransaction.stream()
+        BigDecimal expenses = todaysTransactions.stream()
             .filter(t -> t.getType() == TxnType.EXPENSE)
             .map(Transaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new DailySummaryMailData(user.getFullName(), user.getEmail(), today.format(DATE_FORMAT),
-            income, expenses, income.subtract(expenses), todaysTransaction.size());
+        return new DailySummaryMailData(
+            user.getFullName(),
+            user.getEmail(),
+            today.format(DATE_FORMAT),
+            income,
+            expenses,
+            income.subtract(expenses),
+            todaysTransactions.size()
+        );
     }
 
-    // Helper methods
+    // Helper Methods
 
     /**
-     * Returns the currently authenticated user reference.
+     * Returns the currently authenticated user.
      */
     private User currentUser() {
         return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
@@ -214,54 +232,61 @@ public class TransactionServiceImpl implements TransactionService {
      * Finds a transaction belonging to the given user.
      */
     private Transaction findTransactionByIdAndUser(UUID id, UUID userId) {
-        return transactionRepository.findByIdAndUser_Id(id, userId)
-            .orElseThrow(() -> new TransactionException(ErrorCode.TRANSACTION_NOT_FOUND,
-                "Transaction not found or you do not have permission to access it"
-            ));
+        return transactionRepository
+            .findByIdAndUser_Id(id, userId)
+            .orElseThrow(() ->
+                new TransactionException(ErrorCode.TRANSACTION_NOT_FOUND,
+                    "Transaction not found or access denied"
+                ));
     }
 
     /**
-     * Ensures that EXPENSE transactions include category and payment mode.
+     * Resolves a category accessible to the user.
      */
-    private void validateExpenseFields(TxnType type, String categoryId, String paymentModeId) {
-        if (type == TxnType.EXPENSE) {
-            if (categoryId == null || categoryId.isBlank()) {
-                throw new TransactionException(ErrorCode.INVALID_TRANSACTION, "Category is required for EXPENSE transactions");
-            }
+    private Category resolveCategory(String categoryId,
+                                     User user,
+                                     CategoryType categoryType) {
 
-            if (paymentModeId == null || paymentModeId.isBlank()) {
-                throw new TransactionException(ErrorCode.INVALID_TRANSACTION, "Payment mode is required for EXPENSE transactions");
-            }
-        }
-    }
-
-    /**
-     * Resolves a category accessible to the current user.
-     * Category may belong to the user or be a system default.
-     */
-    private Category resolveCategory(String categoryId, User currentUser) {
         UUID id = UUID.fromString(categoryId);
+
         return categoryRepository
-            .findAllVisibleToUser(currentUser).stream()
+            .findAllVisibleToUser(user, categoryType)
+            .stream()
             .filter(c -> c.getId().equals(id))
             .findFirst()
-            .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND,
-                "Category not found or not accessible"
-            ));
+            .orElseThrow(() ->
+                new CategoryException(
+                    ErrorCode.CATEGORY_NOT_FOUND,
+                    "Category not found or not accessible"
+                ));
     }
 
     /**
-     * Resolves a payment mode accessible to the current user.
-     * Payment mode may belong to the user or be a system default.
+     * Resolves a payment mode accessible to the user.
      */
-    private PaymentMode resolvePaymentMode(String paymentModeId, User currentUser) {
+    private PaymentMode resolvePaymentMode(String paymentModeId,
+                                           User user) {
+
         UUID id = UUID.fromString(paymentModeId);
+
         return paymentModeRepository
-            .findAllVisibleToUser(currentUser).stream()
+            .findAllVisibleToUser(user)
+            .stream()
             .filter(p -> p.getId().equals(id))
             .findFirst()
-            .orElseThrow(() -> new PaymentModeException(ErrorCode.PAYMENT_MODE_NOT_FOUND,
-                "Payment mode not found or not accessible"
-            ));
+            .orElseThrow(() ->
+                new PaymentModeException(
+                    ErrorCode.PAYMENT_MODE_NOT_FOUND,
+                    "Payment mode not found or not accessible"
+                ));
+    }
+
+    /**
+     * Maps transaction type to category type.
+     */
+    private CategoryType getCategoryType(TxnType txnType) {
+        return txnType == TxnType.INCOME
+            ? CategoryType.INCOME
+            : CategoryType.EXPENSE;
     }
 }

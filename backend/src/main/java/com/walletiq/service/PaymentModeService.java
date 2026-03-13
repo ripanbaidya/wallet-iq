@@ -3,6 +3,7 @@ package com.walletiq.service;
 import com.walletiq.dto.paymentmode.CreatePaymentModeRequest;
 import com.walletiq.dto.paymentmode.PaymentModeResponse;
 import com.walletiq.dto.paymentmode.UpdatePaymentModeRequest;
+import com.walletiq.entity.PaymentMode;
 import com.walletiq.exception.PaymentModeException;
 
 import java.util.List;
@@ -35,4 +36,11 @@ public interface PaymentModeService {
      * @throws PaymentModeException if not found or not owned by user.
      */
     void deletePaymentMode(UUID id);
+
+    /**
+     * find payment mode by id
+     *
+     * @throws PaymentModeException if not found
+     */
+    PaymentMode findById(UUID id);
 }

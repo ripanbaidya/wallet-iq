@@ -8,11 +8,12 @@ public final class CategoryMapper {
     private CategoryMapper() {
     }
 
-    public static CategoryResponse mapToCategoryResponse(Category category) {
+    public static CategoryResponse toResponse(Category category) {
         return new CategoryResponse(
             category.getId().toString(),
             category.getName(),
-            category.getUser() == null     // null user = system default
+            category.getCategoryType(),
+            category.getUser() == null // null user = system default
         );
     }
 }

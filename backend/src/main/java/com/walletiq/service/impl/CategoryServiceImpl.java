@@ -2,6 +2,7 @@ package com.walletiq.service.impl;
 
 import com.walletiq.entity.Category;
 import com.walletiq.entity.User;
+import com.walletiq.enums.CategoryType;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.exception.CategoryException;
 import com.walletiq.mapper.CategoryMapper;
@@ -13,6 +14,7 @@ import com.walletiq.repository.UserRepository;
 import com.walletiq.service.CategoryService;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,69 +22,90 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
-    // Get all system defaults + current user's categories
-
+    /**
+     * Get all system defaults + current user's categories filtered by category type
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAllVisibleToUser(currentUser()).stream()
-            .map(CategoryMapper::mapToCategoryResponse)
+    public List<CategoryResponse> getAllCategories(CategoryType categoryType) {
+        User user = currentUser();
+
+        return categoryRepository.findAllVisibleToUser(user, categoryType)
+            .stream()
+            .map(CategoryMapper::toResponse)
             .toList();
     }
 
-    // Create new category for current user
-
+    /**
+     * Create new category for current user
+     */
     @Override
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-        User currentUser = currentUser();
+        User user = currentUser();
 
-        if (categoryRepository.existsByNameIgnoreCaseAndUser(request.name(), currentUser)) {
+        String name = request.name().trim();
+        CategoryType categoryType = request.categoryType();
+
+        if (categoryRepository.existsByNameIgnoreCaseAndUserAndCategoryType(name, user, categoryType)) {
             throw new CategoryException(ErrorCode.CATEGORY_ALREADY_EXISTS,
-                "A category named '%s' already exists".formatted(request.name())
+                "A category named '%s' already exists".formatted(name)
             );
         }
 
-        // Create and save category
         Category category = new Category();
-        category.setName(request.name().trim());
-        category.setUser(currentUser);
+        category.setName(name);
+        category.setCategoryType(request.categoryType());
+        category.setUser(user);
 
-        return CategoryMapper.mapToCategoryResponse(categoryRepository.save(category));
+        return CategoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    // Update category name for current user
-
+    /**
+     * Update category name or type for the current user.
+     */
     @Override
     @Transactional
     public CategoryResponse updateCategory(UUID id, UpdateCategoryRequest request) {
-        User currentUser = currentUser();
-
-        Category category = findCategoryByIdAndUser(id, currentUser);
+        User user = currentUser();
+        Category category = findCategoryByIdAndUser(id, user);
 
         String newName = request.name().trim();
+        CategoryType newType = request.categoryType() != null ? request.categoryType()
+            : category.getCategoryType();
 
-        // Skip duplicate check if name hasn't changed (case-insensitive)
+        log.debug("Updating category {} for user {} with name '{}' and type '{}'",
+            id, user.getId(), newName, newType);
+
         boolean nameChanged = !category.getName().equalsIgnoreCase(newName);
-        if (nameChanged && categoryRepository.existsByNameIgnoreCaseAndUser(newName, currentUser)) {
-            throw new CategoryException(
-                ErrorCode.CATEGORY_ALREADY_EXISTS,
+        boolean typeChanged = newType != category.getCategoryType();
+
+        // Check duplicates only when name or type changes
+        if ((nameChanged || typeChanged)
+            && categoryRepository.existsByNameIgnoreCaseAndUserAndCategoryType(newName, user, newType)) {
+
+            throw new CategoryException(ErrorCode.CATEGORY_ALREADY_EXISTS,
                 "A category named '%s' already exists".formatted(newName)
             );
         }
 
+        // Apply updates
         category.setName(newName);
-        return CategoryMapper.mapToCategoryResponse(categoryRepository.save(category));
+        category.setCategoryType(newType);
+
+        return CategoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    // Delete category for current user
-
+    /**
+     * Delete category for current user
+     */
     @Override
     @Transactional
     public void deleteCategory(UUID id) {
@@ -93,20 +116,27 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
     }
 
-    // Private helper methods
+    @Override
+    @Transactional(readOnly = true)
+    public Category findById(UUID id) {
+        return categoryRepository.findById(id)
+            .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
 
-    // return proxy object
+    // Helper methods
+
     private User currentUser() {
         return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
     }
 
-    // Find category belong to specific user
+    /**
+     * Find category belong to specific user
+     */
     private Category findCategoryByIdAndUser(UUID id, User user) {
         // findByIdAndUser ensures the user can only update their OWN categories
         // System defaults (user IS NULL) will never match here — intentional
         return categoryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new CategoryException(
-                ErrorCode.CATEGORY_NOT_FOUND,
+            .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND,
                 "Category not found or you do not have permission to delete it"
             ));
     }

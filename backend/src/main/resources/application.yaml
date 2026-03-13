@@ -25,7 +25,8 @@ spring:
     show-sql: true
     open-in-view: false # Prevents accidental lazy loading
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+      # ddl-auto: update # Not recommended for production
     properties:
       hibernate:
         format_sql: true
@@ -36,6 +37,12 @@ spring:
           fetch_size: 50 # Ask driver to fetch x number of rows at a time, Good for pagination
         order_inserts: true
         order_updates: true
+
+  # Flyway - DB Migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
   # Json
   jackson:

@@ -1,5 +1,6 @@
 package com.walletiq.entity;
 
+import com.walletiq.enums.CategoryType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,10 @@ public class Category extends BaseEntity {
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
+
+    @Column(name = "category_type", length = 10)
+    @Enumerated(EnumType.STRING)
+    private CategoryType categoryType;
 
     // NULL = system default (visible to all users)
     // NOT NULL = belongs to a specific user (private)

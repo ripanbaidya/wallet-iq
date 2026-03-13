@@ -93,6 +93,13 @@ public class PaymentModeServiceImpl implements PaymentModeService {
         paymentModeRepository.delete(paymentMode);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentMode findById(UUID id) {
+        return paymentModeRepository.findById(id)
+            .orElseThrow(() -> new PaymentModeException(ErrorCode.PAYMENT_MODE_NOT_FOUND));
+    }
+
     // Helper methods
 
     private User currentUser() {

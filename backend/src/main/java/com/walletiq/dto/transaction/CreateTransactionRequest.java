@@ -25,12 +25,10 @@ public record CreateTransactionRequest(
     @Size(max = 1000, message = "Note must not exceed 1000 characters")
     String note, // optional
 
-    // Note: categoryId and paymentModeId are required for EXPENSE, for INCOME these two fields
-    // are not required, so we are checking these cases in our service implementation rather
-    // using annotation
-
+    @NotNull(message = "Category ID is required")
     String categoryId,
 
+    @NotNull(message = "Payment mode ID is required")
     String paymentModeId
 
 ) {
