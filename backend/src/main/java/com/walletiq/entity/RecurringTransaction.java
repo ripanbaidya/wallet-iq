@@ -14,8 +14,7 @@ import java.time.LocalDate;
 @Table(
     name = "recurring_transactions",
     indexes = {
-        @Index(name = "idx_recurring_user_id", columnList = "user_id"),
-        @Index(name = "idx_recurring_next_execution", columnList = "next_execution_date, is_active"),
+        @Index(name = "idx_recurring_scheduler", columnList = "is_active, next_execution_date"),
         @Index(name = "idx_recurring_user_active", columnList = "user_id, is_active")
     }
 )
@@ -38,21 +37,32 @@ public class RecurringTransaction extends BaseEntity {
     @Column(name = "frequency", length = 10, nullable = false)
     private RecurringFrequency frequency;
 
+    /**
+     * The date this recurring rule starts. The first transaction is created on this date.
+     * Must be today or a future date.
+     */
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    // null = runs indefinitely
-    @Column(name = "end_date")
+    /**
+     * The date this recurring rule stops (inclusive). If null, the rule runs indefinitely.
+     * Must be after or equal to {@link #startDate}.
+     */
+    @Column(name = "end_date", nullable = true)
     private LocalDate endDate;
 
+    /**
+     * The next date the scheduler will execute this rule. Updated after each execution.
+     * Managed internally — not exposed in create/update request DTOs.
+     */
     @Column(name = "next_execution_date", nullable = false)
     private LocalDate nextExecutionDate;
+
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
-    // Optional user note carried to generated transactions
-    @Column(name = "note", columnDefinition = "TEXT")
+    @Column(name = "note", length = 255)
     private String note;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -9,6 +9,7 @@ import com.walletiq.exception.RecurringTransactionException;
 import com.walletiq.mapper.RecurringTransactionMapper;
 import com.walletiq.repository.*;
 import com.walletiq.service.CategoryService;
+import com.walletiq.service.EmbeddingService;
 import com.walletiq.service.PaymentModeService;
 import com.walletiq.service.RecurringTransactionService;
 import com.walletiq.util.SecurityUtils;
@@ -28,6 +29,7 @@ import java.util.*;
 public class RecurringTransactionServiceImpl implements RecurringTransactionService {
 
     private final CategoryService categoryService;
+    private final EmbeddingService embeddingService;
     private final PaymentModeService paymentModeService;
 
     private final UserRepository userRepository;
@@ -47,7 +49,9 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
 
         RecurringTransaction recurring = buildRecurringTransaction(request, getCurrentUser());
 
-        recurringRepository.save(recurring);
+        recurring = recurringRepository.saveAndFlush(recurring);
+
+        log.info("Recurring transaction created with id: {}", recurring.getId());
 
         return RecurringTransactionMapper.toResponse(recurring);
     }
@@ -75,7 +79,9 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional(readOnly = true)
     public RecurringTransactionResponse getById(UUID id) {
 
-        RecurringTransaction recurring = findOwnedOrThrow(id, getCurrentUserId());
+        UUID userId = getCurrentUserId();
+
+        RecurringTransaction recurring = findOwnedOrThrow(id, userId);
 
         return RecurringTransactionMapper.toResponse(recurring);
     }
@@ -87,7 +93,9 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public RecurringTransactionResponse update(UUID id, UpdateRecurringTransactionRequest request) {
 
-        RecurringTransaction recurring = findOwnedOrThrow(id, getCurrentUserId());
+        UUID userId = getCurrentUserId();
+
+        RecurringTransaction recurring = findOwnedOrThrow(id, userId);
 
         updateIfPresent(request.title(), recurring::setTitle);
         updateIfPresent(request.amount(), recurring::setAmount);
@@ -119,7 +127,9 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public void deactivate(UUID id) {
 
-        RecurringTransaction recurring = findOwnedOrThrow(id, getCurrentUserId());
+        UUID userId = getCurrentUserId();
+
+        RecurringTransaction recurring = findOwnedOrThrow(id, userId);
 
         if (!recurring.isActive()) {
             throw new RecurringTransactionException(ErrorCode.RECURRING_ALREADY_INACTIVE);
@@ -132,21 +142,38 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
         log.info("Recurring transaction {} deactivated", id);
     }
 
+    /**
+     * It will calculate what will happen financially in the next N days based on my
+     * recurring income and expenses
+     */
     @Override
     @Transactional(readOnly = true)
     public ForecastSummaryResponse forecast(int days) {
+
+        UUID userId = getCurrentUserId();
 
         LocalDate today = LocalDate.now();
         LocalDate until = today.plusDays(days);
 
         List<RecurringTransaction> recurringList = recurringRepository
-            .findForecastableByUser(getCurrentUserId(), today, until);
+            .findForecastableByUser(userId, today, until);
 
         List<ForecastEntryResponse> entries = new ArrayList<>();
         Totals totals = new Totals();
 
         for (RecurringTransaction recurring : recurringList) {
-            projectRecurring(recurring, until, entries, totals);
+            LocalDate next = alignToWindow(recurring.getNextExecutionDate(),
+                recurring.getFrequency(), today
+            );
+
+            while (!next.isAfter(until)) {
+                if (recurring.getEndDate() == null || !next.isAfter(recurring.getEndDate())) {
+                    entries.add(buildForecastEntry(recurring, next));
+                    totals.add(recurring.getType(), recurring.getAmount());
+                }
+
+                next = computeNextDate(next, recurring.getFrequency());
+            }
         }
 
         entries.sort(Comparator.comparing(ForecastEntryResponse::projectedDate));
@@ -164,6 +191,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public void processDueRecurringTransactions() {
         LocalDate today = LocalDate.now();
+
         List<RecurringTransaction> dueTransactions = recurringRepository
             .findDueTransactions(today);
 
@@ -189,23 +217,19 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
         }
     }
 
-    private void projectRecurring(
-        RecurringTransaction recurring,
-        LocalDate until,
-        List<ForecastEntryResponse> entries,
-        Totals totals
+    private LocalDate alignToWindow(
+        LocalDate nextExecutionDate,
+        RecurringFrequency frequency,
+        LocalDate today
     ) {
 
-        LocalDate nextDate = recurring.getNextExecutionDate();
+        LocalDate date = nextExecutionDate;
 
-        while (!nextDate.isAfter(until)) {
-            if (recurring.getEndDate() == null || !nextDate.isAfter(recurring.getEndDate())) {
-                entries.add(buildForecastEntry(recurring, nextDate));
-                totals.add(recurring.getType(), recurring.getAmount());
-            }
-
-            nextDate = computeNextDate(nextDate, recurring.getFrequency());
+        while (date.isBefore(today)) {
+            date = computeNextDate(date, frequency);
         }
+
+        return date;
     }
 
     private ForecastEntryResponse buildForecastEntry(
@@ -233,7 +257,6 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
 
         RecurringTransaction recurring = new RecurringTransaction();
 
-        recurring.setUser(user);
         recurring.setTitle(request.title());
         recurring.setAmount(request.amount());
         recurring.setType(request.type());
@@ -244,12 +267,16 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
         recurring.setActive(true);
         recurring.setNote(request.note());
 
+        recurring.setUser(user);
         recurring.setCategory(resolveCategory(request.categoryId()));
         recurring.setPaymentMode(resolvePaymentMode(request.paymentModeId()));
 
         return recurring;
     }
 
+    /**
+     * Create transaction from recurring transaction
+     */
     private void createTransactionFromRecurring(
         RecurringTransaction recurring,
         LocalDate date
@@ -268,9 +295,17 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
             + (recurring.getNote() != null ? " — " + recurring.getNote() : ""));
 
         transactionRepository.save(transaction);
+
+        // Make sure save the embeddingId into the DB
+        String embeddingId = embeddingService.store(transaction);
+
+        if (embeddingId != null) {
+            transaction.setEmbeddingId(embeddingId);
+            transactionRepository.save(transaction);
+        }
     }
 
-    // * ------------- Helper methods -------------*/
+    // Helper methods
 
     private Category resolveCategory(UUID id) {
         return id == null ? null : categoryService.findById(id);
@@ -305,9 +340,9 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
 
         return recurringRepository.findByIdAndUser_Id(id, userId)
             .orElseThrow(() -> {
-
                 boolean exists = recurringRepository.existsById(id);
 
+                // When user exist, Its different user is trying to access the recurring
                 return exists
                     ? new RecurringTransactionException(ErrorCode.RECURRING_ACCESS_DENIED)
                     : new RecurringTransactionException(ErrorCode.RECURRING_NOT_FOUND);

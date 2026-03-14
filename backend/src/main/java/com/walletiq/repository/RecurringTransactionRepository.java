@@ -11,11 +11,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository for managing {@link RecurringTransaction} entities.
+ * Provides queries for scheduler execution, user-scoped lookups, and forecasting.
+ */
 @Repository
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, UUID> {
 
     /**
-     * User by schedular, fetch all due active entities
+     * Fetches all active recurring transactions due for execution on or before the given date.
+     * Used by the scheduler to determine which rules to process.
+     *
+     * @param today the current date used as the execution threshold
+     * @return list of due {@link RecurringTransaction} entities
      */
     @Query("""
             select r from RecurringTransaction r
@@ -26,20 +34,41 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
     List<RecurringTransaction> findDueTransactions(@Param("today") LocalDate today);
 
     /**
-     * Find all active recurring transactions for a user
+     * Returns all active recurring transactions belonging to the given user.
+     *
+     * @param userId the user's ID
+     * @return list of active {@link RecurringTransaction} entities for the user
      */
     List<RecurringTransaction> findByUser_IdAndIsActiveTrue(UUID userId);
 
     /**
-     * All recurring for a user (including inactive)
+     * Returns all recurring transactions for a user, including inactive ones.
+     *
+     * @param userId the user's ID
+     * @return list of all {@link RecurringTransaction} entities for the user
      */
     List<RecurringTransaction> findByUser_Id(UUID userId);
 
     /**
-     * Find a recurring transaction by ID and User ID
+     * Finds a specific recurring transaction by its ID, scoped to the given user.
+     * Returns empty if the transaction doesn't exist or doesn't belong to the user.
+     *
+     * @param id     the recurring transaction ID
+     * @param userId the user's ID
+     * @return an {@link Optional} containing the matching entity, or empty if not found
      */
     Optional<RecurringTransaction> findByIdAndUser_Id(UUID id, UUID userId);
 
+    /**
+     * Fetches active recurring transactions for a user that are forecastable within a date range.
+     * A transaction is forecastable if it has started and has a pending execution before {@code forecastUntil},
+     * and its end date has not passed.
+     *
+     * @param userId        the user's ID
+     * @param today         the current date, used to filter out expired rules
+     * @param forecastUntil the upper bound of the forecast window
+     * @return list of forecastable {@link RecurringTransaction} entities
+     */
     @Query("""
             select r from RecurringTransaction r
             where r.user.id = :userId
@@ -53,5 +82,4 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
         @Param("today") LocalDate today,
         @Param("forecastUntil") LocalDate forecastUntil
     );
-
 }

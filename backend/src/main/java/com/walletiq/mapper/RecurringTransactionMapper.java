@@ -30,7 +30,7 @@ public final class RecurringTransactionMapper {
             .note(r.getNote())
             .categoryName(r.getCategory() != null ? r.getCategory().getName() : null)
             .paymentModeName(r.getPaymentMode() != null ? r.getPaymentMode().getName() : null)
-            .createdAt(FORMATTER.format(r.getCreatedAt().atZone(ZONE)))
+            .createdAt(FORMATTER.format(r.getCreatedAt().atZone(ZoneId.systemDefault())))
             .build();
     }
 }

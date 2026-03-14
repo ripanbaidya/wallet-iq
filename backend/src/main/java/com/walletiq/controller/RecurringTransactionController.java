@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/recurring")
+@RequestMapping("/recurring")
 @RequiredArgsConstructor
 @Tag(name = "Recurring Transactions", description = "Manage recurring income and expense rules")
 public class RecurringTransactionController {
