@@ -36,9 +36,18 @@ GET    /api/recurring/forecast?days=30 → projected cash flow
 2. Budget & Goals System - Users set spending limits per category per month, and saving targets with deadlines. The
    system tracks progress in
    real-time.
-3. Financial Health Score - A single score from 0–100 computed from multiple financial dimensions. Updates every time a
-   transaction is added.
-4. Notification using Websocket
+```http request
+POST   /api/budgets                    → create budget
+GET    /api/budgets?month=2025-07      → get budgets for a month
+GET    /api/budgets/{id}/status        → current spend vs limit
+
+POST   /api/goals                      → create savings goal
+GET    /api/goals                      → list all goals
+PATCH  /api/goals/{id}/contribute      → add money toward goal
+GET    /api/goals/{id}/progress        → % achieved, days remaining
+```
+
+3. Notification using Websocket
 
 ### Core Entities
 

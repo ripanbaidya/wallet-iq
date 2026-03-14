@@ -20,6 +20,7 @@ import com.walletiq.repository.CategoryRepository;
 import com.walletiq.repository.PaymentModeRepository;
 import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
+import com.walletiq.service.BudgetAlertService;
 import com.walletiq.service.EmbeddingService;
 import com.walletiq.service.TransactionService;
 import com.walletiq.util.PageableValidator;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -49,6 +51,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final BudgetAlertService budgetAlertService;
     private final TransactionRepository transactionRepository;
     private final PaymentModeRepository paymentModeRepository;
 
@@ -107,7 +110,15 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setCategory(resolveCategory(request.categoryId(), currentUser, categoryType));
         transaction.setPaymentMode(resolvePaymentMode(request.paymentModeId(), currentUser));
 
-        transaction = transactionRepository.save(transaction);
+        transaction = transactionRepository.saveAndFlush(transaction);
+
+        // Check for budget alerts
+        if (transaction.getType() == TxnType.EXPENSE && transaction.getCategory() != null) {
+            budgetAlertService.checkAndAlert(
+                currentUser.getId(),
+                transaction.getCategory().getId(),
+                YearMonth.from(transaction.getDate()));
+        }
 
         String embeddingId = embeddingService.store(transaction);
 
@@ -162,6 +173,19 @@ public class TransactionServiceImpl implements TransactionService {
         } else {
             transaction.setCategory(category);
             transaction.setPaymentMode(paymentMode);
+        }
+
+        // Make sure flush it, so the sum query in checkAndAlert sees the
+        // updated amount/category/date
+        transactionRepository.flush();
+
+        // Check for budget alerts
+        if (effectiveType == TxnType.EXPENSE && transaction.getCategory() != null) {
+            budgetAlertService.checkAndAlert(
+                user.getId(),
+                transaction.getCategory().getId(),
+                YearMonth.from(transaction.getDate())
+            );
         }
 
         String newEmbeddingId = embeddingService.update(transaction.getEmbeddingId(), transaction);

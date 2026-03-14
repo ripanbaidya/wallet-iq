@@ -1,6 +1,7 @@
 package com.walletiq.service.impl;
 
 import com.walletiq.dto.recurringtransaction.*;
+import com.walletiq.dto.transaction.CreateTransactionRequest;
 import com.walletiq.entity.*;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.RecurringFrequency;
@@ -8,10 +9,7 @@ import com.walletiq.enums.TxnType;
 import com.walletiq.exception.RecurringTransactionException;
 import com.walletiq.mapper.RecurringTransactionMapper;
 import com.walletiq.repository.*;
-import com.walletiq.service.CategoryService;
-import com.walletiq.service.EmbeddingService;
-import com.walletiq.service.PaymentModeService;
-import com.walletiq.service.RecurringTransactionService;
+import com.walletiq.service.*;
 import com.walletiq.util.SecurityUtils;
 import com.walletiq.validator.RecurringTransactionValidator;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +29,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     private final CategoryService categoryService;
     private final EmbeddingService embeddingService;
     private final PaymentModeService paymentModeService;
+    private final TransactionService transactionService;
 
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
@@ -115,7 +114,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
             recurring.setPaymentMode(resolvePaymentMode(request.paymentModeId()));
         }
 
-        recurringRepository.save(recurring);
+        recurring = recurringRepository.saveAndFlush(recurring);
 
         return RecurringTransactionMapper.toResponse(recurring);
     }
@@ -203,10 +202,13 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
                 createTransactionFromRecurring(recurring, today);
                 LocalDate nextExecution = computeNextDate(today, recurring.getFrequency());
 
+                // Checking if the next execution date is after the end date, means that recurring
+                // has end, so deactivate it.
                 if (recurring.getEndDate() != null && nextExecution.isAfter(recurring.getEndDate())) {
                     recurring.setActive(false);
                     log.info("Recurring {} completed", recurring.getId());
                 } else {
+                    // Set the next execution date
                     recurring.setNextExecutionDate(nextExecution);
                 }
 
@@ -281,28 +283,14 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
         RecurringTransaction recurring,
         LocalDate date
     ) {
-
-        Transaction transaction = new Transaction();
-
-        transaction.setUser(recurring.getUser());
-        transaction.setAmount(recurring.getAmount());
-        transaction.setType(recurring.getType());
-        transaction.setDate(date);
-        transaction.setCategory(recurring.getCategory());
-        transaction.setPaymentMode(recurring.getPaymentMode());
-
-        transaction.setNote("[Auto] " + recurring.getTitle()
-            + (recurring.getNote() != null ? " — " + recurring.getNote() : ""));
-
-        transactionRepository.save(transaction);
-
-        // Make sure save the embeddingId into the DB
-        String embeddingId = embeddingService.store(transaction);
-
-        if (embeddingId != null) {
-            transaction.setEmbeddingId(embeddingId);
-            transactionRepository.save(transaction);
-        }
+        transactionService.createTransaction(new CreateTransactionRequest(
+            recurring.getAmount(),
+            recurring.getType(),
+            date,
+            recurring.getNote(),
+            recurring.getCategory().toString(),
+            recurring.getPaymentMode().toString()
+        ));
     }
 
     // Helper methods

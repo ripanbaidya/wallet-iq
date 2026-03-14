@@ -1,6 +1,7 @@
 package com.walletiq.repository;
 
 import com.walletiq.entity.User;
+import com.walletiq.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("select u from User u where u.active = true")
     List<User> findAllActiveUsers();
+
+    long countByRoleAndActiveTrue(Role role);
+
+    long countByRoleAndActive(Role role, boolean active);
 }

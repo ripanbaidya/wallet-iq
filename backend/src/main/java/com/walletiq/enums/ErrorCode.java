@@ -1,5 +1,6 @@
 package com.walletiq.enums;
 
+import com.walletiq.dto.error.ErrorResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -84,9 +85,24 @@ public enum ErrorCode {
     // Recurring Transaction errors
     RECURRING_NOT_FOUND(ErrorType.NOT_FOUND, "Recurring transaction not found"),
     RECURRING_ALREADY_INACTIVE(ErrorType.VALIDATION, "Recurring transaction is already inactive"),
-    RECURRING_END_DATE_BEFORE_START( ErrorType.VALIDATION, "End date must be after start date"),
+    RECURRING_END_DATE_BEFORE_START(ErrorType.VALIDATION, "End date must be after start date"),
     RECURRING_INVALID_FREQUENCY(ErrorType.VALIDATION, "Invalid frequency provided"),
     RECURRING_ACCESS_DENIED(ErrorType.AUTHORIZATION, "You do not have permission to modify this recurring transaction"),
+
+    // Savings Goal
+    GOAL_NOT_FOUND(ErrorType.NOT_FOUND, "Savings goal not found"),
+    GOAL_ACCESS_DENIED(ErrorType.AUTHORIZATION, "Access denied to this goal"),
+    GOAL_ALREADY_ACHIEVED(ErrorType.VALIDATION, "Goal is already achieved"),
+    GOAL_ALREADY_FAILED(ErrorType.VALIDATION, "Goal has already failed — deadline passed"),
+    GOAL_INVALID_CONTRIBUTION(ErrorType.VALIDATION, "Contribution amount must be greater than zero"),
+    GOAL_DEADLINE_PAST(ErrorType.VALIDATION, "Deadline must be a future date"),
+
+    // Budget
+    BUDGET_NOT_FOUND(ErrorType.NOT_FOUND, "Budget not found"),
+    BUDGET_ACCESS_DENIED(ErrorType.AUTHORIZATION, "Access denied to this budget"),
+    BUDGET_DUPLICATE(ErrorType.CONFLICT, "Budget already exists for this category and month"),
+    BUDGET_INVALID_MONTH(ErrorType.VALIDATION, "Invalid month format. Use yyyy-MM"),
+    BUDGET_INVALID_THRESHOLD(ErrorType.VALIDATION, "Alert threshold must be between 1 and 100"),
 
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),

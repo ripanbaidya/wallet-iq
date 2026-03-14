@@ -6,12 +6,11 @@ import com.walletiq.service.UserService;
 import com.walletiq.util.ResponseUtil;
 import com.walletiq.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -25,6 +24,14 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<ResponseWrapper<UserProfileResponse>> getProfile() {
         return ResponseUtil.ok("User profile fetched successfully",
-            userService.getUserProfile(SecurityUtils.getCurrentUserEmail()));
+            userService.fetchProfile());
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<ResponseWrapper<UserProfileResponse>> updateProfile(
+        @Valid @RequestBody String fullName
+    ) {
+        return ResponseUtil.ok("User profile updated successfully",
+            userService.updateProfile(fullName));
     }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Tag(name = "Admin", description = "Admin related operations")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final UserService userService;
@@ -30,14 +32,20 @@ public class AdminController {
         @Parameter(hidden = true)
         Pageable pageable
     ) {
-        var response = userService.getAllUsers(pageable);
-        return ResponseUtil.paginated("User's Fetched Successfully", response);
+        return ResponseUtil.paginated("User's Fetched Successfully",
+            userService.fetchAllUsers(pageable));
     }
 
     @GetMapping("/users/{id}")
     public ResponseEntity<ResponseWrapper<UserProfileResponse>> getUserById(
         @PathVariable UUID id
     ) {
-        return ResponseUtil.ok("User Fetched Successfully", userService.getUserById(id));
+        return ResponseUtil.ok("User Fetched Successfully", userService.fetchProfileById(id));
+    }
+
+    @GetMapping("/users/count")
+    public ResponseEntity<ResponseWrapper<Long>> getUserCount() {
+        return ResponseUtil.ok("User Count Fetched Successfully",
+            userService.countTotalUsers());
     }
 }

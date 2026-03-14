@@ -9,10 +9,16 @@ import java.util.UUID;
 
 public interface UserService {
 
-    UserProfileResponse getUserProfile(String email);
+    UserProfileResponse fetchProfile();
 
-    Page<UserProfileResponse> getAllUsers(Pageable pageable);
+    UserProfileResponse updateProfile(String fullName);
 
-    UserProfileResponse getUserById(UUID id);
+    // Admin Specific
+
+    UserProfileResponse fetchProfileById(UUID id);
+
+    Page<UserProfileResponse> fetchAllUsers(Pageable pageable);
+
+    long countTotalUsers();
 
 }

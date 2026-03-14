@@ -1,0 +1,127 @@
+package com.walletiq.service.impl;
+
+import com.walletiq.dto.savingsgoal.ContributeRequest;
+import com.walletiq.dto.savingsgoal.GoalProgressResponse;
+import com.walletiq.dto.savingsgoal.SavingsGoalRequest;
+import com.walletiq.entity.SavingsGoal;
+import com.walletiq.entity.User;
+import com.walletiq.enums.ErrorCode;
+import com.walletiq.enums.GoalStatus;
+import com.walletiq.exception.SavingsGoalException;
+import com.walletiq.mapper.SavingsGoalMapper;
+import com.walletiq.repository.SavingsGoalRepository;
+import com.walletiq.repository.UserRepository;
+import com.walletiq.service.SavingsGoalService;
+import com.walletiq.util.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class SavingsGoalServiceImpl implements SavingsGoalService {
+
+    private final UserRepository userRepository;
+    private final SavingsGoalRepository goalRepository;
+
+    @Override
+    @Transactional
+    public GoalProgressResponse create(SavingsGoalRequest request) {
+        User user = currentUser();
+
+        SavingsGoal goal = new SavingsGoal();
+        goal.setUser(user);
+        goal.setTitle(request.title());
+        goal.setTargetAmount(request.targetAmount());
+        goal.setSavedAmount(BigDecimal.ZERO);
+        goal.setDeadline(request.deadline());
+        goal.setStatus(GoalStatus.IN_PROGRESS);
+        goal.setNote(request.note());
+
+        goalRepository.saveAndFlush(goal);
+
+        return SavingsGoalMapper.toProgressResponse(goal);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GoalProgressResponse> getAll() {
+        return goalRepository.findByUser_Id(currentUserId())
+            .stream()
+            .map(SavingsGoalMapper::toProgressResponse)
+            .toList();
+    }
+
+    @Override
+    public GoalProgressResponse contribute(UUID goalId, ContributeRequest request) {
+        UUID userId = currentUserId();
+
+        SavingsGoal goal = findOwnedOrThrow(goalId, userId);
+
+        if (goal.getStatus() == GoalStatus.ACHIEVED) {
+            throw new SavingsGoalException(ErrorCode.GOAL_ALREADY_ACHIEVED);
+        }
+
+        if (goal.getStatus() == GoalStatus.FAILED) {
+            throw new SavingsGoalException(ErrorCode.GOAL_ALREADY_FAILED);
+        }
+
+        goal.setSavedAmount(goal.getSavedAmount().add(request.amount()));
+        if (goal.getSavedAmount().compareTo(goal.getTargetAmount()) >= 0) {
+            goal.setStatus(GoalStatus.ACHIEVED);
+            log.info("Goal {} achieved by user {}", goalId, userId);
+        }
+
+        goalRepository.save(goal);
+
+        return SavingsGoalMapper.toProgressResponse(goal);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GoalProgressResponse getProgress(UUID goalId) {
+        return SavingsGoalMapper
+            .toProgressResponse(findOwnedOrThrow(goalId, currentUserId()));
+    }
+
+    // Called by scheduler
+    @Transactional
+    public void markExpiredGoalsAsFailed() {
+        List<SavingsGoal> expired = goalRepository
+            .findByStatusAndDeadlineBefore(GoalStatus.IN_PROGRESS, LocalDate.now());
+
+        expired.forEach(goal -> {
+            goal.setStatus(GoalStatus.FAILED);
+            log.info("Goal {} marked as FAILED — deadline passed", goal.getId());
+        });
+
+        goalRepository.saveAll(expired);
+    }
+
+    // Helper methods
+
+    private User currentUser() {
+        return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
+    }
+
+    private UUID currentUserId() {
+        return SecurityUtils.getCurrentUserId();
+    }
+    
+    private SavingsGoal findOwnedOrThrow(UUID id, UUID userId) {
+        return goalRepository.findByIdAndUser_Id(id, userId)
+            .orElseThrow(() -> {
+                boolean exists = goalRepository.existsById(id);
+                return exists
+                    ? new SavingsGoalException(ErrorCode.GOAL_ACCESS_DENIED)
+                    : new SavingsGoalException(ErrorCode.GOAL_NOT_FOUND);
+            });
+    }
+}
