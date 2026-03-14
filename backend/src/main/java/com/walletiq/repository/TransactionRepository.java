@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -59,4 +60,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByUserAndDate(User user, LocalDate date);
 
     List<Transaction> findAllByUserOrderByDateDesc(User user);
+
+    @Query("""
+            SELECT COALESCE(SUM(t.amount), 0)
+            FROM Transaction t
+            WHERE t.user.id     = :userId
+              AND t.category.id = :categoryId
+              AND t.type        = com.walletiq.enums.TxnType.EXPENSE
+              AND t.date >= :startDate
+              AND t.date <= :endDate
+        """)
+    BigDecimal sumExpensesByCategoryAndMonth(
+        @Param("userId") UUID userId,
+        @Param("categoryId") UUID categoryId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }

@@ -11,6 +11,7 @@ import com.walletiq.exception.BudgetException;
 import com.walletiq.mapper.BudgetMapper;
 import com.walletiq.repository.BudgetRepository;
 import com.walletiq.repository.CategoryRepository;
+import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.BudgetService;
 import com.walletiq.service.CategoryService;
@@ -31,15 +32,18 @@ import java.util.UUID;
 @Slf4j
 public class BudgetServiceImpl implements BudgetService {
 
-    private final UserRepository userRepository;
     private final CategoryService categoryService;
+
+    private final UserRepository userRepository;
     private final BudgetRepository budgetRepository;
-    private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
 
     @Override
     @Transactional
     public BudgetResponse create(BudgetRequest request) {
         User user = currentUser();
+
+        Category category = categoryService.findById(request.categoryId());
 
         // Prevent duplicate budget for same category + month
         if (budgetRepository.existsByUser_IdAndCategoryIdAndMonth(
@@ -47,8 +51,6 @@ public class BudgetServiceImpl implements BudgetService {
         ) {
             throw new BudgetException(ErrorCode.BUDGET_DUPLICATE);
         }
-
-        Category category = categoryService.findById(request.categoryId());
 
         Budget budget = new Budget();
         budget.setUser(user);
@@ -78,10 +80,11 @@ public class BudgetServiceImpl implements BudgetService {
 
         Budget budget = findOwnedOrThrow(budgetId, userId);
 
-        BigDecimal spent = budgetRepository.sumExpensesByCategoryAndMonth(
+        BigDecimal spent = transactionRepository.sumExpensesByCategoryAndMonth(
             userId,
             budget.getCategory().getId(),
-            budget.getMonth().toString()
+            budget.getMonth().atDay(1),
+            budget.getMonth().atEndOfMonth()
         );
 
         BigDecimal limit = budget.getLimitAmount();

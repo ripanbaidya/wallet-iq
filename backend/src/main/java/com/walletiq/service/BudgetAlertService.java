@@ -2,6 +2,7 @@ package com.walletiq.service;
 
 import com.walletiq.entity.Budget;
 import com.walletiq.repository.BudgetRepository;
+import com.walletiq.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class BudgetAlertService {
 
     private final BudgetRepository budgetRepository;
+    private final TransactionRepository transactionRepository;
 
     /**
      * Called after any EXPENSE transaction is created or updated.
@@ -27,8 +29,6 @@ public class BudgetAlertService {
      * transaction from being saved.
      */
     public void checkAndAlert(UUID userId, UUID categoryId, YearMonth month) {
-        log.debug("Checking if transaction exists for user {} and category {}", userId, categoryId);
-
         if (categoryId == null) return;
 
         Optional<Budget> budgetOpt = budgetRepository
@@ -39,8 +39,8 @@ public class BudgetAlertService {
 
         Budget budget = budgetOpt.get();
 
-        BigDecimal spent = budgetRepository.sumExpensesByCategoryAndMonth(
-            userId, categoryId, month.toString()
+        BigDecimal spent = transactionRepository.sumExpensesByCategoryAndMonth(
+            userId, categoryId, month.atDay(1), month.atEndOfMonth()
         );
 
         BigDecimal limit = budget.getLimitAmount();

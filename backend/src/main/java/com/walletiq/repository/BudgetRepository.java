@@ -59,26 +59,4 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
      */
     Optional<Budget> findByUser_IdAndCategoryIdAndMonth(UUID userId, UUID categoryId, YearMonth month);
 
-    /**
-     * Calculates the total expenses for a user in a specific category and month.
-     * Returns 0 if no matching transactions are found.
-     *
-     * @param userId     the user's ID
-     * @param categoryId the category ID
-     * @param month      the target month formatted as {@code "YYYY-MM"} (e.g. {@code "2025-07"})
-     * @return total expense amount as {@link BigDecimal}
-     */
-    @Query("""
-            select coalesce(sum(t.amount), 0)
-            from Transaction t
-            where t.user.id = :userId
-              and t.category.id = :categoryId
-              and t.type = 'EXPENSE'
-              and function('TO_CHAR', t.date, 'YYYY-MM') = :month
-        """)
-    BigDecimal sumExpensesByCategoryAndMonth(
-        @Param("userId") UUID userId,
-        @Param("categoryId") UUID categoryId,
-        @Param("month") String month
-    );
 }

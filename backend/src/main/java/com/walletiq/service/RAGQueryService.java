@@ -38,6 +38,8 @@ public class RAGQueryService {
     // Spring AI chat client used to interact with the LLM.
     private final ChatClient chatClient;
 
+    private final FinancialContextService financialContextService;
+
     // Loaded system prompt used for all RAG queries
     private String systemPrompt;
 
@@ -79,18 +81,28 @@ public class RAGQueryService {
         // Retrieve relevant transactions for this user only
         List<Document> context = retrieve(question, userId);
 
-        if (context.isEmpty()) {
-            log.warn("No relevant documents found for userId={} question={}", userId, question);
-            return "I couldn't find any relevant transactions to answer that question.";
-        }
+        // Add context for Budget & goals
+        String budgetContext = financialContextService.buildBudgetContext(userId);
+        String goalContext = financialContextService.buildGoalContext(userId);
 
-        // Format context block sent to the LLM
-        String contextBlock = context.stream()
+        // Build combined context block
+        String transactionContext = context.isEmpty()
+            ? "I couldn't find any relevant transactions to answer that question."
+            : context.stream()
             .map(Document::getText)
             .collect(Collectors.joining("\n---\n"));
 
+        String fullContext = """
+            %s
+            
+            %s
+            
+            === RELEVANT TRANSACTIONS ===
+            %s
+            """.formatted(budgetContext, goalContext, transactionContext);
+
         // Call LLM
-        String rawResponse = callLlm(contextBlock, question, userId);
+        String rawResponse = callLlm(fullContext, question, userId);
 
         // Sanitize the response
         return sanitizeMarkdown(rawResponse);
@@ -147,25 +159,23 @@ public class RAGQueryService {
         }
 
         return raw
+            // Fix literal escape sequences from some LLMs
             .replace("\\n", "\n")
             .replace("\\t", "\t")
             .replace("\\r", "")
-            .replace("\\*", "*")
-            .replace("\\_", "_")
-            .replace("\\`", "`")
-            .replace("\\#", "#")
-            .replace("\\-", "-")
 
-            .replaceAll("(?s)^```(?:markdown)?\\s*", "")
+            // Strip code block wrappers if LLM wraps anyway
+            .replaceAll("(?s)^```(?:markdown|text)?\\s*", "")
             .replaceAll("(?s)```\\s*$", "")
 
+            // Strip preamble the LLM sneaks in despite instructions
             .replaceAll("(?i)^(based on (the |your )?(data|context|transactions)[,.]?\\s*)", "")
-            .replaceAll("(?i)^(here (is|are) (your|the|some)[^\\n]*\\n)", "")
             .replaceAll("(?i)^(certainly[!,.]?\\s*|sure[!,.]?\\s*|of course[!,.]?\\s*)", "")
+            .replaceAll("(?i)^(here (is|are) (your|the|a)[^\n]*\n)", "")
 
-            .replaceAll("\r\n", "\n")
-            .replaceAll("\r", "\n")
-            .replaceAll("[ \\t]+\n", "\n")
+            // Normalize line endings and excess whitespace
+            .replaceAll("\r\n|\r", "\n")
+            .replaceAll("[ \t]+\n", "\n")
             .replaceAll("\n{3,}", "\n\n")
 
             .trim();
