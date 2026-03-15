@@ -104,6 +104,9 @@ public enum ErrorCode {
     BUDGET_INVALID_MONTH(ErrorType.VALIDATION, "Invalid month format. Use yyyy-MM"),
     BUDGET_INVALID_THRESHOLD(ErrorType.VALIDATION, "Alert threshold must be between 1 and 100"),
 
+    // Notification
+    NOTIFICATION_NOT_FOUND(ErrorType.NOT_FOUND, "Notification not found"),
+
     // General
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more fields are invalid"),
     INTERNAL_ERROR(ErrorType.INTERNAL, "An unexpected error occurred"),

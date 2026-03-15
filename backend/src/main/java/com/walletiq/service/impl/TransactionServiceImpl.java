@@ -22,6 +22,7 @@ import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.BudgetAlertService;
 import com.walletiq.service.EmbeddingService;
+import com.walletiq.service.NotificationService;
 import com.walletiq.service.TransactionService;
 import com.walletiq.util.PageableValidator;
 import com.walletiq.util.SecurityUtils;
@@ -52,6 +53,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final BudgetAlertService budgetAlertService;
+    private final NotificationService notificationService;
     private final TransactionRepository transactionRepository;
     private final PaymentModeRepository paymentModeRepository;
 

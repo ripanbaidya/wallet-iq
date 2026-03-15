@@ -250,7 +250,27 @@ CREATE INDEX vector_store_embedding_idx
 CREATE INDEX vector_store_metadata_idx
     ON vector_store USING GIN (metadata);
 
+-- Notification
 
+CREATE TABLE notifications
+(
+    id         UUID                        NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    user_id    UUID                        NOT NULL,
+    type       VARCHAR(50)                 NOT NULL,
+    message    TEXT                        NOT NULL,
+    CONSTRAINT pk_notifications PRIMARY KEY (id),
+    CONSTRAINT chk_notifications_type CHECK (type IN (
+                                                      'LOGIN_ALERT',
+                                                      'BUDGET_ALERT',
+                                                      'RECURRING_TRANSACTION',
+                                                      'SAVINGS_GOAL',
+                                                      'SYSTEM'
+        )),
+    CONSTRAINT FK_NOTIFICATIONS_ON_USER FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications (user_id);
 
 -- =============================================================================
 -- END OF MIGRATION

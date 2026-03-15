@@ -4,6 +4,7 @@ import com.walletiq.config.properties.JwtSecurityProperties;
 import com.walletiq.entity.RefreshToken;
 import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
+import com.walletiq.enums.NotificationType;
 import com.walletiq.exception.AuthException;
 import com.walletiq.dto.auth.LoginRequest;
 import com.walletiq.dto.auth.SignupRequest;
@@ -13,6 +14,7 @@ import com.walletiq.repository.RefreshTokenRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.security.JwtService;
 import com.walletiq.service.AuthService;
+import com.walletiq.service.NotificationService;
 import com.walletiq.util.TimeConversionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +29,12 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final JwtSecurityProperties jwtProperties;
+
+    private final JwtService jwtService;
+
+    private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
@@ -64,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AuthException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        log.info("User logged in successfully: {}", user.getId());
+        log.debug("User logged in successfully and notification sent for user ID: {}", user);
 
         var tokens = issueTokens(user);
         return AuthResponse.of(user, tokens);
