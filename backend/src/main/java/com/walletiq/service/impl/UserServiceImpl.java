@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
      * Fetch current user profile
      */
     @Override
+    @Transactional(readOnly = true)
     public UserProfileResponse fetchProfile() {
         User user = currentUser();
 
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService {
      * Fetch user profile by ID
      */
     @Override
+    @Transactional(readOnly = true)
     public UserProfileResponse fetchProfileById(UUID id) {
         return userRepository.findById(id)
             .map(UserMapper::toResponse)
@@ -52,6 +55,7 @@ public class UserServiceImpl implements UserService {
      * Update user profile
      */
     @Override
+    @Transactional
     public UserProfileResponse updateProfile(String fullName) {
         User user = currentUser();
 
@@ -69,6 +73,7 @@ public class UserServiceImpl implements UserService {
      * Fetch all users with pagination
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<UserProfileResponse> fetchAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(UserMapper::toResponse);
     }
@@ -77,6 +82,7 @@ public class UserServiceImpl implements UserService {
      * Count the number of active users (Role.USER)
      */
     @Override
+    @Transactional(readOnly = true)
     public long countTotalUsers() {
         return userRepository.countByRoleAndActive(Role.USER, true);
     }

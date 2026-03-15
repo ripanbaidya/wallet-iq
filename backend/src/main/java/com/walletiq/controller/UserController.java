@@ -1,5 +1,6 @@
 package com.walletiq.controller;
 
+import com.walletiq.dto.user.UpdateProfileRequest;
 import com.walletiq.dto.user.UserProfileResponse;
 import com.walletiq.dto.success.ResponseWrapper;
 import com.walletiq.service.UserService;
@@ -29,9 +30,9 @@ public class UserController {
 
     @PatchMapping("/me")
     public ResponseEntity<ResponseWrapper<UserProfileResponse>> updateProfile(
-        @Valid @RequestBody String fullName
-    ) {
+        @Valid @RequestBody UpdateProfileRequest request
+        ) {
         return ResponseUtil.ok("User profile updated successfully",
-            userService.updateProfile(fullName));
+            userService.updateProfile(request.fullName()));
     }
 }
