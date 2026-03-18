@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
+import { useMutation, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import { AppError } from '../errors/AppError';
 
 export function useAppMutation<TData, TVariables>(

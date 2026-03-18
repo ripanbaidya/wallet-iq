@@ -1,4 +1,4 @@
-import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { AppError } from '../errors/AppError';
 
 export function useAppQuery<TData>(

@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 const navItems = [
     { label: "Dashboard",     path: "/dashboard" },
@@ -13,6 +14,13 @@ const navItems = [
 
 const Sidebar: React.FC = () => {
     const { user, logout } = useAuth();
+    const queryClient = useQueryClient();
+
+    const handleLogout = () => {
+        // Clear all cached data
+        queryClient.clear();
+        logout();
+    };
 
     return (
         <aside className="w-56 min-h-screen bg-white border-r border-gray-200 flex flex-col">

@@ -1,4 +1,4 @@
-import type { ErrorResponse } from "../types/common.types";
+import type { ErrorResponse } from "../types/api.types";
 
 export function mapApiErrors(errorResponse: ErrorResponse) {
   const error = errorResponse?.error;
