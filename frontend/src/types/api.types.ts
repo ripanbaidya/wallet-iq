@@ -1,5 +1,6 @@
-// Success
-
+/**
+ * Response for all Success API
+ */
 export interface ResponseWrapper<T> {
     success: true;
     status: number;
@@ -8,8 +9,9 @@ export interface ResponseWrapper<T> {
     timestamp: string;
 }
 
-// Error
-
+/**
+ * Response for all Error API
+ */
 export interface ErrorResponse {
     success: false;
     error: ErrorDetail;
@@ -22,15 +24,13 @@ export interface ErrorDetail {
     status: number;
     timestamp: string;
     path: string;
-    errors?: FieldError[]; // Only for Validation error
+    errors?: FieldError[];
 }
 
 export interface FieldError {
     field: string;
     message: string;
 }
-
-// Error types
 
 export type ErrorType =
     | 'VALIDATION'

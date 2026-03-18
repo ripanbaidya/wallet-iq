@@ -1,6 +1,6 @@
 import axios from 'axios';
-import {AppError} from './AppError';
-import type {ErrorResponse} from '../types/api.types';
+import { AppError } from './AppError';
+import type { ErrorResponse } from '../types/api.types';
 
 /**
  * Converts any thrown value into an AppError.

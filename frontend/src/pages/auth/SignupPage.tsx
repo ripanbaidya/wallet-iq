@@ -23,7 +23,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-  // ✅ useAppMutation — consistent with LoginPage, errors normalized via AppError
   const { mutate: signup, isPending } = useAppMutation({
     mutationFn: () => authService.signup(form),
 
@@ -140,9 +139,7 @@ export default function SignupPage() {
 
             {/* Email */}
             <motion.div variants={item}>
-              <label className="block text-sm text-gray-600 mb-1">
-                Email
-              </label>
+              <label className="block text-sm text-gray-600 mb-1">Email</label>
               <input
                 type="email"
                 name="email"
@@ -204,7 +201,7 @@ export default function SignupPage() {
             <motion.button
               variants={item}
               type="submit"
-              disabled={isPending}                             // ✅ no manual loading state
+              disabled={isPending} // ✅ no manual loading state
               className="w-full bg-black text-white py-3 rounded-full hover:bg-gray-800 transition disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isPending ? (

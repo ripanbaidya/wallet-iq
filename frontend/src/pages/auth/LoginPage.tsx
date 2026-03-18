@@ -37,8 +37,11 @@ export default function LoginPage() {
     mutationFn: () => authService.login({ email, password }),
 
     onSuccess: (res) => {
-      // ✅ res.data.user + res.data.tokens — matches AuthResponse shape
-      setAuth(res.data.user, res.data.tokens.accessToken, res.data.tokens.refreshToken);
+      setAuth(
+        res.data.user,
+        res.data.token.accessToken,
+        res.data.token.refreshToken,
+      );
       navigate("/dashboard");
     },
 
@@ -67,10 +70,13 @@ export default function LoginPage() {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (deleting ? -1 : 1));
-      setText(currentMessage.substring(0, subIndex));
-    }, deleting ? 30 : 50);
+    const timeout = setTimeout(
+      () => {
+        setSubIndex((prev) => prev + (deleting ? -1 : 1));
+        setText(currentMessage.substring(0, subIndex));
+      },
+      deleting ? 30 : 50,
+    );
 
     return () => clearTimeout(timeout);
   }, [subIndex, index, deleting]);
@@ -108,7 +114,11 @@ export default function LoginPage() {
           }}
         />
         <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -20, 20, 0], scale: [1, 1.1, 0.95, 1] }}
+          animate={{
+            x: [0, 30, -20, 0],
+            y: [0, -20, 20, 0],
+            scale: [1, 1.1, 0.95, 1],
+          }}
           transition={{ duration: 10, repeat: Infinity }}
           className="absolute left-20 top-1/3 w-40 h-40 bg-red-500/30 blur-3xl"
         />
@@ -211,9 +221,15 @@ export default function LoginPage() {
             </motion.button>
           </motion.form>
 
-          <motion.p variants={item} className="text-sm text-center mt-6 text-gray-500">
+          <motion.p
+            variants={item}
+            className="text-sm text-center mt-6 text-gray-500"
+          >
             Don't have an account?{" "}
-            <Link to="/signup" className="font-medium text-black hover:text-gray-600 transition">
+            <Link
+              to="/signup"
+              className="font-medium text-black hover:text-gray-600 transition"
+            >
               Register
             </Link>
           </motion.p>

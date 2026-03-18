@@ -6,8 +6,8 @@ export function useAppQuery<TData>(
 ): UseQueryResult<TData, AppError> {
     return useQuery<TData, AppError>({
         retry: (failureCount, error) => {
-            // Don't retry on auth/client errors — only server errors
-            if (error instanceof AppError && !error.isServerError) return false;
+            if (error instanceof AppError && !error.isServerError)
+                return false;
             return failureCount < 2;
         },
         ...options,
