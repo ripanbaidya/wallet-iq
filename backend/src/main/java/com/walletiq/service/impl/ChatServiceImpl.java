@@ -6,7 +6,7 @@ import com.walletiq.entity.ChatSession;
 import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.MessageRole;
-import com.walletiq.exception.handler.ChatSessionException;
+import com.walletiq.exception.ChatSessionException;
 import com.walletiq.mapper.ChatMapper;
 import com.walletiq.repository.ChatMessageRepository;
 import com.walletiq.repository.ChatSessionRepository;
@@ -23,10 +23,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link ChatService}.
+ * <p>Manages chat sessions and messages for the current user, including session
+ * lifecycle, message persistence, and query handling.
+ * <p>Integrates with {@link RAGQueryService} to generate responses based on user
+ * queries.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class ChatServiceImpl implements ChatService {
 
     private final RAGQueryService ragQueryService;
@@ -53,9 +59,7 @@ public class ChatServiceImpl implements ChatService {
 
         ChatSession session = new ChatSession();
         session.setUser(user);
-        session.setTitle(Optional.ofNullable(req.title())
-            .filter(s -> !s.isBlank())
-            .orElse("New Chat"));
+        session.setTitle(normalizeTitle(req.title()));
 
         ChatSession createdSession = chatSessionRepository.saveAndFlush(session);
 
@@ -66,8 +70,7 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public void deleteSession(UUID sessionId) {
         ChatSession session = getOwnedSession(sessionId);
-
-        chatSessionRepository.delete(session);   // Cascades to messages
+        chatSessionRepository.delete(session); // Cascades to messages
     }
 
     @Override
@@ -82,6 +85,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
     public ChatQueryResponse query(UUID sessionId, ChatQueryRequest req) {
         ChatSession session = getOwnedSession(sessionId);
         User user = currentUser();
@@ -89,20 +93,20 @@ public class ChatServiceImpl implements ChatService {
         // Persist user message
         saveMessage(session, MessageRole.USER, req.question());
 
-        // RAG
+        // RAG query
         String answer = ragQueryService.query(req.question(), user.getId());
 
         // Persist assistant reply
         saveMessage(session, MessageRole.ASSISTANT, answer);
 
-        // Bump session updatedAt
+        // Update session metadata
         session.setTitle(deriveTitle(session, req.question()));
         chatSessionRepository.save(session);
 
         return new ChatQueryResponse(answer);
     }
 
-    // Helper
+    // ===================== Helpers =====================
 
     private User currentUser() {
         return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
@@ -111,7 +115,8 @@ public class ChatServiceImpl implements ChatService {
     private ChatSession getOwnedSession(UUID sessionId) {
         User user = currentUser();
         return chatSessionRepository.findByIdAndUser(sessionId, user)
-            .orElseThrow(() -> new ChatSessionException(ErrorCode.CHAT_SESSION_NOT_FOUND));
+            .orElseThrow(() ->
+                new ChatSessionException(ErrorCode.CHAT_SESSION_NOT_FOUND));
     }
 
     private void saveMessage(ChatSession session, MessageRole role, String content) {
@@ -123,10 +128,27 @@ public class ChatServiceImpl implements ChatService {
     }
 
     /**
-     * Use the first question as the session title (only set once)
+     * Normalizes session title input.
+     * Handles Swagger default "string", blank values, and nulls.
+     */
+    private String normalizeTitle(String title) {
+        if (title == null) return "New Chat";
+
+        String trimmed = title.trim();
+        if (trimmed.isEmpty() || "string".equalsIgnoreCase(trimmed)) {
+            return "New Chat";
+        }
+        return trimmed;
+    }
+
+    /**
+     * Uses the first user question as session title (only if still default).
      */
     private String deriveTitle(ChatSession session, String question) {
         if (!"New Chat".equals(session.getTitle())) return session.getTitle();
-        return question.length() > 60 ? question.substring(0, 57) + "..." : question;
+
+        return question.length() > 60
+            ? question.substring(0, 57) + "..."
+            : question;
     }
 }

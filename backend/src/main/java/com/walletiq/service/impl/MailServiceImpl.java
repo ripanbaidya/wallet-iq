@@ -2,11 +2,13 @@ package com.walletiq.service.impl;
 
 import com.walletiq.dto.mail.DailySummaryMailData;
 import com.walletiq.service.MailService;
+import com.walletiq.util.MaskingUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -41,14 +43,20 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void sendDailySummary(DailySummaryMailData data) {
+        String maskedEmail = MaskingUtil.maskEmail(data.recipientEmail());
+
         try {
             String html = renderTemplate("daily-summary", buildContext(data));
-            send(data.recipientEmail(),
+            send(
+                data.recipientEmail(),
                 "💰 Your Daily Finance Summary — " + data.date(),
-                html);
-            log.debug("Daily Summary Mail Sent to: {}", data.recipientEmail());
+                html,
+                data.csvAttachment(),
+                data.csvFileName()
+            );
+            log.debug("Daily Summary Mail Sent to: {}", maskedEmail);
         } catch (Exception e) {
-            log.error("Failed to send daily summary email to {}", data.recipientEmail(), e);
+            log.error("Failed to send daily summary email to {}", maskedEmail, e);
         }
     }
 
@@ -69,14 +77,26 @@ public class MailServiceImpl implements MailService {
         return templateEngine.process(templateName, context);
     }
 
-    private void send(String to, String subject, String html) throws MessagingException, UnsupportedEncodingException {
+    private void send(String to, String subject, String html,
+                      byte[] attachmentBytes, String attachmentFileName)
+        throws MessagingException, UnsupportedEncodingException {
+
         MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message,
-            true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
         helper.setFrom(fromAddress, fromName);
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(html, true);   // true = isHtml
+
+        if (attachmentBytes != null && attachmentBytes.length > 0) {
+            helper.addAttachment(
+                attachmentFileName,
+                new ByteArrayResource(attachmentBytes),
+                "text/csv"
+            );
+        }
+
         javaMailSender.send(message);
     }
 }

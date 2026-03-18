@@ -31,25 +31,25 @@ public record BudgetStatusResponse(
     YearMonth month,
 
     @Schema(
-        description = "Maximum allowed spending for the category",
+        description = "Maximum allowed spending for the category in the specified month",
         example = "5000.00"
     )
     BigDecimal limitAmount,
 
     @Schema(
-        description = "Total amount spent so far in the given month",
+        description = "Total amount spent so far within the specified month",
         example = "3200.50"
     )
     BigDecimal spentAmount,
 
     @Schema(
-        description = "Remaining amount before reaching the budget limit",
+        description = "Remaining amount available before reaching the budget limit",
         example = "1799.50"
     )
     BigDecimal remainingAmount,
 
     @Schema(
-        description = "Percentage of the budget already used (can exceed 100 if limit is breached)",
+        description = "Percentage of the budget that has been used (can exceed 100 if limit is breached)",
         example = "64.01"
     )
     double usagePercentage,
@@ -61,7 +61,7 @@ public record BudgetStatusResponse(
     boolean thresholdBreached,
 
     @Schema(
-        description = "Indicates whether the spending limit has been exceeded",
+        description = "Indicates whether the budget spending limit has been exceeded",
         example = "false"
     )
     boolean limitBreached

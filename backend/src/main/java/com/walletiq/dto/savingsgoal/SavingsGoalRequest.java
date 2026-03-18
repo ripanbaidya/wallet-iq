@@ -2,7 +2,6 @@ package com.walletiq.dto.savingsgoal;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,33 +15,38 @@ public record SavingsGoalRequest(
         maxLength = 100,
         requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotBlank(message = "Title is required")
-    @Size(max = 100)
+    @NotBlank(message = "Savings goal title must not be blank")
+    @Size(
+        max = 100,
+        message = "Savings goal title must not exceed 100 characters"
+    )
     String title,
 
     @Schema(
-        description = "Target amount to save",
+        description = "Target amount to save for this goal",
         example = "150000.00",
         requiredMode = Schema.RequiredMode.REQUIRED
     )
     @NotNull(message = "Target amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
-    @Digits(integer = 10, fraction = 2, message = "Amount must have at most 2 decimal places")
+    @DecimalMin(value = "0.01", inclusive = true, message = "Target amount must be greater than 0")
+    @Digits(integer = 10, fraction = 2, message = "Target amount must have at most 2 decimal places")
     BigDecimal targetAmount,
 
     @Schema(
-        description = "Deadline by which the target amount should be saved",
+        description = "Deadline by which the savings goal should be achieved",
         example = "2026-12-31",
         requiredMode = Schema.RequiredMode.REQUIRED
     )
     @NotNull(message = "Deadline is required")
-    @Future(message = "Deadline must be in the future")
+    @Future(message = "Deadline must be a future date")
     LocalDate deadline,
 
     @Schema(
-        description = "Optional note for additional context about the savings goal",
-        example = "Saving monthly for a new laptop"
+        description = "Optional note providing additional context about the savings goal",
+        example = "Saving monthly for a new laptop",
+        maxLength = 500
     )
+    @Size(max = 500, message = "Note must not exceed 500 characters")
     String note
 
 ) {

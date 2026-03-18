@@ -2,6 +2,12 @@ package com.walletiq.exception;
 
 import com.walletiq.enums.ErrorCode;
 
+/**
+ * Exception thrown for cryptographic key loading failures.
+ * <p>This exception occurs when the application fails to load or initialize
+ * security keys required for cryptographic operations such as JWT signing
+ * or verification.
+ */
 public class KeyLoadException extends BaseException {
 
     public KeyLoadException(ErrorCode errorCode) {

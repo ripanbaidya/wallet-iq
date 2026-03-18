@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+@Schema(description = "Request payload for creating a new category")
 public record CreateCategoryRequest(
 
     @Schema(
@@ -20,12 +21,12 @@ public record CreateCategoryRequest(
     String name,
 
     @Schema(
-        description = "Type of category",
+        description = "Type of the category",
         example = "EXPENSE",
         allowableValues = {"INCOME", "EXPENSE"},
         requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotNull(message = "Category type must not be null")
+    @NotNull(message = "Category type is required")
     CategoryType categoryType
 
 ) {

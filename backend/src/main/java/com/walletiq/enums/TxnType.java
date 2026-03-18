@@ -1,10 +1,18 @@
 package com.walletiq.enums;
 
 /**
- * Represents the type of financial transaction.
- * Used to distinguish between money earned and money spent.
+ * Represents the type of a financial transaction.
+ * Used to distinguish between money received and money spent.
  */
 public enum TxnType {
-    INCOME,   // Money received
-    EXPENSE   // Money spent
+
+    /**
+     * Money received (e.g., salary, bonus)
+     */
+    INCOME,
+
+    /**
+     * Money spent (e.g., food, rent, utilities)
+     */
+    EXPENSE
 }

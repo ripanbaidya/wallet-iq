@@ -12,35 +12,50 @@ import java.util.UUID;
 public interface PaymentModeService {
 
     /**
-     * Returns system default payment modes + the current user's own payment modes.
+     * Retrieves all payment modes visible to the current user.
+     * <p>Includes both system default and user-defined payment modes.
+     *
+     * @return list of payment mode responses
      */
-    List<PaymentModeResponse> getAllPaymentModes();
+    List<PaymentModeResponse> getAll();
 
     /**
-     * Creates a new payment mode owned by the current user.
+     * Creates a new payment mode for the current user.
+     * <p>Ensures no duplicate payment mode exists with the same name
+     * (case-insensitive) for the user.
      *
-     * @throws PaymentModeException if a payment mode with the same name already exists for this user.
+     * @param request payment mode creation request
+     * @return created payment mode response
+     * @throws PaymentModeException if a payment mode with the same name already exists
      */
-    PaymentModeResponse createPaymentMode(CreatePaymentModeRequest request);
+    PaymentModeResponse create(CreatePaymentModeRequest request);
 
     /**
-     * Updates a payment mode owned by the current user.
+     * Updates an existing payment mode owned by the current user.
+     * <p>Validates uniqueness only when the name is changed.
      *
-     * @throws PaymentModeException if not found, not owned by user, or name already taken.
+     * @param id      payment mode identifier
+     * @param request update request
+     * @return updated payment mode response
+     * @throws PaymentModeException if payment mode is not found, not owned by user,
+     *                              or a duplicate name exists
      */
-    PaymentModeResponse updatePaymentMode(UUID id, UpdatePaymentModeRequest request);
+    PaymentModeResponse update(UUID id, UpdatePaymentModeRequest request);
 
     /**
      * Deletes a payment mode owned by the current user.
      *
-     * @throws PaymentModeException if not found or not owned by user.
+     * @param id payment mode identifier
+     * @throws PaymentModeException if payment mode is not found or not owned by user
      */
-    void deletePaymentMode(UUID id);
+    void delete(UUID id);
 
     /**
-     * find payment mode by id
+     * Retrieves a payment mode by its ID.
      *
-     * @throws PaymentModeException if not found
+     * @param id payment mode identifier
+     * @return payment mode entity
+     * @throws PaymentModeException if payment mode is not found
      */
     PaymentMode findById(UUID id);
 }

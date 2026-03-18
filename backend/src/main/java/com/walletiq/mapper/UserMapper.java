@@ -6,7 +6,12 @@ import com.walletiq.dto.user.UserProfileResponse;
 public final class UserMapper {
 
     public static UserProfileResponse toResponse(User user) {
-        return new UserProfileResponse(user.getId(), user.getFullName(),
-            user.getEmail(), user.isActive(), user.isEmailVerified());
+        return UserProfileResponse.builder()
+            .id(user.getId())
+            .fullName(user.getFullName())
+            .email(user.getEmail())
+            .active(user.isActive())
+            .isEmailVerified(user.isEmailVerified())
+            .build();
     }
 }

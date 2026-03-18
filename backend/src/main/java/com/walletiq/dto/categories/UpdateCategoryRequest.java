@@ -6,10 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+@Schema(description = "Request payload for updating an existing category")
 public record UpdateCategoryRequest(
 
     @Schema(
-        description = "Name of the category",
+        description = "Updated name of the category",
         example = "Food",
         minLength = 1,
         maxLength = 100,
@@ -20,11 +21,12 @@ public record UpdateCategoryRequest(
     String name,
 
     @Schema(
-        description = "Type of category",
+        description = "Type of the category",
         example = "EXPENSE",
         allowableValues = {"INCOME", "EXPENSE"},
         requiredMode = Schema.RequiredMode.REQUIRED
     )
+    @NotNull(message = "Category type is required")
     CategoryType categoryType
 
 ) {

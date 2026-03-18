@@ -15,9 +15,9 @@ public record ContributeRequest(
         example = "500.00",
         requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotNull(message = "Target amount is required")
+    @NotNull(message = "Contribution amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
-    @Digits(integer = 10, fraction = 2, message = "Amount must have at most 2 decimal places")
+    @Digits(integer = 10, fraction = 2, message = "Amount must have up to 10 integer digits and 2 decimal places")
     BigDecimal amount
 
 ) {

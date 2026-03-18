@@ -17,6 +17,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,20 +26,41 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+/**
+ * Spring Security configuration for the application.
+ * Configures JWT authentication, stateless session policy, endpoint authorization
+ * rules, and CORS settings.
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    /**
+     * Public endpoints related to authentication and application access.
+     */
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/test/**",
-        "/auth/**",
-        "/actuator/health/**", "/actuator/info",
-        "/api-docs/**", "/v3/api-docs/**",
-        "/swagger-ui/**", "/swagger-ui.html",
-        "/ws/**", //
-        "/error"
+        "/auth/**", "/app/**", "/test/**", "/ws/**", "/error"
     };
+
+    /**
+     * Public actuator endpoints exposed for monitoring.
+     */
+    private static final String[] ACTUATOR_ENDPOINTS = {
+        "/actuator/health/**", "/actuator/info"
+    };
+
+    /**
+     * Public endpoints required for API documentation (Swagger / OpenAPI).
+     */
+    private static final String[] SWAGGER_ENDPOINTS = {
+        "/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+    };
+
+
+    private static final String ADMIN_ENDPOINT = "/admin/**";
+    private static final String API_PATH = "/api/**";
+    private static final String ROLE_ADMIN = "ADMIN";
 
     private final CorsProperties corsProperties;
 
@@ -47,28 +69,37 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+    /**
+     * Main Spring Security filter chain.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .exceptionHandling(ex -> ex
+            .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler))
-            .authorizeHttpRequests(req -> req
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
+                .requestMatchers(ACTUATOR_ENDPOINTS).permitAll()
+                .requestMatchers(ADMIN_ENDPOINT).hasRole(ROLE_ADMIN)
                 .anyRequest().authenticated())
+
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        ;
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Configures CORS policy based on application properties.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(corsProperties.allowedOrigins());
@@ -78,26 +109,37 @@ public class SecurityConfig {
         configuration.setAllowCredentials(corsProperties.allowCredentials());
         configuration.setMaxAge(corsProperties.maxAge());
 
-        var source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration(API_PATH, configuration);
 
         return source;
     }
 
+    /**
+     * Password encoder used for hashing user passwords.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Authentication provider using UserDetailsService and password encoder.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
+
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
+
         return authProvider;
     }
 
+    /**
+     * Exposes AuthenticationManager for authentication operations.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

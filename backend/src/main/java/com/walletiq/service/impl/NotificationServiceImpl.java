@@ -18,11 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link NotificationService}.
+ * <p>Handles notification lifecycle including creation, retrieval, deletion,
+ * and real-time delivery via WebSocket.
+ * <p>Ensures that notifications are scoped to the currently authenticated user
+ * and prevents data leakage across users.
+ */
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
 
     private final WebSocketNotificationPublisher publisher;
@@ -30,13 +36,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void send(NotificationType type, String message) {
+        UUID userId = currentUserId();
+
         Notification notification = new Notification();
-        notification.setUserId(currentUserId());
+
+        notification.setUserId(userId);
         notification.setType(type);
         notification.setMessage(message);
 
         var saved = notificationRepository.save(notification);
-        publisher.publish(currentUserId(), toResponse(saved));
+        publisher.publish(userId, toResponse(saved));
     }
 
     @Override
@@ -72,10 +81,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     // Helper methods
-
-    private User currentUser() {
-        return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
-    }
 
     private UUID currentUserId() {
         return SecurityUtils.getCurrentUserId();

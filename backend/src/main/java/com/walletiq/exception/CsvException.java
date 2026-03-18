@@ -2,6 +2,11 @@ package com.walletiq.exception;
 
 import com.walletiq.enums.ErrorCode;
 
+/**
+ * Exception thrown for CSV processing related failures.
+ * <p>This exception represents errors that occur during CSV operations,
+ * such as importing, exporting, parsing, or validating CSV data.
+ */
 public class CsvException extends BaseException {
 
     public CsvException(ErrorCode errorCode) {

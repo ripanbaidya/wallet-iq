@@ -1,5 +1,6 @@
 package com.walletiq.controller;
 
+import com.walletiq.dto.error.ErrorResponse;
 import com.walletiq.dto.success.ResponseWrapper;
 import com.walletiq.dto.transaction.CreateTransactionRequest;
 import com.walletiq.dto.transaction.TransactionFilterRequest;
@@ -10,6 +11,8 @@ import com.walletiq.service.TransactionService;
 import com.walletiq.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,28 +33,56 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/transactions")
 @RequiredArgsConstructor
-@Tag(name = "Transactions", description = "APIs for managing financial transactions")
+@Tag(
+    name = "Transactions",
+    description = "APIs for managing financial transactions"
+)
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized - Invalid or missing token",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    ),
+    @ApiResponse(
+        responseCode = "403",
+        description = "Forbidden - Admin access required",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    )
+})
 public class TransactionController {
 
     private final TransactionService transactionService;
 
     @Operation(
         summary = "Get all transactions",
-        description = "Fetch transactions with optional filters such as transaction type, category, and date range."
+        description = "Fetches transactions with optional filters such as type, category, and date range. Supports pagination and sorting."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Transactions fetched successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "200",
+            description = "Transactions fetched successfully",
+            content = @Content(schema = @Schema(implementation = TransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid filter parameters",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
     })
     @GetMapping
     public ResponseEntity<ResponseWrapper<Map<String, Object>>> getAllTransactions(
+        @Parameter(description = "Transaction type filter (INCOME or EXPENSE)")
         @RequestParam(required = false) TxnType type,
+
+        @Parameter(description = "Category ID to filter transactions")
         @RequestParam(required = false) String categoryId,
 
+        @Parameter(description = "Start date (inclusive) in ISO format yyyy-MM-dd")
         @RequestParam(required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate dateFrom,
 
+        @Parameter(description = "End date (inclusive) in ISO format yyyy-MM-dd")
         @RequestParam(required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate dateTo,
@@ -65,7 +96,12 @@ public class TransactionController {
         }
 
         TransactionFilterRequest filter =
-            new TransactionFilterRequest(type, categoryId, dateFrom, dateTo);
+            new TransactionFilterRequest(
+                type,
+                categoryId != null ? UUID.fromString(categoryId) : null,
+                dateFrom,
+                dateTo
+            );
 
         Page<TransactionResponse> page =
             transactionService.getAllTransactions(filter, pageable);
@@ -73,14 +109,22 @@ public class TransactionController {
         return ResponseUtil.paginated("Transactions fetched successfully", page);
     }
 
+
     @Operation(
         summary = "Get transaction by ID",
-        description = "Fetch a specific transaction using its unique identifier."
+        description = "Fetches a specific transaction using its unique identifier."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Transaction fetched successfully"),
-        @ApiResponse(responseCode = "404", description = "Transaction not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "200",
+            description = "Transaction fetched successfully",
+            content = @Content(schema = @Schema(implementation = TransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseWrapper<TransactionResponse>> getTransactionById(
@@ -95,12 +139,19 @@ public class TransactionController {
 
     @Operation(
         summary = "Create a transaction",
-        description = "Creates a new transaction such as income or expense."
+        description = "Creates a new transaction (INCOME or EXPENSE). Validates category and payment mode."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Transaction created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request payload"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "201",
+            description = "Transaction created successfully",
+            content = @Content(schema = @Schema(implementation = TransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
     })
     @PostMapping
     public ResponseEntity<ResponseWrapper<TransactionResponse>> createTransaction(
@@ -114,18 +165,30 @@ public class TransactionController {
 
     @Operation(
         summary = "Update a transaction",
-        description = "Updates an existing transaction using its ID."
+        description = "Updates an existing transaction. Supports partial updates and validates ownership."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Transaction updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request payload"),
-        @ApiResponse(responseCode = "404", description = "Transaction not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "200",
+            description = "Transaction updated successfully",
+            content = @Content(schema = @Schema(implementation = TransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
     })
     @PutMapping("/{id}")
     public ResponseEntity<ResponseWrapper<TransactionResponse>> updateTransaction(
         @Parameter(description = "Unique identifier of the transaction", required = true)
         @PathVariable UUID id,
+
         @Valid @RequestBody UpdateTransactionRequest request
     ) {
         return ResponseUtil.ok(
@@ -139,9 +202,15 @@ public class TransactionController {
         description = "Deletes a transaction using its unique identifier."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Transaction deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Transaction not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "204",
+            description = "Transaction deleted successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseWrapper<Void>> deleteTransaction(
@@ -149,6 +218,6 @@ public class TransactionController {
         @PathVariable UUID id
     ) {
         transactionService.deleteTransaction(id);
-        return ResponseUtil.ok("Transaction deleted successfully");
+        return ResponseUtil.ok("Transaction Deleted Successfully");
     }
 }

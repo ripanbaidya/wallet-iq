@@ -13,7 +13,7 @@ public final class CategoryMapper {
             category.getId().toString(),
             category.getName(),
             category.getCategoryType(),
-            category.getUser() == null // null user = system default
+            category.getUser() == null
         );
     }
 }

@@ -20,13 +20,14 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
      * Finds the single active (non-revoked, non-expired) token for a user
      */
     @Query("""
-        select r FROM RefreshToken r
+        select r from RefreshToken r
         where r.user.id = :userId
           and r.revoked = false
           and r.expiresAt > :now
         """)
-    Optional<RefreshToken> findActiveByUserId(@Param("userId") UUID userId,
-                                              @Param("now") Instant now);
+    Optional<RefreshToken> findActiveByUserId(
+        @Param("userId") UUID userId,
+        @Param("now") Instant now);
 
     @Modifying
     @Query("delete from RefreshToken rt where rt.revoked = true or rt.expiresAt < :now")

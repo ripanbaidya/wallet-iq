@@ -1,6 +1,6 @@
 package com.walletiq.service.impl;
 
-import com.walletiq.dto.mail.DailySummaryMailData;
+import com.walletiq.constant.CacheNames;
 import com.walletiq.dto.transaction.CreateTransactionRequest;
 import com.walletiq.dto.transaction.TransactionFilterRequest;
 import com.walletiq.dto.transaction.TransactionResponse;
@@ -22,24 +22,28 @@ import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.BudgetAlertService;
 import com.walletiq.service.EmbeddingService;
-import com.walletiq.service.NotificationService;
 import com.walletiq.service.TransactionService;
 import com.walletiq.util.PageableValidator;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link TransactionService}.
+ * <p>Handles transaction lifecycle including creation, update, deletion,
+ * filtering, and summary generation.
+ * <p>Also integrates with embedding, budgeting, and notification systems
+ * as side effects of transaction operations.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -53,7 +57,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final BudgetAlertService budgetAlertService;
-    private final NotificationService notificationService;
     private final TransactionRepository transactionRepository;
     private final PaymentModeRepository paymentModeRepository;
 
@@ -66,7 +69,7 @@ public class TransactionServiceImpl implements TransactionService {
                                                         Pageable pageable) {
         User currentUser = currentUser();
 
-        UUID categoryId = filter.categoryId() != null ? UUID.fromString(filter.categoryId()) : null;
+        UUID categoryId = filter.categoryId() != null ? filter.categoryId() : null;
 
         Pageable safePageable = PageableValidator.validateTransactionPageable(pageable);
 
@@ -97,6 +100,7 @@ public class TransactionServiceImpl implements TransactionService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.DASHBOARD, keyGenerator = "transactionDateKeyGenerator")
     public TransactionResponse createTransaction(CreateTransactionRequest request) {
         User currentUser = currentUser();
 
@@ -137,6 +141,7 @@ public class TransactionServiceImpl implements TransactionService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.DASHBOARD, keyGenerator = "transactionDateKeyGenerator")
     public TransactionResponse updateTransaction(UUID id, UpdateTransactionRequest request) {
         User user = currentUser();
 
@@ -213,38 +218,6 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.delete(transaction);
     }
 
-    /**
-     * Builds daily summary email data.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public DailySummaryMailData buildDailySummaryMailData(User user) {
-        LocalDate today = LocalDate.now();
-
-        List<Transaction> todaysTransactions = transactionRepository.findByUserAndDate(user, today);
-
-        // Calculate the income and expenses
-        BigDecimal income = todaysTransactions.stream()
-            .filter(t -> t.getType() == TxnType.INCOME)
-            .map(Transaction::getAmount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal expenses = todaysTransactions.stream()
-            .filter(t -> t.getType() == TxnType.EXPENSE)
-            .map(Transaction::getAmount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return new DailySummaryMailData(
-            user.getFullName(),
-            user.getEmail(),
-            today.format(DATE_FORMAT),
-            income,
-            expenses,
-            income.subtract(expenses),
-            todaysTransactions.size()
-        );
-    }
-
     // Helper Methods
 
     /**
@@ -269,16 +242,14 @@ public class TransactionServiceImpl implements TransactionService {
     /**
      * Resolves a category accessible to the user.
      */
-    private Category resolveCategory(String categoryId,
+    private Category resolveCategory(UUID categoryId,
                                      User user,
                                      CategoryType categoryType) {
-
-        UUID id = UUID.fromString(categoryId);
 
         return categoryRepository
             .findAllVisibleToUser(user, categoryType)
             .stream()
-            .filter(c -> c.getId().equals(id))
+            .filter(c -> c.getId().equals(categoryId))
             .findFirst()
             .orElseThrow(() ->
                 new CategoryException(
@@ -290,15 +261,13 @@ public class TransactionServiceImpl implements TransactionService {
     /**
      * Resolves a payment mode accessible to the user.
      */
-    private PaymentMode resolvePaymentMode(String paymentModeId,
+    private PaymentMode resolvePaymentMode(UUID paymentModeId,
                                            User user) {
-
-        UUID id = UUID.fromString(paymentModeId);
 
         return paymentModeRepository
             .findAllVisibleToUser(user)
             .stream()
-            .filter(p -> p.getId().equals(id))
+            .filter(p -> p.getId().equals(paymentModeId))
             .findFirst()
             .orElseThrow(() ->
                 new PaymentModeException(

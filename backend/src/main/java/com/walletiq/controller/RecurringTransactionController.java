@@ -1,5 +1,6 @@
 package com.walletiq.controller;
 
+import com.walletiq.dto.error.ErrorResponse;
 import com.walletiq.dto.recurringtransaction.ForecastSummaryResponse;
 import com.walletiq.dto.recurringtransaction.RecurringTransactionRequest;
 import com.walletiq.dto.recurringtransaction.RecurringTransactionResponse;
@@ -8,6 +9,11 @@ import com.walletiq.dto.success.ResponseWrapper;
 import com.walletiq.service.RecurringTransactionService;
 import com.walletiq.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -22,73 +28,183 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/recurring")
 @RequiredArgsConstructor
-@Tag(name = "Recurring Transactions", description = "Manage recurring income and expense rules")
+@Tag(
+    name = "Recurring Transactions",
+    description = "APIs for managing recurring income and expense rules"
+)
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized - Invalid or missing token",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    ),
+})
 public class RecurringTransactionController {
 
     private final RecurringTransactionService service;
 
+    @Operation(
+        summary = "Create a recurring transaction",
+        description = "Creates a recurring transaction rule with a defined schedule and amount."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "201",
+            description = "Recurring transaction created successfully",
+            content = @Content(schema = @Schema(implementation = RecurringTransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload or date range",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @PostMapping
-    @Operation(summary = "Create a recurring transaction")
     public ResponseEntity<ResponseWrapper<RecurringTransactionResponse>> create(
         @Valid @RequestBody RecurringTransactionRequest request
     ) {
-
-        var response = service.create(request);
-
-        return ResponseUtil.created("Recurring transaction created",
-            response);
+        return ResponseUtil.created(
+            "Recurring transaction created successfully",
+            service.create(request)
+        );
     }
 
+    @Operation(
+        summary = "Get all recurring transactions",
+        description = "Fetches all active recurring transactions for the authenticated user."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recurring transactions fetched successfully",
+            content = @Content(schema = @Schema(implementation = RecurringTransactionResponse.class))
+        )
+    })
     @GetMapping
-    @Operation(summary = "Get all active recurring transactions for current user")
     public ResponseEntity<ResponseWrapper<List<RecurringTransactionResponse>>> getAll() {
-
-        var responses = service.getAllByUser();
-
-        return ResponseUtil.ok("Recurring transactions fetched", responses);
+        return ResponseUtil.ok(
+            "Recurring transactions fetched successfully",
+            service.getAllByUser()
+        );
     }
 
+    @Operation(
+        summary = "Get recurring transaction by ID",
+        description = "Fetches a specific recurring transaction using its unique identifier."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recurring transaction fetched successfully",
+            content = @Content(schema = @Schema(implementation = RecurringTransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recurring transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @GetMapping("/{id}")
-    @Operation(summary = "Get a recurring transaction by ID")
     public ResponseEntity<ResponseWrapper<RecurringTransactionResponse>> getById(
+
+        @Parameter(description = "Unique identifier of the recurring transaction", required = true)
         @PathVariable UUID id
     ) {
-
-        var response = service.getById(id);
-
-        return ResponseUtil.ok("Recurring transaction fetched", response);
+        return ResponseUtil.ok(
+            "Recurring transaction fetched successfully",
+            service.getById(id)
+        );
     }
 
+    @Operation(
+        summary = "Update a recurring transaction",
+        description = "Updates an existing recurring transaction. Supports partial updates and validates date range."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recurring transaction updated successfully",
+            content = @Content(schema = @Schema(implementation = RecurringTransactionResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recurring transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @PatchMapping("/{id}")
-    @Operation(summary = "Update a recurring transaction")
     public ResponseEntity<ResponseWrapper<RecurringTransactionResponse>> update(
+
+        @Parameter(description = "Unique identifier of the recurring transaction", required = true)
         @PathVariable UUID id,
+
         @Valid @RequestBody UpdateRecurringTransactionRequest request
     ) {
-
-        var response = service.update(id, request);
-
-        return ResponseUtil.ok("Recurring transaction updated", response);
+        return ResponseUtil.ok(
+            "Recurring transaction updated successfully",
+            service.update(id, request)
+        );
     }
 
+    @Operation(
+        summary = "Deactivate a recurring transaction",
+        description = "Soft deletes (deactivates) a recurring transaction so it no longer generates future transactions."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recurring transaction deactivated successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recurring transaction not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deactivate a recurring transaction (soft delete)")
-    public ResponseEntity<ResponseWrapper<Void>> deactivate(@PathVariable UUID id) {
+    public ResponseEntity<ResponseWrapper<Void>> deactivate(
 
+        @Parameter(description = "Unique identifier of the recurring transaction", required = true)
+        @PathVariable UUID id
+    ) {
         service.deactivate(id);
-        return ResponseUtil.ok("Recurring transaction deactivated", null);
+        return ResponseUtil.ok("Recurring transaction deactivated successfully", null);
     }
 
+    @Operation(
+        summary = "Get forecast",
+        description = "Generates projected income, expenses, and net balance based on active recurring transactions."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Forecast generated successfully",
+            content = @Content(schema = @Schema(implementation = ForecastSummaryResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid number of days",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @GetMapping("/forecast")
-    @Operation(summary = "Get projected cash flow for next N days")
     public ResponseEntity<ResponseWrapper<ForecastSummaryResponse>> forecast(
-        @RequestParam(defaultValue = "30")
-        @Min(value = 1, message = "Forecast days must be at least 1")
-        @Max(value = 365, message = "Forecast days cannot exceed 365")
-        int days
-    ) {
 
-        var forecast = service.forecast(days);
-        return ResponseUtil.ok("Forecast generated", forecast);
+        @Parameter(
+            description = "Number of days for forecast (1 to 365)",
+            example = "30"
+        )
+        @RequestParam(defaultValue = "30")
+        @Min(1) @Max(365) int days
+    ) {
+        return ResponseUtil.ok(
+            "Forecast generated successfully",
+            service.forecast(days)
+        );
     }
 }

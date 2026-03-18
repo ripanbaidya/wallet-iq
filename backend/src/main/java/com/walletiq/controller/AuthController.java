@@ -1,6 +1,7 @@
 package com.walletiq.controller;
 
 import com.walletiq.dto.auth.*;
+import com.walletiq.dto.error.ErrorResponse;
 import com.walletiq.dto.otp.OtpResponse;
 import com.walletiq.dto.otp.SendOtpRequest;
 import com.walletiq.dto.otp.VerifyOtpRequest;
@@ -27,100 +28,289 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Authentication")
+@Tag(
+    name = "Authentication",
+    description = "Endpoints for user authentication, session management, and email verification."
+)
 public class AuthController {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
 
+    @Operation(
+        summary = "Register a new user",
+        description = """
+            Creates a new user account using the provided email, name, and password.
+            
+            Behaviour:
+            - The email must be unique in the system.
+            - Password is securely hashed before storing in the database.
+            - No tokens are issued during signup.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "201",
+            description = "User registered successfully"
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Email already exists",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+    })
     @PostMapping("/signup")
     public ResponseEntity<ResponseWrapper<String>> signup(
         @Valid @RequestBody SignupRequest request) {
+
         authService.signup(request);
         return ResponseUtil.created("User registered successfully", null);
     }
 
+    @Operation(
+        summary = "Authenticate user",
+        description = """
+            Authenticates a user using email and password.
+            
+            Behaviour:
+            - If credentials are valid, a JWT access token and refresh token are issued.
+            - The access token is short-lived and used for API authorization.
+            - The refresh token is stored in the database and used to obtain new tokens.
+            - Any previously active refresh token for the user is revoked (single-session rule).
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Login successful",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid email or password",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @PostMapping("/login")
     public ResponseEntity<ResponseWrapper<AuthResponse>> login(
         @Valid @RequestBody LoginRequest request) {
-        return ResponseUtil.ok("Login Successfully", authService.login(request));
+
+        return ResponseUtil.ok(
+            "Login successful",
+            authService.login(request)
+        );
     }
 
+    @Operation(
+        summary = "Logout user",
+        description = """
+            Logs out a user by revoking the provided refresh token.
+            
+            Behaviour:
+            - The refresh token is marked as revoked in the database.
+            - Once revoked, the token can no longer be used to refresh sessions.
+            - If the token is already revoked, the operation safely returns without error.
+            
+            **Note** - Token blacklisting is not yet implemented.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "204",
+            description = "Logout successful"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Refresh token not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400", description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
+    public ResponseEntity<Void> logout(
+        @Valid @RequestBody LogoutRequest request) {
+
         authService.logout(request.refreshToken());
-        return ResponseEntity.noContent().build();
+        return ResponseUtil.noContent();
     }
 
+    @Operation(
+        summary = "Refresh authentication tokens",
+        description = """
+            Generates a new access token using a valid refresh token.
+            
+            Behaviour:
+            - The provided refresh token is validated for signature and expiration.
+            - The existing refresh token is revoked (token rotation).
+            - A new access token and refresh token pair is issued.
+            - This helps prevent replay attacks and token reuse.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Token refreshed successfully",
+            content = @Content(schema = @Schema(implementation = TokenResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid or expired refresh token",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Refresh token not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
     @PostMapping("/refresh-token")
     public ResponseEntity<ResponseWrapper<TokenResponse>> refresh(
         @Valid @RequestBody RefreshTokenRequest request) {
-        return ResponseUtil.ok("Token Refreshed Successfully",
-            authService.refreshToken(request.refreshToken()));
+
+        return ResponseUtil.ok(
+            "Token refreshed successfully",
+            authService.refreshToken(request.refreshToken())
+        );
     }
 
     @Operation(
         summary = "Generate password hash",
-        description = "Hashes a plain text password using the configured password encoder (e.g., BCrypt)."
+        description = """
+            Utility endpoint that generates a secure hash for a given password.
+            
+            Behaviour:
+            - Uses the configured password encoder (typically BCrypt).
+            - Mainly intended for testing or administrative usage.
+            - The raw password is not stored by the system.
+            """
     )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Password successfully hashed"),
-        @ApiResponse(responseCode = "400", description = "Invalid password input")
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Password hash generated successfully",
+            content = @Content(schema = @Schema(implementation = PasswordHashResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid password input",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
     @PostMapping("/password-hash")
     public ResponseEntity<ResponseWrapper<PasswordHashResponse>> getPasswordHash(
         @Valid @RequestBody PasswordHashRequest request) {
-        String hash = authService.getPasswordHash(request.password());
-        var response = new PasswordHashResponse(request.password(), hash);
 
-        return ResponseUtil.ok("Password Hash Generated Successfully",
-            response);
+        String hash = authService.getPasswordHash(request.password());
+
+        var response = new PasswordHashResponse(
+            request.password(),
+            hash
+        );
+
+        return ResponseUtil.ok(
+            "Password hash generated successfully",
+            response
+        );
     }
 
-    @PostMapping("/email/send-otp")
     @Operation(
-        summary = "Send OTP to email",
-        description = "Generates a 6-digit OTP and sends it to the user's registered email address."
+        summary = "Send email verification OTP",
+        description = """
+            Sends a 6-digit OTP (One-Time Password) to the user's registered email address.
+            
+            Behaviour:
+            - A random OTP is generated and delivered via email.
+            - The OTP is stored temporarily with an expiration time.
+            - The OTP must be verified before enabling email-based features.
+            """
     )
-    @ApiResponses(value = {
+    @ApiResponses({
         @ApiResponse(
             responseCode = "200",
             description = "OTP sent successfully",
             content = @Content(schema = @Schema(implementation = OtpResponse.class))
         ),
-        @ApiResponse(responseCode = "404", description = "User not found"),
-        @ApiResponse(responseCode = "400", description = "Invalid request")
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
+    @PostMapping("/email/send-otp")
     public ResponseEntity<ResponseWrapper<OtpResponse>> sendOtp(
-        @RequestBody @Valid SendOtpRequest request
-    ) {
+        @Valid @RequestBody SendOtpRequest request) {
+
         emailVerificationService.sendOtp(request.email());
-        return ResponseUtil.ok("OTP sent successfully", new OtpResponse(
-            "A 6-digit OTP has been sent to your email address."
-        ));
+
+        return ResponseUtil.ok(
+            "OTP sent successfully",
+            new OtpResponse("A 6-digit OTP has been sent to your email address.")
+        );
     }
 
     @Operation(
-        summary = "Verify OTP",
-        description = "Verifies the OTP sent to the user's email address."
+        summary = "Verify email OTP",
+        description = """
+            Verifies the OTP sent to the user's email address.
+            
+            Behaviour:
+            - The provided OTP is matched against the stored OTP.
+            - If valid and not expired, the user's email is marked as verified.
+            - Invalid or expired OTPs will be rejected.
+            """
     )
-    @ApiResponses(value = {
+    @ApiResponses({
         @ApiResponse(
             responseCode = "200",
             description = "Email verified successfully",
             content = @Content(schema = @Schema(implementation = OtpResponse.class))
         ),
-        @ApiResponse(responseCode = "400", description = "Invalid or expired OTP"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid or expired OTP",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
     @PostMapping("/email/verify-otp")
     public ResponseEntity<ResponseWrapper<OtpResponse>> verifyOtp(
-        @RequestBody @Valid VerifyOtpRequest request
-    ) {
-        emailVerificationService.verifyOtp(request.email(), request.otp());
-        return ResponseUtil.ok("Email verified", new OtpResponse(
-            "Your email has been verified successfully."
-        ));
-    }
+        @Valid @RequestBody VerifyOtpRequest request) {
 
+        emailVerificationService.verifyOtp(
+            request.email(),
+            request.otp()
+        );
+
+        return ResponseUtil.ok(
+            "Email verified successfully",
+            new OtpResponse("Your email has been verified successfully.")
+        );
+    }
 }

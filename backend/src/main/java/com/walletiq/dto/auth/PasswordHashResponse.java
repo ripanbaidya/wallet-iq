@@ -2,11 +2,18 @@ package com.walletiq.dto.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Response containing the hashed password")
+/**
+ * Response payload containing the generated hash for a given password.
+ * ⚠ SECURITY NOTE: Returning the original password is generally NOT recommended
+ * in production APIs.
+ * This DTO should only be used for internal tools, debugging, or testing hashing
+ * configuration.
+ */
+@Schema(description = "Response containing the generated hash of a provided password")
 public record PasswordHashResponse(
 
     @Schema(
-        description = "Original password that was hashed",
+        description = "Original plain text password provided in the request",
         example = "MySecurePassword123!"
     )
     String original,

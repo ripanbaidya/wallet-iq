@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Builder
-@Schema(description = "Response payload representing the progress of a savings goal")
+@Schema(description = "Response payload representing the progress and status of a savings goal")
 public record GoalProgressResponse(
 
     @Schema(
@@ -19,28 +19,29 @@ public record GoalProgressResponse(
     UUID id,
 
     @Schema(
-        description = "Title of the savings goal",
+        description = "Title of the savings goal defined by the user",
         example = "Buy MacBook Pro"
     )
     String title,
 
     @Schema(
-        description = "Target amount to save",
+        description = "Total amount the user aims to save for this goal",
         example = "150000.00"
     )
     BigDecimal targetAmount,
 
     @Schema(
-        description = "Total amount already saved",
+        description = "Total amount already saved toward the goal",
         example = "50000.00"
     )
     BigDecimal savedAmount,
 
     @Schema(
-        description = "Remaining amount required to reach the goal",
+        description = "Remaining amount required to achieve the goal",
         example = "100000.00"
     )
     BigDecimal remainingAmount,
+
 
     @Schema(
         description = "Progress percentage of the savings goal (0–100)",
@@ -49,19 +50,20 @@ public record GoalProgressResponse(
     double progressPercentage,
 
     @Schema(
-        description = "Number of days remaining until the deadline (negative if overdue)",
+        description = "Number of days remaining until the goal deadline. Negative value indicates the deadline has passed.",
         example = "45"
     )
     long daysRemaining,
 
     @Schema(
-        description = "Current status of the goal",
-        example = "IN_PROGRESS"
+        description = "Current status of the savings goal",
+        example = "IN_PROGRESS",
+        allowableValues = {"IN_PROGRESS", "ACHIEVED", "FAILED"}
     )
     GoalStatus status,
 
     @Schema(
-        description = "Deadline date of the savings goal",
+        description = "Deadline date by which the goal should be achieved",
         example = "2026-12-31"
     )
     LocalDate deadline

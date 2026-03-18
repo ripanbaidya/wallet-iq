@@ -7,7 +7,8 @@ import com.walletiq.entity.ChatSession;
 
 public final class ChatMapper {
 
-    private ChatMapper() {}
+    private ChatMapper() {
+    }
 
     public static ChatSessionResponse toSessionResponse(ChatSession session) {
         return new ChatSessionResponse(

@@ -10,7 +10,6 @@ import com.walletiq.enums.ErrorCode;
 import com.walletiq.exception.BudgetException;
 import com.walletiq.mapper.BudgetMapper;
 import com.walletiq.repository.BudgetRepository;
-import com.walletiq.repository.CategoryRepository;
 import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.BudgetService;
@@ -116,6 +115,16 @@ public class BudgetServiceImpl implements BudgetService {
         return SecurityUtils.getCurrentUserId();
     }
 
+    /**
+     * Retrieves a budget owned by the given user.
+     * <p>If the budget exists but is owned by another user, an access denied
+     * exception is thrown. If it does not exist, a not found exception is thrown.
+     *
+     * @param id     budget identifier
+     * @param userId current user identifier
+     * @return budget entity
+     * @throws BudgetException if budget is not found or access is denied
+     */
     private Budget findOwnedOrThrow(UUID id, UUID userId) {
         return budgetRepository.findByIdAndUser_Id(id, userId)
             .orElseThrow(() -> {

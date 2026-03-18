@@ -1,5 +1,8 @@
 package com.walletiq.repository;
 
+import com.walletiq.dto.dashboard.CategoryBreakdownItem;
+import com.walletiq.dto.dashboard.DailyTrendItem;
+import com.walletiq.dto.dashboard.TopExpenseItem;
 import com.walletiq.entity.Transaction;
 import com.walletiq.entity.User;
 import com.walletiq.enums.TxnType;
@@ -61,10 +64,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     List<Transaction> findAllByUserOrderByDateDesc(User user);
 
+    List<Transaction> findAllByUserAndDateOrderByDateDesc(User user, LocalDate date);
+
     @Query("""
-            SELECT COALESCE(SUM(t.amount), 0)
-            FROM Transaction t
-            WHERE t.user.id     = :userId
+            select COALESCE(sum(t.amount), 0)
+            from Transaction t
+            where t.user.id     = :userId
               AND t.category.id = :categoryId
               AND t.type        = com.walletiq.enums.TxnType.EXPENSE
               AND t.date >= :startDate
@@ -75,5 +80,79 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
         @Param("categoryId") UUID categoryId,
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        select coalesce(sum(t.amount), 0)
+        from Transaction t
+        where t.user.id = :userId
+          and t.type = :type
+          and t.date between :from and :to
+        """)
+    BigDecimal sumByUserAndTypeAndDateBetween(
+        @Param("userId") UUID userId,
+        @Param("type") TxnType type,
+        @Param("from") LocalDate from,
+        @Param("to") LocalDate to
+    );
+
+    @Query("""
+        select new com.walletiq.dto.dashboard.CategoryBreakdownItem(
+            c.name,
+            sum(t.amount)
+        )
+        from Transaction t
+        JOIN t.category c
+        where t.user.id = :userId
+          AND t.type = :type
+          AND t.date BETWEEN :from AND :to
+        GROUP BY c.name
+        order by sum(t.amount) desc
+        """)
+    List<CategoryBreakdownItem> findCategoryBreakdown(
+        @Param("userId") UUID userId,
+        @Param("type") TxnType type,
+        @Param("from") LocalDate from,
+        @Param("to") LocalDate to
+    );
+
+    @Query("""
+        select new com.walletiq.dto.dashboard.DailyTrendItem(
+            t.date,
+            sum(case when t.type = com.walletiq.enums.TxnType.INCOME  then t.amount else 0 end),
+            sum(case when t.type = com.walletiq.enums.TxnType.EXPENSE then t.amount else 0 end)
+        )
+        from Transaction t
+        where t.user.id = :userId
+          AND t.date BETWEEN :from AND :to
+        GROUP BY t.date
+        order by t.date ASC
+        """)
+    List<DailyTrendItem> findDailyTrend(
+        @Param("userId") UUID userId,
+        @Param("from") LocalDate from,
+        @Param("to") LocalDate to
+    );
+
+    @Query("""
+        SELECT new com.walletiq.dto.dashboard.TopExpenseItem(
+            t.id,
+            t.amount,
+            c.name,
+            t.note,
+            t.date
+        )
+        FROM Transaction t
+        LEFT JOIN t.category c
+        WHERE t.user.id = :userId
+          AND t.type = com.walletiq.enums.TxnType.EXPENSE
+          AND t.date BETWEEN :from AND :to
+        ORDER BY t.amount DESC
+        LIMIT 5
+        """)
+    List<TopExpenseItem> findTop5Expenses(
+        @Param("userId") UUID userId,
+        @Param("from") LocalDate from,
+        @Param("to") LocalDate to
     );
 }

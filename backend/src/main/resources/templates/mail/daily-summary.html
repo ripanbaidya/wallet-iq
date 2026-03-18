@@ -1,252 +1,90 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Finance Summary</title>
-
-    <style>
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f5f6f8;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: #222;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 460px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 30px 25px;
-            border-radius: 10px;
-            border: 1px solid #e8e8e8;
-        }
-
-        .logo {
-            font-size: 22px;
-            font-weight: 600;
-            color: #2563eb;
-            margin-bottom: 6px;
-        }
-
-        .date {
-            font-size: 13px;
-            color: #888;
-            margin-bottom: 25px;
-        }
-
-        .greeting {
-            font-size: 15px;
-            color: #444;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-
-        .balance-section {
-            background: #f8f9fb;
-            padding: 24px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            text-align: center;
-            border: 1px solid #eee;
-        }
-
-        .balance-label {
-            font-size: 12px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .balance-amount {
-            font-size: 36px;
-            font-weight: 700;
-            color: #2563eb;
-        }
-
-        .stats-section {
-            margin-bottom: 25px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #555;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .income {
-            color: #10b981;
-        }
-
-        .expense {
-            color: #ef4444;
-        }
-
-        .transaction-count {
-            text-align: center;
-            padding: 14px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .transaction-count strong {
-            color: #2563eb;
-        }
-
-        .empty-message {
-            text-align: center;
-            font-size: 13px;
-            color: #888;
-            padding: 15px 0;
-        }
-
-        .links {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            text-align: center;
-        }
-
-        .links a {
-            display: inline-block;
-            margin: 0 12px;
-            font-size: 13px;
-            color: #2563eb;
-            text-decoration: none;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .copyright {
-            margin-top: 18px;
-            font-size: 11px;
-            color: #aaa;
-            text-align: center;
-        }
-
-        @media (max-width: 480px) {
-
-            body {
-                padding: 15px;
-            }
-
-            .container {
-                padding: 24px 18px;
-            }
-
-            .balance-section {
-                padding: 20px;
-            }
-
-            .balance-amount {
-                font-size: 30px;
-            }
-
-            .logo {
-                font-size: 20px;
-            }
-
-        }
-
-    </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Daily Summary - WalletIQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="min-h-screen bg-gray-50 py-6 px-4">
 
-<body>
+<div class="max-w-md mx-auto space-y-6">
 
-<div class="container">
+    <main class="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
 
-    <div class="logo">WalletIQ</div>
+        <!-- Header -->
+        <header class="space-y-1">
+            <a href="#" class="text-lg font-semibold text-blue-600">WalletIQ</a>
+            <div class="text-sm text-gray-600" th:text="${date}">
+                Monday, March 18, 2026
+            </div>
+        </header>
 
-    <div class="date" th:text="${date}">
-        Monday, 12 March 2026
-    </div>
+        <!-- Greeting -->
+        <p class="text-sm text-gray-600">
+            Hi <strong th:text="${name}">there</strong>, here is your financial summary for today:
+        </p>
 
-    <p class="greeting">
-        Hi <strong th:text="${name}">User</strong>, here's your financial snapshot for today 👋
-    </p>
-
-    <div class="balance-section">
-
-        <div class="balance-label">
-            Net Balance Today
-        </div>
-
-        <div class="balance-amount"
-             th:text="'₹' + ${#numbers.formatDecimal(netBalance, 1, 2)}">
-            ₹0.00
-        </div>
-
-    </div>
-
-    <div class="stats-section">
-
-        <div class="stat-item">
-            <div class="stat-label">📈 Income</div>
-
-            <div class="stat-value income"
-                 th:text="'₹' + ${#numbers.formatDecimal(totalIncome, 1, 2)}">
+        <!-- Balance -->
+        <section class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center space-y-1">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                Net Balance
+            </div>
+            <div class="text-2xl font-semibold text-gray-800"
+                 th:text="'₹' + ${#numbers.formatDecimal(netBalance, 1, 2, 'POINT')}">
                 ₹0.00
             </div>
+        </section>
+
+        <!-- Stats -->
+        <table class="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
+            <tbody>
+            <tr class="border-b border-gray-200">
+                <td class="px-3 py-2 text-gray-600">Total Income</td>
+                <td class="px-3 py-2 text-right font-medium text-green-600"
+                    th:text="'+₹' + ${#numbers.formatDecimal(totalIncome, 1, 2, 'POINT')}">
+                    +₹0.00
+                </td>
+            </tr>
+            <tr>
+                <td class="px-3 py-2 text-gray-600">Total Expenses</td>
+                <td class="px-3 py-2 text-right font-medium text-red-600"
+                    th:text="'-₹' + ${#numbers.formatDecimal(totalExpenses, 1, 2, 'POINT')}">
+                    -₹0.00
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Transaction Info -->
+        <div class="text-sm text-gray-600 text-center border-t border-gray-200 pt-4">
+            <strong th:text="${transactionCount}">0</strong>
+            transaction<span th:if="${transactionCount != 1}">s</span> recorded today
         </div>
 
-        <div class="stat-item">
-            <div class="stat-label">💸 Expenses</div>
-
-            <div class="stat-value expense"
-                 th:text="'₹' + ${#numbers.formatDecimal(totalExpenses, 1, 2)}">
-                ₹0.00
-            </div>
+        <!-- Empty State -->
+        <div class="text-sm text-gray-600 italic text-center"
+             th:if="${transactionCount == 0}">
+            No activity to report for this period.
         </div>
 
-    </div>
+        <!-- Attachment -->
+        <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-md p-3 text-center"
+             th:if="${transactionCount > 0}">
+            📎 Detailed CSV report attached
+        </div>
 
-    <div class="transaction-count">
-        📊 <strong th:text="${transactionCount}">0</strong> transaction(s) recorded today
-    </div>
+    </main>
 
-    <p class="empty-message"
-       th:if="${transactionCount == 0}">
-        No transactions recorded today — stay on top of your spending! 💡
-    </p>
-
-    <div class="links">
-        <a href="https://linkedin.com">LinkedIn</a>
-        <a href="https://github.com">GitHub</a>
-        <a href="https://twitter.com">Twitter</a>
-    </div>
-
-    <div class="copyright">
-        © 2026 WalletIQ. All rights reserved.
-    </div>
+    <!-- Footer -->
+    <footer class="text-center space-y-2">
+        <div class="flex justify-center gap-4 text-sm text-gray-600">
+            <a href="https://linkedin.com" class="hover:text-blue-600">LinkedIn</a>
+            <a href="https://github.com" class="hover:text-blue-600">GitHub</a>
+            <a href="https://twitter.com" class="hover:text-blue-600">X</a>
+        </div>
+        <p class="text-xs text-gray-600">© 2026 WalletIQ. All rights reserved.</p>
+    </footer>
 
 </div>
 

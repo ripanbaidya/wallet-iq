@@ -1,6 +1,7 @@
 package com.walletiq.service;
 
 import com.walletiq.entity.Budget;
+import com.walletiq.enums.NotificationType;
 import com.walletiq.repository.BudgetRepository;
 import com.walletiq.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class BudgetAlertService {
+
+    private final NotificationService notificationService;
 
     private final BudgetRepository budgetRepository;
     private final TransactionRepository transactionRepository;
@@ -54,12 +57,23 @@ public class BudgetAlertService {
         if (spent.compareTo(limit) > 0) {
             log.warn("[BUDGET EXCEEDED] userId: {} category: {} month: {} spent: {} limit: {}",
                 userId, categoryId, month, spent, limit);
-            // TODO: plug in email/push notification here later
+
+            notificationService.send(
+                NotificationType.BUDGET_ALERT,
+                String.format("Budget exceeded for %s in %s! Spent ₹%s of ₹%s limit.",
+                    categoryId, month, spent.setScale(2, RoundingMode.HALF_UP),
+                    limit)
+            );
         } else if (usagePct >= budget.getAlertThreshold()) {
             log.warn("[BUDGET THRESHOLD] userId: {} category: {} month: {} usage: {}% threshold: {}%",
                 userId, categoryId, month, String.format("%.1f", usagePct),
                 budget.getAlertThreshold());
-            // TODO: plug in email/push notification here later
+
+            notificationService.send(
+                NotificationType.BUDGET_ALERT,
+                String.format("You've used %.1f%% of your budget for %s in %s (threshold: %d%%).",
+                    usagePct, categoryId, month, budget.getAlertThreshold())
+            );
         }
     }
 }

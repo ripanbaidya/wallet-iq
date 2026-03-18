@@ -21,6 +21,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * Default implementation of {@link RecurringTransactionService}.
+ * <p>Manages recurring transactions including creation, updates, forecasting
+ * future transactions, and automated execution.
+ * <p>Handles scheduling logic to generate actual transactions from recurring
+ * definitions and maintains their lifecycle.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -288,8 +295,8 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
             recurring.getType(),
             date,
             recurring.getNote(),
-            recurring.getCategory().toString(),
-            recurring.getPaymentMode().toString()
+            recurring.getCategory().getId(),
+            recurring.getPaymentMode().getId()
         ));
     }
 

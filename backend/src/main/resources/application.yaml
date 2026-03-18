@@ -2,6 +2,7 @@ spring:
   application:
     name: walletiq
 
+  # DB - PostgreSQL
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:walletiq}
     username: ${DB_USERNAME:postgres}
@@ -37,6 +38,18 @@ spring:
           fetch_size: 50 # Ask driver to fetch x number of rows at a time, Good for pagination
         order_inserts: true
         order_updates: true
+
+  # Redis Configuration
+  # Multiple Redis deployment options supported:
+  # 1. Redis-Upstash (Cloud): Visit https://upstash.com -> Redis -> Create DB -> Copy URL
+  # 2. Docker: Use docker-compose with redis:alpine image
+  # 3. Local Installation: Install Redis locally and use redis://localhost:6379
+  # Note: SSL is automatically enabled for Upstash URLs starting with rediss://
+  data:
+    redis:
+      url: ${REDIS_URL}
+      ssl:
+        enabled: true
 
   # Flyway - DB Migration
   flyway:
@@ -137,7 +150,7 @@ springdoc:
 
 # Application Specific Config
 app:
-  name: walletiq
+  name: Wallet-IQ
   version: ${APPLICATION_VERSION:1.0.0}
   build-number: ${APPLICATION_BUILD_NUMBER:1.0.0}
   copyright: ${APPLICATION_COPYRIGHT:© 2026 walletiq. All rights reserved}
@@ -201,8 +214,10 @@ app:
 
 logging:
   level:
-    root: INFO
-    com.walletiq: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.ai.chat.client.advisor: DEBUG
+    root: info
+    com.walletiq: debug
+    org.springframework.web: debug
+    org.springframework.security: debug
+    org.springframework.ai.chat.client.advisor: debug
+    org.springframework.data.redis: debug
+    org.springframework.cache: trace

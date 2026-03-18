@@ -1,14 +1,13 @@
 package com.walletiq.service.impl;
 
+import com.walletiq.dto.user.UserProfileResponse;
 import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.Role;
 import com.walletiq.exception.UserException;
 import com.walletiq.mapper.UserMapper;
-import com.walletiq.dto.user.UserProfileResponse;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.UserService;
-import com.walletiq.util.MaskingUtil;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
-
-import static com.walletiq.util.MaskingUtil.maskEmail;
 
 @Service
 @Slf4j
@@ -67,7 +63,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toResponse(user);
     }
 
-    // Admin endpoints
+    // Admin
 
     /**
      * Fetch all users with pagination
@@ -79,12 +75,12 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Count the number of active users (Role.USER)
+     * Count the number of active/inactive users based on roles
      */
     @Override
     @Transactional(readOnly = true)
-    public long countTotalUsers() {
-        return userRepository.countByRoleAndActive(Role.USER, true);
+    public long countTotalUsers(Role role, boolean active) {
+        return userRepository.countByRoleAndActive(role, active);
     }
 
 

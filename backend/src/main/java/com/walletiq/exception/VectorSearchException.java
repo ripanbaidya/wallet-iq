@@ -2,6 +2,11 @@ package com.walletiq.exception;
 
 import com.walletiq.enums.ErrorCode;
 
+/**
+ * Exception thrown for vector search related failures.
+ * <p>This exception occurs when vector search operations fail, such as
+ * embedding generation, similarity search, or vector database queries.
+ */
 public class VectorSearchException extends BaseException {
 
     public VectorSearchException(ErrorCode errorCode) {

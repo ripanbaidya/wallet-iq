@@ -9,13 +9,16 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 /**
- * Mail configuration.
- * Configures Thymeleaf template engine specifically for HTML email rendering,
- * separate from the web template engine to avoid conflicts.
+ * Configuration for email template rendering.
+ * Sets up a dedicated Thymeleaf template resolver and engine for email
+ * templates to keep them isolated from the web view template configuration.
  */
 @Configuration
 public class MailConfig {
 
+    /**
+     * Resolves HTML email templates from the classpath.
+     */
     @Bean(name = "emailTemplateResolver")
     public ITemplateResolver emailTemplateResolver() {
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
@@ -30,6 +33,9 @@ public class MailConfig {
         return resolver;
     }
 
+    /**
+     * Thymeleaf template engine used for processing email templates.
+     */
     @Bean(name = "emailTemplateEngine")
     public SpringTemplateEngine emailTemplateEngine(
         @Qualifier("emailTemplateResolver") ITemplateResolver resolver

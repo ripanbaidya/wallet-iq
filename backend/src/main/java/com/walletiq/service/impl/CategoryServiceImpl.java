@@ -1,26 +1,36 @@
 package com.walletiq.service.impl;
 
+import com.walletiq.constant.CacheNames;
+import com.walletiq.dto.categories.CategoryResponse;
+import com.walletiq.dto.categories.CreateCategoryRequest;
+import com.walletiq.dto.categories.UpdateCategoryRequest;
 import com.walletiq.entity.Category;
 import com.walletiq.entity.User;
 import com.walletiq.enums.CategoryType;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.exception.CategoryException;
 import com.walletiq.mapper.CategoryMapper;
-import com.walletiq.dto.categories.CreateCategoryRequest;
-import com.walletiq.dto.categories.UpdateCategoryRequest;
-import com.walletiq.dto.categories.CategoryResponse;
 import com.walletiq.repository.CategoryRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.CategoryService;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link CategoryService}.
+ * <p>Handles category management for the current user, including creation,
+ * update, deletion, and retrieval of both user-defined and system default
+ * categories.
+ * <p>Also manages cache invalidation for category-related operations.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -29,12 +39,10 @@ public class CategoryServiceImpl implements CategoryService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
 
-    /**
-     * Get all system defaults + current user's categories filtered by category type
-     */
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryResponse> getAllCategories(CategoryType categoryType) {
+    @Cacheable(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    public List<CategoryResponse> getAll(CategoryType categoryType) {
         User user = currentUser();
 
         return categoryRepository.findAllVisibleToUser(user, categoryType)
@@ -43,12 +51,10 @@ public class CategoryServiceImpl implements CategoryService {
             .toList();
     }
 
-    /**
-     * Create new category for current user
-     */
     @Override
     @Transactional
-    public CategoryResponse createCategory(CreateCategoryRequest request) {
+    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    public CategoryResponse create(CreateCategoryRequest request) {
         User user = currentUser();
 
         String name = request.name().trim();
@@ -68,12 +74,10 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    /**
-     * Update category name or type for the current user.
-     */
     @Override
     @Transactional
-    public CategoryResponse updateCategory(UUID id, UpdateCategoryRequest request) {
+    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
         User user = currentUser();
         Category category = findCategoryByIdAndUser(id, user);
 
@@ -103,12 +107,10 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    /**
-     * Delete category for current user
-     */
     @Override
     @Transactional
-    public void deleteCategory(UUID id) {
+    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    public void delete(UUID id) {
         User currentUser = currentUser();
 
         Category category = findCategoryByIdAndUser(id, currentUser);

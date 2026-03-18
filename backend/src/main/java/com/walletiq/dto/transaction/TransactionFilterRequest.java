@@ -4,12 +4,13 @@ import com.walletiq.enums.TxnType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Schema(description = "Request object used to filter transactions by type, category, and date range")
 public record TransactionFilterRequest(
 
     @Schema(
-        description = "Filter transactions by type",
+        description = "Transaction type to filter results",
         example = "EXPENSE",
         allowableValues = {"INCOME", "EXPENSE"},
         nullable = true
@@ -17,13 +18,14 @@ public record TransactionFilterRequest(
     TxnType type,
 
     @Schema(
-        description = "Category ID to filter transactions",
+        description = "Category ID used to filter transactions",
+        example = "9c5c0f4c-9a3d-4b22-9a11-8f8c9b0c1234",
         nullable = true
     )
-    String categoryId,
+    UUID categoryId,
 
     @Schema(
-        description = "Start date for transaction filtering (inclusive)",
+        description = "Start date of the filtering range (inclusive)",
         example = "2026-01-01",
         type = "string",
         format = "date",
@@ -32,7 +34,7 @@ public record TransactionFilterRequest(
     LocalDate dateFrom,
 
     @Schema(
-        description = "End date for transaction filtering (inclusive)",
+        description = "End date of the filtering range (inclusive)",
         example = "2026-01-31",
         type = "string",
         format = "date",

@@ -12,10 +12,7 @@ public record CategoryResponse(
     )
     String id,
 
-    @Schema(
-        description = "Name of the category",
-        example = "Food"
-    )
+    @Schema(description = "Name of the category", example = "Food")
     String name,
 
     @Schema(
@@ -26,10 +23,10 @@ public record CategoryResponse(
     CategoryType categoryType,
 
     @Schema(
-        description = "Indicates whether this is a system default category",
+        description = "Indicates whether this category is a system default (true) or user-created (false)",
         example = "true"
     )
-    boolean isDefault // true when user is null (system default)
+    boolean isDefault
 
 ) {
 }

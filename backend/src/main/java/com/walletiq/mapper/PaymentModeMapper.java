@@ -12,7 +12,7 @@ public final class PaymentModeMapper {
         return new PaymentModeResponse(
             paymentMode.getId().toString(),
             paymentMode.getName(),
-            paymentMode.getUser() == null       // null user = system default
+            paymentMode.getUser() == null
         );
     }
 }

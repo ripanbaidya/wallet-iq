@@ -23,6 +23,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link SavingsGoalService}.
+ * <p>Handles savings goal lifecycle including creation, contribution,
+ * progress tracking, and automatic expiration handling.
+ * <p>Ensures ownership validation and enforces goal state transitions
+ * such as IN_PROGRESS → ACHIEVED or FAILED.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -91,7 +98,9 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
             .toProgressResponse(findOwnedOrThrow(goalId, currentUserId()));
     }
 
-    // Called by scheduler
+    /**
+     * Called by scheduler
+     */
     @Transactional
     public void markExpiredGoalsAsFailed() {
         List<SavingsGoal> expired = goalRepository
@@ -114,7 +123,7 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
     private UUID currentUserId() {
         return SecurityUtils.getCurrentUserId();
     }
-    
+
     private SavingsGoal findOwnedOrThrow(UUID id, UUID userId) {
         return goalRepository.findByIdAndUser_Id(id, userId)
             .orElseThrow(() -> {

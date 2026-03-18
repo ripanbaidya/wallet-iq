@@ -3,18 +3,19 @@ package com.walletiq.controller;
 import com.walletiq.dto.budget.BudgetRequest;
 import com.walletiq.dto.budget.BudgetResponse;
 import com.walletiq.dto.budget.BudgetStatusResponse;
+import com.walletiq.dto.error.ErrorResponse;
 import com.walletiq.dto.success.ResponseWrapper;
 import com.walletiq.service.BudgetService;
 import com.walletiq.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,71 +30,105 @@ import java.util.UUID;
     name = "Budgets",
     description = "APIs for managing monthly budgets and tracking spending status"
 )
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized - Invalid or missing token",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    ),
+})
 public class BudgetController {
 
     private final BudgetService budgetService;
 
     @Operation(
         summary = "Create a new budget",
-        description = "Creates a budget for a specific category and month."
+        description = "Creates a budget for a specific category and month. Ensures uniqueness per category per month."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "201",
+            description = "Budget created successfully",
+            content = @Content(schema = @Schema(implementation = BudgetResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data or duplicate budget",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
     @PostMapping
     public ResponseEntity<ResponseWrapper<BudgetResponse>> create(
-        @Valid
-        @RequestBody
-        @Parameter(description = "Budget creation request payload")
-        BudgetRequest request) {
 
-        return ResponseUtil.ok("Budget created.", budgetService.create(request));
+        @Valid @RequestBody BudgetRequest request
+    ) {
+        return ResponseUtil.created(
+            "Budget created successfully",
+            budgetService.create(request)
+        );
     }
-
 
     @Operation(
         summary = "Get budgets by month",
-        description = "Fetch all budgets for the authenticated user for a given month"
+        description = "Fetches all budgets for the authenticated user for a given month."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budgets fetched successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid month format"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "200",
+            description = "Budgets fetched successfully",
+            content = @Content(schema = @Schema(implementation = BudgetResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid month format",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
     @GetMapping
     public ResponseEntity<ResponseWrapper<List<BudgetResponse>>> getByMonth(
 
         @Parameter(
-            description = "Month for which budgets should be retrieved (format: YYYY-MM)",
-            example = "2026-03"
+            description = "Month in format YYYY-MM",
+            example = "2026-03",
+            required = true
         )
         @RequestParam YearMonth month
     ) {
-
-        return ResponseUtil.ok("Budgets fetched", budgetService.getByMonth(month));
+        return ResponseUtil.ok(
+            "Budgets fetched successfully",
+            budgetService.getByMonth(month)
+        );
     }
-
 
     @Operation(
         summary = "Get budget status",
-        description = "Returns current status of a budget including spent amount and remaining amount"
+        description = "Returns current budget status including spent amount, remaining amount, and usage percentage."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget status fetched successfully"),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(
+            responseCode = "200",
+            description = "Budget status fetched successfully",
+            content = @Content(schema = @Schema(implementation = BudgetStatusResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Budget not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
     })
     @GetMapping("/{id}/status")
     public ResponseEntity<ResponseWrapper<BudgetStatusResponse>> getStatus(
 
         @Parameter(
-            description = "Budget ID",
-            example = "c3f6f4a2-3e1a-4c89-bb72-123456789abc"
+            description = "Unique identifier of the budget",
+            example = "c3f6f4a2-3e1a-4c89-bb72-123456789abc",
+            required = true
         )
-        @PathVariable UUID id) {
-
-        return ResponseUtil.ok("Budget status fetched", budgetService.getStatus(id));
+        @PathVariable UUID id
+    ) {
+        return ResponseUtil.ok(
+            "Budget status fetched successfully",
+            budgetService.getStatus(id)
+        );
     }
 }

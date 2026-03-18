@@ -2,6 +2,12 @@ package com.walletiq.exception;
 
 import com.walletiq.enums.ErrorCode;
 
+/**
+ * Exception thrown for RAG query processing failures.
+ * <p>This exception represents errors that occur during Retrieval-Augmented
+ * Generation (RAG) query processing, such as query execution, context
+ * retrieval, or response generation failures.
+ */
 public class RagQueryException extends BaseException {
 
     public RagQueryException(ErrorCode errorCode) {

@@ -1,20 +1,26 @@
 package com.walletiq.schedular;
 
+import com.walletiq.dto.mail.DailySummaryMailData;
+import com.walletiq.entity.Transaction;
 import com.walletiq.entity.User;
+import com.walletiq.enums.TxnType;
+import com.walletiq.repository.TransactionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.MailService;
-import com.walletiq.service.TransactionService;
+import com.walletiq.service.impl.TransactionCsvExportServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
  * Scheduler responsible for sending daily financial summary emails to all
- * active users at 9:00 PM every day.
+ * active users.
  */
 @Slf4j
 @Component
@@ -22,28 +28,32 @@ import java.util.List;
 public class DailySummaryScheduler {
 
     private static final DateTimeFormatter DATE_FORMAT =
-        DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy");
+        DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+
+    private final MailService mailService;
+    private final TransactionCsvExportServiceImpl csvExportService;
 
     private final UserRepository userRepository;
-    private final MailService mailService;
-    private final TransactionService transactionService;
+    private final TransactionRepository transactionRepository;
 
     /**
      * Fetches all active users and sends each a daily summary email.
+     * <br>Runs daily at <b>9:00 PM</b>
      */
-    // @Scheduled(cron = "*/30 * * * * *") // every 30s
-    @Scheduled(cron = "0 0 21 * * *") // daily at 9.00 PM
+    @Scheduled(cron = "0 0 21 * * *")
     public void sendDailySummaries() {
+        LocalDate today = LocalDate.now();
+        log.info("Running daily summary scheduler for date: {}", today);
+
+        // We will only send mails to active users (Admin is not included)
         List<User> activeUsers = userRepository.findAllActiveUsers();
-        log.info("Sending Daily summaries to {} users", activeUsers.size());
 
         int success = 0;
         int failed = 0;
 
         for (User user : activeUsers) {
             try {
-                var data = transactionService.buildDailySummaryMailData(user);
-                mailService.sendDailySummary(data);
+                buildDailySummaryMailData(user, today);
                 success++;
             } catch (Exception e) {
                 log.error("Failed to build/send summary for userId={}", user.getId(), e);
@@ -52,5 +62,39 @@ public class DailySummaryScheduler {
         }
 
         log.info("Daily summary sending completed. Success: {}, Failed: {}", success, failed);
+    }
+
+    public void buildDailySummaryMailData(User user, LocalDate today) {
+        List<Transaction> todayTransactions = transactionRepository
+            .findByUserAndDate(user, today);
+
+        // Calculate the total Income and Expenses
+        BigDecimal totalIncome = todayTransactions.stream()
+            .filter(t -> t.getType() == TxnType.INCOME)
+            .map(Transaction::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalExpense = todayTransactions.stream()
+            .filter(t -> t.getType() == TxnType.EXPENSE)
+            .map(Transaction::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Build the CSV attachment
+        byte[] csvBytes = csvExportService.exportDailyAsBytes(user, today);
+        String csvFileName = "walletiq-transactions-" + today + ".csv";
+
+        var mailData = new DailySummaryMailData(
+            user.getFullName(),
+            user.getEmail(),
+            today.format(DATE_FORMAT),
+            totalIncome,
+            totalExpense,
+            totalIncome.subtract(totalExpense),
+            todayTransactions.size(),
+            csvBytes,
+            csvFileName
+        );
+
+        mailService.sendDailySummary(mailData);
     }
 }

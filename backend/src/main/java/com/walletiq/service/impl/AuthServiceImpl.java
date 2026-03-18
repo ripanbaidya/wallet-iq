@@ -1,20 +1,19 @@
 package com.walletiq.service.impl;
 
 import com.walletiq.config.properties.JwtSecurityProperties;
+import com.walletiq.dto.auth.AuthResponse;
+import com.walletiq.dto.auth.LoginRequest;
+import com.walletiq.dto.auth.SignupRequest;
+import com.walletiq.dto.auth.TokenResponse;
 import com.walletiq.entity.RefreshToken;
 import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
-import com.walletiq.enums.NotificationType;
 import com.walletiq.exception.AuthException;
-import com.walletiq.dto.auth.LoginRequest;
-import com.walletiq.dto.auth.SignupRequest;
-import com.walletiq.dto.auth.AuthResponse;
-import com.walletiq.dto.auth.TokenResponse;
 import com.walletiq.repository.RefreshTokenRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.security.JwtService;
 import com.walletiq.service.AuthService;
-import com.walletiq.service.NotificationService;
+import com.walletiq.util.MaskingUtil;
 import com.walletiq.util.TimeConversionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+/**
+ * Default implementation of {@link AuthService}.
+ * <p>Handles authentication operations such as signup, login, refresh token
+ * rotation, and logout using JWT-based sessions.
+ * <p>Refresh tokens are stored in the database to support revocation and
+ * expiration validation.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -40,8 +46,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void signup(SignupRequest request) {
-        log.info("Signup attempt for email: {}", request.email());
-
         // Check if user already exists
         if (userRepository.existsByEmail(request.email())) {
             throw new AuthException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -51,33 +55,38 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+
         userRepository.save(user);
+        log.debug("User registered successfully!");
     }
 
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        log.info("Login attempt for email: {}", request.email());
+        String maskedEmail = MaskingUtil.maskEmail(request.email());
 
+        log.debug("Login attempt for email: {}", maskedEmail);
+
+        // Check if user exists with the email
         User user = userRepository.findByEmail(request.email())
             .orElseThrow(() -> new AuthException(ErrorCode.INVALID_CREDENTIALS));
 
+        // Check whether password matches
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            log.warn("Invalid password attempt for email: {}", request.email());
-            // Same exception as user-not-found — never leak which one failed
+            log.warn("Invalid password attempt for email: {}", maskedEmail);
             throw new AuthException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        log.debug("User logged in successfully and notification sent for user ID: {}", user);
-
         var tokens = issueTokens(user);
+
+        log.debug("User logged in successfully for id: {}", user.getId());
         return AuthResponse.of(user, tokens);
     }
 
     @Override
     @Transactional
     public TokenResponse refreshToken(String refreshToken) {
-        log.info("Refresh attempt for refreshToken: {}", refreshToken);
+        log.debug("Refresh token attempt for refreshToken: {}", refreshToken);
 
         // Validate the token structure and signature
         if (!jwtService.isTokenValid(refreshToken)) {
@@ -112,12 +121,13 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(stored);
 
         // Issue new pair (rotation)
-        TokenResponse tokens = issueTokens(user);
+        var tokens = issueTokens(user);
 
         log.info("Token refreshed successfully for user: {}", user.getId());
         return tokens;
     }
 
+    // TODO - Token blacklisting using Redis
     @Override
     public void logout(String refreshToken) {
         RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
@@ -140,12 +150,13 @@ public class AuthServiceImpl implements AuthService {
         return passwordEncoder.encode(password);
     }
 
-    // Helpers
+    // Helper methods
 
     /**
-     * Revokes any existing refresh token for the user, issues a new access
-     * and refresh token pair, and persists the new refresh token.
-     * Called on both signup and login — enforces the one-active-refresh-token rule.
+     * Generates a new access and refresh token pair for the user.
+     * <p>Ensures that only one active refresh token exists by revoking any
+     * previously issued token before creating a new one.
+     * The new refresh token is persisted with its expiration time.
      */
     private TokenResponse issueTokens(User user) {
         String userId = user.getId().toString();

@@ -13,7 +13,6 @@ public final class SecurityUtils {
     private SecurityUtils() {
     }
 
-
     /**
      * Returns the currently authenticated user principal.
      *

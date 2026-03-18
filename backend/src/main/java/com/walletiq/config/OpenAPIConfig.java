@@ -22,15 +22,26 @@ import java.util.List;
 import static com.walletiq.constant.OpenAPIConstant.API_DESCRIPTION;
 import static com.walletiq.constant.OpenAPIConstant.AUTH_DESCRIPTION;
 
+/**
+ * Configures OpenAPI / Swagger documentation for the application.
+ * Defines API metadata, server environments, security schemes, and logical
+ * endpoint grouping through tags.
+ */
 @Configuration
 @RequiredArgsConstructor
 public class OpenAPIConfig {
 
+    /**
+     * Security scheme name used for JWT bearer authentication.
+     */
     private static final String BEARER_AUTH = "BearerAuth";
 
     private final ApplicationAPIProperties applicationAPIProperties;
     private final ApplicationProperties applicationProperties;
 
+    /**
+     * OpenAPI configuration for non-production environments.
+     */
     @Bean
     @Profile("!prod")
     public OpenAPI nonProductionOpenAPI() {
@@ -40,6 +51,9 @@ public class OpenAPIConfig {
         );
     }
 
+    /**
+     * OpenAPI configuration for production environment.
+     */
     @Bean
     @Profile("prod")
     public OpenAPI productionOpenAPI() {
@@ -49,6 +63,10 @@ public class OpenAPIConfig {
         );
     }
 
+    /**
+     * Builds the OpenAPI specification with metadata, servers,
+     * security configuration, and API tags.
+     */
     private OpenAPI createOpenAPI(List<Server> servers, boolean isDevelopment) {
         String description = API_DESCRIPTION.formatted(AUTH_DESCRIPTION);
 
@@ -67,14 +85,11 @@ public class OpenAPIConfig {
             .info(info)
             .servers(servers)
             .tags(createApiTags(isDevelopment))
-            .components(createSecurityComponents())
+            .components(createComponents())
             .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH));
     }
 
-    /**
-     * JWT Security configuration
-     */
-    private Components createSecurityComponents() {
+    private Components createComponents() {
         return new Components()
             .addSecuritySchemes(BEARER_AUTH,
                 new SecurityScheme()
@@ -86,30 +101,24 @@ public class OpenAPIConfig {
     }
 
     /**
-     * API Tags for endpoint grouping
+     * Defines API tags used for grouping endpoints in Swagger UI.
      */
     private List<Tag> createApiTags(boolean isDevelopment) {
         List<Tag> tags = new ArrayList<>(List.of(
-            createTag("Authentication", "Authentication",
-                "Login, registration, and token management.", true),
-
-            createTag("Users", "User Management",
-                "User account and profile management.", true),
-
-            createTag("Admin", "Administration",
-                "Administrative endpoints requiring ADMIN privileges.", false)
+            createTag("Authentication", "Authentication", "Endpoints for user authentication, session management, and email verification.", true),
+            createTag("Users", "User Management", "User account and profile management.", true),
+            createTag("Admin", "Administration", "Administrative endpoints requiring ADMIN privileges.", false)
         ));
 
         if (isDevelopment) {
-            tags.add(createTag("Test", "Test Endpoints",
-                "Internal testing endpoints (development only).", false));
+            tags.add(createTag("Test", "Test Endpoints", "Internal testing endpoints (development only).", false));
         }
 
         return tags;
     }
 
     /**
-     * Tag builder
+     * Creates a Swagger tag with additional UI metadata.
      */
     private Tag createTag(String name, String displayName, String description, boolean isPublic) {
         Tag tag = new Tag().name(name).description(description);
@@ -121,7 +130,7 @@ public class OpenAPIConfig {
     }
 
     /**
-     * Server configuration
+     * Converts configured server URLs into OpenAPI server definitions.
      */
     private List<Server> getServers(List<String> urls, String description) {
         return urls.stream()

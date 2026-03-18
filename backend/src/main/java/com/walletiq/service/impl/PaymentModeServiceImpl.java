@@ -1,5 +1,6 @@
 package com.walletiq.service.impl;
 
+import com.walletiq.constant.CacheNames;
 import com.walletiq.dto.paymentmode.CreatePaymentModeRequest;
 import com.walletiq.dto.paymentmode.PaymentModeResponse;
 import com.walletiq.dto.paymentmode.UpdatePaymentModeRequest;
@@ -13,35 +14,41 @@ import com.walletiq.repository.UserRepository;
 import com.walletiq.service.PaymentModeService;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link PaymentModeService}.
+ * <p>Handles payment mode management for the current user, including creation,
+ * update, deletion, and retrieval of both user-defined and system default payment modes.
+ * <p>Also manages cache consistency for payment mode operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class PaymentModeServiceImpl implements PaymentModeService {
 
-    private final PaymentModeRepository paymentModeRepository;
     private final UserRepository userRepository;
-
-    // Get all payment modes visible to the current user
+    private final PaymentModeRepository paymentModeRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentModeResponse> getAllPaymentModes() {
+    @Cacheable(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    public List<PaymentModeResponse> getAll() {
         return paymentModeRepository.findAllVisibleToUser(currentUser())
             .stream()
             .map(PaymentModeMapper::toResponse)
             .toList();
     }
 
-    // Create payment mode for user
-
     @Override
     @Transactional
-    public PaymentModeResponse createPaymentMode(CreatePaymentModeRequest request) {
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    public PaymentModeResponse create(CreatePaymentModeRequest request) {
         User currentUser = currentUser();
 
         if (paymentModeRepository.existsByNameIgnoreCaseAndUser(request.name(), currentUser)) {
@@ -58,11 +65,10 @@ public class PaymentModeServiceImpl implements PaymentModeService {
         return PaymentModeMapper.toResponse(paymentModeRepository.save(paymentMode));
     }
 
-    // Update payment mode
-
     @Override
     @Transactional
-    public PaymentModeResponse updatePaymentMode(UUID id, UpdatePaymentModeRequest request) {
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    public PaymentModeResponse update(UUID id, UpdatePaymentModeRequest request) {
         User currentUser = currentUser();
 
         PaymentMode paymentMode = findPaymentModeByIdAndUser(id, currentUser);
@@ -81,11 +87,10 @@ public class PaymentModeServiceImpl implements PaymentModeService {
         return PaymentModeMapper.toResponse(paymentModeRepository.save(paymentMode));
     }
 
-    // Delete payment mode
-
     @Override
     @Transactional
-    public void deletePaymentMode(UUID id) {
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    public void delete(UUID id) {
         User currentUser = currentUser();
 
         PaymentMode paymentMode = findPaymentModeByIdAndUser(id, currentUser);
@@ -95,6 +100,7 @@ public class PaymentModeServiceImpl implements PaymentModeService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
     public PaymentMode findById(UUID id) {
         return paymentModeRepository.findById(id)
             .orElseThrow(() -> new PaymentModeException(ErrorCode.PAYMENT_MODE_NOT_FOUND));
@@ -106,6 +112,13 @@ public class PaymentModeServiceImpl implements PaymentModeService {
         return userRepository.getReferenceById(SecurityUtils.getCurrentUserId());
     }
 
+
+    /**
+     * Finds a payment mode owned by the given user.
+     * <p>Ensures that only user-owned payment modes are accessible.
+     *
+     * @throws PaymentModeException if payment mode is not found or not accessible
+     */
     private PaymentMode findPaymentModeByIdAndUser(UUID id, User user) {
         return paymentModeRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new PaymentModeException(

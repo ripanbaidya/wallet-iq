@@ -10,13 +10,13 @@ import java.util.UUID;
 public record BudgetResponse(
 
     @Schema(
-        description = "Unique identifier of the budget",
+        description = "Unique identifier of the budget record",
         example = "1f7d9e72-3e7d-4a23-bc21-9c7e8c9a1a10"
     )
     UUID id,
 
     @Schema(
-        description = "Name of the category associated with the budget",
+        description = "Display name of the category associated with this budget",
         example = "Food"
     )
     String categoryName,
@@ -35,13 +35,13 @@ public record BudgetResponse(
     YearMonth month,
 
     @Schema(
-        description = "Maximum spending limit for the category in the specified month",
+        description = "Maximum spending limit allowed for this category during the specified month",
         example = "5000.00"
     )
     BigDecimal limitAmount,
 
     @Schema(
-        description = "Percentage threshold for triggering budget alerts",
+        description = "Percentage threshold that triggers a budget alert when spending approaches the limit",
         example = "80",
         minimum = "1",
         maximum = "100"

@@ -17,10 +17,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(String email);
 
-    @Query("select u from User u where u.active = true")
+    @Query("select u from User u where u.active = true and u.role <> com.walletiq.enums.Role.ADMIN")
     List<User> findAllActiveUsers();
-
-    long countByRoleAndActiveTrue(Role role);
 
     long countByRoleAndActive(Role role, boolean active);
 }
