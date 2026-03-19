@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { AppError } from "../errors/AppError";
-import { FieldErrorMessage } from "../components/ui/FieldErrorMessage";
-import { FormError } from "../components/ui/FormError";
-import type { CreateSavingsGoalRequest } from "../types/savings.types";
+import { AppError } from "../../errors/AppError";
+import { FieldErrorMessage } from "../ui/FieldErrorMessage";
+import { FormError } from "../ui/FormError";
+import type { CreateSavingsGoalRequest } from "../../types/savings.types";
 
 interface Props {
   open: boolean;

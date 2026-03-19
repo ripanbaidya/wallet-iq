@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { budgetService } from "../services/budgetService";
-import { useAppQuery } from "../hooks/useAppQuery";
-import Spinner from "../components/ui/Spinner";
-import type { BudgetResponse } from "../types/budget.types";
+import { budgetService } from "../../services/budgetService";
+import { useAppQuery } from "../../hooks/useAppQuery";
+import Spinner from "../ui/Spinner";
+import type { BudgetResponse } from "../../types/budget.types";
 
 interface Props {
   budget: BudgetResponse;

@@ -9,13 +9,14 @@ import { useAppMutation } from "../../hooks/useAppMutation";
 import { AppError } from "../../errors/AppError";
 import { QueryError } from "../../components/ui/QueryError";
 import Spinner from "../../components/ui/Spinner";
+import { FiDownload } from "react-icons/fi";
 
 import TransactionFilters, {
   DEFAULT_FILTERS,
   type FilterState,
-} from "../../components/TransactionFilters";
-import TransactionTable from "../../components/TransactionTable";
-import TransactionForm from "../../components/TransactionForm";
+} from "../../components/transactions/TransactionFilters";
+import TransactionTable from "../../components/transactions/TransactionTable";
+import TransactionForm from "../../components/transactions/TransactionForm";
 
 import type {
   CreateTransactionRequest,
@@ -24,8 +25,7 @@ import type {
   UpdateTransactionRequest,
 } from "../../types/transaction.types";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
+/* Constants */
 const PAGE_SIZE = 20;
 
 const EMPTY_PAGE_INFO: PageInfo = {
@@ -35,28 +35,30 @@ const EMPTY_PAGE_INFO: PageInfo = {
   totalPages: 0,
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
+/* Page */
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
 
-  // ── List state ────────────────────────────────────────────────────────────
+  /* List state */
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
-  // ── Panel state ───────────────────────────────────────────────────────────
-  // null  → panel closed
-  // false → create mode
-  // TransactionResponse → edit mode with that transaction pre-filled
+  /* Panel state */
+  /* 
+    null  → panel closed
+    false → create mode
+    TransactionResponse → edit mode with that transaction pre-filled
+  */
   const [editing, setEditing] = useState<TransactionResponse | null | false>(
     null,
   );
   const [submitError, setSubmitError] = useState<AppError | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const isFormOpen = editing !== null;
   const isEditMode = editing !== null && editing !== false;
 
-  // ── Transactions query ────────────────────────────────────────────────────
+  // Transactions query
   const txnQuery = useAppQuery({
     queryKey: ["transactions", page, filters],
     queryFn: () =>
@@ -70,7 +72,7 @@ export default function TransactionsPage() {
     placeholderData: (prev) => prev,
   });
 
-  // ── Category queries (both types for form dropdown) ───────────────────────
+  // Category queries (both types for form dropdown)
   const categoryIncomeQuery = useAppQuery({
     queryKey: ["categories", "INCOME"],
     queryFn: () => categoryService.getAll("INCOME"),
@@ -80,13 +82,25 @@ export default function TransactionsPage() {
     queryFn: () => categoryService.getAll("EXPENSE"),
   });
 
-  // ── Payment modes ─────────────────────────────────────────────────────────
+  // Payment modes
   const paymentModeQuery = useAppQuery({
     queryKey: ["payment-modes"],
     queryFn: () => paymentModeService.getAll(),
   });
 
-  // ── Create ────────────────────────────────────────────────────────────────
+  // Handler
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await transactionService.exportCsv();
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Create
   const { mutate: create, isPending: isCreating } = useAppMutation({
     mutationFn: (data: CreateTransactionRequest) =>
       transactionService.create(data),
@@ -99,7 +113,7 @@ export default function TransactionsPage() {
     onError: (err: AppError) => setSubmitError(err),
   });
 
-  // ── Update ────────────────────────────────────────────────────────────────
+  // Update
   const { mutate: update, isPending: isUpdating } = useAppMutation({
     mutationFn: ({
       id,
@@ -116,7 +130,7 @@ export default function TransactionsPage() {
     onError: (err: AppError) => setSubmitError(err),
   });
 
-  // ── Delete ────────────────────────────────────────────────────────────────
+  // Delete
   const { mutate: remove, isPending: isDeleting } = useAppMutation({
     mutationFn: (id: string) => transactionService.delete(id),
     onSuccess: () => {
@@ -126,7 +140,7 @@ export default function TransactionsPage() {
     onError: (err: AppError) => console.error("Delete failed", err.message),
   });
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // Helpers
   const openCreate = () => {
     setSubmitError(null);
     setEditing(false); // false = create mode, panel open
@@ -152,7 +166,7 @@ export default function TransactionsPage() {
     setPage(0);
   };
 
-  // ── Derived data ──────────────────────────────────────────────────────────
+  // Derived data
   const transactions = txnQuery.data?.data?.content ?? [];
   const pageInfo: PageInfo = txnQuery.data?.data?.page ?? EMPTY_PAGE_INFO;
 
@@ -166,11 +180,11 @@ export default function TransactionsPage() {
   const isPageRefetching = txnQuery.isFetching && !txnQuery.isLoading;
   const isPending = isCreating || isUpdating;
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // Render
   return (
     <div className="max-w-6xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Transactions</h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -179,6 +193,27 @@ export default function TransactionsPage() {
               : "Track your income and expenses."}
           </p>
         </div>
+
+        {/* Export CSV button */}
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="text-sm font-medium border border-gray-200 text-gray-700 px-4 py-2 rounded-lg 
+             hover:bg-gray-100 hover:border-gray-300 
+             transition-all duration-200 
+             disabled:opacity-50 disabled:cursor-not-allowed 
+             flex items-center gap-2 active:scale-[0.98]"
+        >
+          {isExporting ? (
+            <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <FiDownload className="text-base" />
+          )}
+
+          <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+        </button>
+
+        {/* New Transaction button */}
         <button
           onClick={openCreate}
           className="text-sm bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"

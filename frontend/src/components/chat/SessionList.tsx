@@ -1,4 +1,4 @@
-import type { ChatSessionResponse } from "../types/chat.types";
+import type { ChatSessionResponse } from "../../types/chat.types";
 
 interface Props {
   sessions: ChatSessionResponse[];

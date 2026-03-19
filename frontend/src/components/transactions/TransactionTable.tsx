@@ -1,4 +1,4 @@
-import type { PageInfo, TransactionResponse } from '../types/transaction.types';
+import type { PageInfo, TransactionResponse } from '../../types/transaction.types';
 
 interface Props {
     transactions: TransactionResponse[];

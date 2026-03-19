@@ -1,4 +1,4 @@
-import type { DashboardSummary } from "../types/dashboard.types";
+import type { DashboardSummary } from "../../types/dashboard.types";
 
 interface Props {
   summary: DashboardSummary;

@@ -6,7 +6,9 @@ interface AuthState {
     user: AuthUserResponse | null;
     accessToken: string | null;
     refreshToken: string | null;
+    isAdmin: boolean;
     setAuth: (user: AuthUserResponse, access: string, refresh: string) => void;
+    setIsAdmin: (isAdmin: boolean) => void;
     clearAuth: () => void;
 }
 
@@ -16,10 +18,13 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             accessToken: null,
             refreshToken: null,
+            isAdmin: false,
             setAuth: (user, accessToken, refreshToken) =>
                 set({ user, accessToken, refreshToken }),
+            setIsAdmin: (isAdmin) =>
+                set({ isAdmin }),
             clearAuth: () =>
-                set({ user: null, accessToken: null, refreshToken: null }),
+                set({ user: null, accessToken: null, refreshToken: null, isAdmin: false }),
         }),
         {
             name: 'walletiq-auth',
@@ -27,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
                 user: state.user,
                 accessToken: state.accessToken,
                 refreshToken: state.refreshToken,
+                isAdmin: state.isAdmin,
             }),
         }
     )

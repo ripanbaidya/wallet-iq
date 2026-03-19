@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { AppError } from "../errors/AppError";
-import { FieldErrorMessage } from "./ui/FieldErrorMessage";
-import { FormError } from "./ui/FormError";
-import type { CategoryResponse } from "../types/category.types";
-import type { CreateBudgetRequest } from "../types/budget.types";
+import { AppError } from "../../errors/AppError";
+import { FieldErrorMessage } from "../ui/FieldErrorMessage";
+import { FormError } from "../ui/FormError";
+import type { CategoryResponse } from "../../types/category.types";
+import type { CreateBudgetRequest } from "../../types/budget.types";
 
 interface Props {
   open: boolean;

@@ -8,9 +8,9 @@ import { AppError } from "../../errors/AppError";
 import { QueryError } from "../../components/ui/QueryError";
 import Spinner from "../../components/ui/Spinner";
 
-import GoalForm from "../../components/GoalForm";
-import GoalCard from "../../components/GoalCard";
-import ContributeModal from "../../components/ContributeModal";
+import GoalForm from "../../components/savings/GoalForm";
+import GoalCard from "../../components/savings/GoalCard";
+import ContributeModal from "../../components/savings/ContributeModal";
 
 import type {
   CreateSavingsGoalRequest,

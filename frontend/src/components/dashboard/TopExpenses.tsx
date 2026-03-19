@@ -1,4 +1,4 @@
-import type { TopExpenseItem } from "../types/dashboard.types";
+import type { TopExpenseItem } from "../../types/dashboard.types";
 
 interface Props {
   data: TopExpenseItem[];

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { useAppMutation } from "../../hooks/useAppMutation";
 import { authService } from "../../services/authService";
+import { adminService } from "../../services/adminService";
 import { useAuthStore } from "../../store/authStore";
 import { AppError } from "../../errors/AppError";
 import { FormError } from "../../components/ui/FormError";
@@ -19,7 +20,7 @@ const messages = [
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setIsAdmin } = useAuthStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -36,12 +37,24 @@ export default function LoginPage() {
   const { mutate, isPending } = useAppMutation({
     mutationFn: () => authService.login({ email, password }),
 
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
+      // Store auth immediately so the Axios interceptor can
+      // attach the Bearer token for the admin probe below.
       setAuth(
         res.data.user,
         res.data.tokens.accessToken,
         res.data.tokens.refreshToken,
       );
+
+      // Probe the admin endpoint once at login time.
+      // 200 → admin, 403 → regular user.
+      try {
+        await adminService.getUserCount("USER", true);
+        setIsAdmin(true);
+      } catch {
+        setIsAdmin(false);
+      }
+
       navigate("/dashboard");
     },
 
@@ -102,12 +115,9 @@ export default function LoginPage() {
       animate={{ opacity: 1 }}
       className="min-h-screen flex font-sans"
     >
-      {/* LEFT PANEL */}
+      {/* LEFT — branding panel */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-gradient-to-br from-red-700 via-purple-900 to-black text-white">
-        {/* overlay blur */}
         <div className="absolute inset-0 bg-black/20 backdrop-blur-2xl" />
-
-        {/* grid pattern */}
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -116,8 +126,6 @@ export default function LoginPage() {
             backgroundSize: "40px 40px",
           }}
         />
-
-        {/* animated glow */}
         <motion.div
           animate={{
             x: [0, 30, -20, 0],
@@ -127,50 +135,25 @@ export default function LoginPage() {
           transition={{ duration: 10, repeat: Infinity }}
           className="absolute left-20 top-1/3 w-40 h-40 bg-red-500/30 blur-3xl"
         />
-
-        {/* CONTENT */}
         <motion.div
           initial="hidden"
           animate="show"
           variants={container}
-          className="relative z-10 flex flex-col justify-center px-16 h-full font-[Space_Grotesk]"
+          className="relative z-10 flex flex-col justify-center px-16 h-full"
         >
-          {/* Brand */}
-          <motion.h1
-            variants={item}
-            className="text-4xl font-semibold mb-6 tracking-tight"
-          >
+          <motion.h1 variants={item} className="text-4xl font-semibold mb-6">
             Wallet<span className="text-red-400">IQ</span>
           </motion.h1>
-
-          {/* Animated text */}
           <motion.div variants={item} className="h-20">
-            <p className="text-2xl font-medium leading-snug">
+            <p className="text-2xl">
               {text}
               <span className="animate-pulse">|</span>
             </p>
           </motion.div>
-
-          {/* Supporting line */}
-          <motion.p
-            variants={item}
-            className="mt-6 text-sm opacity-70 max-w-md"
-          >
-            Built for developers who want deeper financial awareness using AI +
-            real-time intelligence.
-          </motion.p>
-
-          {/* Tag */}
-          <motion.div
-            variants={item}
-            className="mt-10 text-xs opacity-50 tracking-widest"
-          >
-            PERSONAL FINANCE • AI • RAG SYSTEM
-          </motion.div>
         </motion.div>
       </div>
 
-      {/* RIGHT PANEL */}
+      {/* RIGHT — form panel */}
       <div className="flex w-full lg:w-1/2 items-center justify-center bg-gray-50 px-6">
         <motion.div
           variants={container}
@@ -182,6 +165,7 @@ export default function LoginPage() {
             <h2 className="text-3xl font-semibold">Welcome back</h2>
           </motion.div>
 
+          {/* Top-level form error */}
           <motion.div variants={item}>
             <FormError error={formError} />
           </motion.div>
@@ -193,11 +177,12 @@ export default function LoginPage() {
           >
             {/* Email */}
             <motion.div variants={item}>
-              <label className="block text-sm text-gray-600 mb-1">Email</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                Email address
+              </label>
               <input
                 type="email"
                 value={email}
-                placeholder="ripanbaidya@gmail.com"
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
               />
@@ -213,7 +198,6 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  placeholder="********"
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
                 />
@@ -248,45 +232,6 @@ export default function LoginPage() {
                 "Login"
               )}
             </motion.button>
-
-            {/* social login  */}
-            {/* <motion.div variants={item} className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </motion.div>
-
-            <motion.div variants={item} className="flex gap-2">
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-full hover:bg-gray-100 transition"
-              >
-                <FcGoogle className="w-5 h-5" />
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-full hover:bg-gray-100 transition"
-              >
-                <FaGithub className="w-5 h-5" />
-                GitHub
-              </button>
-            </motion.div> */}
-
-            {/* Forgot password */}
-            <motion.div variants={item} className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-gray-500 hover:text-black transition"
-              >
-                Forgot password?
-              </Link>
-            </motion.div>
           </motion.form>
 
           <motion.p
@@ -296,7 +241,7 @@ export default function LoginPage() {
             Don't have an account?{" "}
             <Link
               to="/signup"
-              className="font-medium text-black hover:text-blue-600 transition"
+              className="font-medium text-black hover:text-gray-600 transition"
             >
               Register
             </Link>

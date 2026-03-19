@@ -9,9 +9,9 @@ import { AppError } from "../../errors/AppError";
 import { QueryError } from "../../components/ui/QueryError";
 import Spinner from "../../components/ui/Spinner";
 
-import BudgetMonthNav from "../../components/BudgetMonthNav";
-import BudgetForm from "../../components/BudgetForm";
-import BudgetCard from "../../components/BudgetCard";
+import BudgetMonthNav from "../../components/budgets/BudgetMonthNav";
+import BudgetForm from "../../components/budgets/BudgetForm";
+import BudgetCard from "../../components/budgets/BudgetCard";
 
 import type { CreateBudgetRequest } from "../../types/budget.types";
 

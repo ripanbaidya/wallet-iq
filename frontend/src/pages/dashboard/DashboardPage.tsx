@@ -4,11 +4,11 @@ import { useAppQuery } from '../../hooks/useAppQuery';
 import { QueryError } from '../../components/ui/QueryError';
 import Spinner from '../../components/ui/Spinner';
 
-import MonthNavigator from '../../components/MonthNavigator';
-import SummaryCards from '../../components/SummaryCards';
-import DailyTrendChart from '../../components/DailyTrendChart';
-import CategoryBreakdown from '../../components/CategoryBreakdown';
-import TopExpenses from '../../components/TopExpenses';
+import MonthNavigator from '../../components/dashboard/MonthNavigator';
+import SummaryCards from '../../components/dashboard/SummaryCards';
+import DailyTrendChart from '../../components/dashboard/DailyTrendChart';
+import CategoryBreakdown from '../../components/dashboard/CategoryBreakdown';
+import TopExpenses from '../../components/dashboard/TopExpenses';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

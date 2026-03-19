@@ -8,9 +8,9 @@ import { AppError } from "../../errors/AppError";
 import Spinner from "../../components/ui/Spinner";
 import { QueryError } from "../../components/ui/QueryError";
 
-import SessionList from "../../components/SessionList";
-import MessageList from "../../components/MessageList";
-import MessageInput from "../../components/MessageInput";
+import SessionList from "../../components/chat/SessionList";
+import MessageList from "../../components/chat/MessageList";
+import MessageInput from "../../components/chat/MessageInput";
 
 import type {
   ChatMessageResponse,

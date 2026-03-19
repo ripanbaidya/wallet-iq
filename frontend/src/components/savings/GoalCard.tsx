@@ -1,4 +1,4 @@
-import type { GoalProgressResponse, GoalStatus } from "../types/savings.types";
+import type { GoalProgressResponse, GoalStatus } from "../../types/savings.types";
 
 interface Props {
   goal: GoalProgressResponse;

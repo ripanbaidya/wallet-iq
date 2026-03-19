@@ -8,7 +8,7 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
-import type { DailyTrendItem } from "../types/dashboard.types";
+import type { DailyTrendItem } from "../../types/dashboard.types";
 
 interface Props {
   data: DailyTrendItem[];

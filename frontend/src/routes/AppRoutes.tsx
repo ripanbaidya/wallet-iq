@@ -13,6 +13,9 @@ import BudgetsPage from "../pages/budgets/BudgetsPage";
 import SavingsPage from "../pages/savings/SavingsPage";
 import ChatPage from "../pages/chat/ChatPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+import AboutPage from "../pages/about/AboutPage";
+import RecurringPage from "../pages/recurring/RecurringPage";
+import AdminPage from "../pages/admin/AdminPage";
 
 const AppRoutes: React.FC = () => (
   <Routes>
@@ -31,12 +34,15 @@ const AppRoutes: React.FC = () => (
     >
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/transactions" element={<TransactionsPage />} />
+      <Route path="/recurring" element={<RecurringPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
       <Route path="/payment-modes" element={<PaymentModesPage />} />
       <Route path="/budgets" element={<BudgetsPage />} />
       <Route path="/savings" element={<SavingsPage />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/admin" element={<AdminPage />} />
     </Route>
 
     {/* Catch-all → landing page */}

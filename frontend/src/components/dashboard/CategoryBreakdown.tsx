@@ -1,4 +1,4 @@
-import type { CategoryBreakdownResponse } from "../types/dashboard.types";
+import type { CategoryBreakdownResponse } from "../../types/dashboard.types";
 
 interface Props {
   title: string;

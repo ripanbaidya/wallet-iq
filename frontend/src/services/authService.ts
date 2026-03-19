@@ -23,6 +23,7 @@ export const authService = {
     logout: async (): Promise<void> => {
         await apiClient.post('/auth/logout');
     },
+    
     sendOtp: async (data: SendOtpRequest): Promise<ResponseWrapper<OtpResponse>> => {
         const res = await apiClient.post('/auth/email/send-otp', data);
         return res.data;
