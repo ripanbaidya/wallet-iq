@@ -31,10 +31,14 @@ export interface UpdateTransactionRequest {
     paymentModeId?: string;
 }
 
-export interface PageResponse<T> {
-    content: T[];
-    totalElements: number;
-    totalPages: number;
+export interface PageInfo {
     number: number;
     size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
+export interface PageResponse<T> {
+    content: T[];
+    page: PageInfo;
 }
