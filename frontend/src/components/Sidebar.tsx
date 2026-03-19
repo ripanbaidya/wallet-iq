@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const navItems = [
@@ -18,12 +18,16 @@ const extractFirstLetter = (fullName?: string) => {
 
 const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <aside className="w-56 min-h-screen bg-white border-r border-gray-200 flex flex-col">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-200">
-        <span className="text-lg font-semibold tracking-tight text-black">
+        <span
+          className="text-lg font-semibold tracking-tight text-black cursor-pointer"
+          onClick={() => navigate("/home")}
+        >
           WalletIQ
         </span>
       </div>

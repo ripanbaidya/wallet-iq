@@ -1,6 +1,13 @@
 import { apiClient } from '../lib/axios';
 import type { ResponseWrapper } from '../types/api.types';
-import type { AuthResponse, LoginRequest, SignupRequest } from '../types/auth.types';
+import type {
+    AuthResponse,
+    LoginRequest,
+    SignupRequest,
+    SendOtpRequest,
+    VerifyOtpRequest,
+    OtpResponse
+} from '../types/auth.types';
 
 export const authService = {
     login: async (data: LoginRequest): Promise<ResponseWrapper<AuthResponse>> => {
@@ -15,5 +22,14 @@ export const authService = {
 
     logout: async (): Promise<void> => {
         await apiClient.post('/auth/logout');
+    },
+    sendOtp: async (data: SendOtpRequest): Promise<ResponseWrapper<OtpResponse>> => {
+        const res = await apiClient.post('/auth/email/send-otp', data);
+        return res.data;
+    },
+
+    verifyOtp: async (data: VerifyOtpRequest): Promise<ResponseWrapper<OtpResponse>> => {
+        const res = await apiClient.post('/auth/email/verify-otp', data);
+        return res.data;
     },
 };

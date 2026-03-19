@@ -4,6 +4,7 @@ import Layout from "../components/Layout";
 
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
+import HomePage from "../pages/home/HomePage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import TransactionsPage from "../pages/transactions/TransactionsPage";
 import CategoriesPage from "../pages/categories/CategoriesPage";
@@ -15,7 +16,8 @@ import ProfilePage from "../pages/profile/ProfilePage";
 
 const AppRoutes: React.FC = () => (
   <Routes>
-    {/* Public routes */}
+    {/* Public routes — no auth required */}
+    <Route path="/home" element={<HomePage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
 
@@ -37,8 +39,8 @@ const AppRoutes: React.FC = () => (
       <Route path="/profile" element={<ProfilePage />} />
     </Route>
 
-    {/* Default redirect */}
-    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    {/* Catch-all → landing page */}
+    <Route path="*" element={<Navigate to="/home" replace />} />
   </Routes>
 );
 
