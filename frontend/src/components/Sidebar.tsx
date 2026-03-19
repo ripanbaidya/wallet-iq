@@ -5,11 +5,16 @@ const navItems = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Transactions", path: "/transactions" },
   { label: "Categories", path: "/categories" },
+  { label: "Payment Modes", path: "/payment-modes" },
   { label: "Budgets", path: "/budgets" },
   { label: "Savings Goals", path: "/savings" },
   { label: "Chat", path: "/chat" },
   { label: "Profile", path: "/profile" },
 ];
+
+const extractFirstLetter = (fullName?: string) => {
+  return fullName?.charAt(0).toUpperCase() ?? "U";
+};
 
 const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -43,14 +48,22 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* User + Logout */}
-      <div className="px-4 py-4 border-t border-gray-200">
-        <p className="text-xs text-gray-400 truncate mb-2">{user?.email}</p>
-        <button
-          onClick={logout}
-          className="w-full text-left text-sm text-red-500 hover:text-red-700 transition-colors"
-        >
-          Logout
-        </button>
+      <div className="px-4 py-4 border-t border-gray-200 flex items-center gap-3">
+        {/* Avatar */}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+          {extractFirstLetter(user?.fullName ?? "")}
+        </div>
+
+        {/* User Info + Logout */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-gray-700 truncate">{user?.fullName}</p>
+          <button
+            onClick={logout}
+            className="text-xs text-red-500 hover:text-red-700 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </aside>
   );

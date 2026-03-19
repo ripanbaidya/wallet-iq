@@ -7,6 +7,7 @@ import SignupPage from "../pages/auth/SignupPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import TransactionsPage from "../pages/transactions/TransactionsPage";
 import CategoriesPage from "../pages/categories/CategoriesPage";
+import PaymentModesPage from "../pages/paymentmodes/PaymentModesPage";
 import BudgetsPage from "../pages/budgets/BudgetsPage";
 import SavingsPage from "../pages/savings/SavingsPage";
 import ChatPage from "../pages/chat/ChatPage";
@@ -29,6 +30,7 @@ const AppRoutes: React.FC = () => (
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/transactions" element={<TransactionsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="/payment-modes" element={<PaymentModesPage />} />
       <Route path="/budgets" element={<BudgetsPage />} />
       <Route path="/savings" element={<SavingsPage />} />
       <Route path="/chat" element={<ChatPage />} />

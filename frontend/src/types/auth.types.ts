@@ -15,7 +15,7 @@ export interface LogoutRequest {
 
 export interface AuthResponse {
     user: AuthUserResponse;
-    token: TokenResponse;
+    tokens: TokenResponse;
 }
 
 export interface TokenResponse {

@@ -28,7 +28,7 @@ export default function SignupPage() {
 
     onSuccess: () => {
       setSuccess("Account created successfully 🎉");
-      setTimeout(() => navigate("/login"), 1500);
+      setTimeout(() => navigate("/login"), 2500);
     },
 
     onError: (error: AppError) => {
@@ -37,7 +37,6 @@ export default function SignupPage() {
       if (error.isValidation) {
         setFieldErrors(error.toFieldErrorMap());
       } else if (error.isConflict) {
-        // e.g. EMAIL_ALREADY_EXISTS — show on the email field directly
         setFieldErrors({ email: error.message });
       } else {
         setFormError(error.message);
@@ -131,6 +130,7 @@ export default function SignupPage() {
                 type="text"
                 name="fullName"
                 value={form.fullName}
+                placeholder="Ripan Baidya"
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
               />
@@ -144,6 +144,7 @@ export default function SignupPage() {
                 type="email"
                 name="email"
                 value={form.email}
+                placeholder="ripanbaidya@gmail.com"
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
               />
@@ -160,6 +161,7 @@ export default function SignupPage() {
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
+                  placeholder="********"
                   onChange={handleChange}
                   className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
                 />
@@ -201,7 +203,7 @@ export default function SignupPage() {
             <motion.button
               variants={item}
               type="submit"
-              disabled={isPending} // ✅ no manual loading state
+              disabled={isPending}
               className="w-full bg-black text-white py-3 rounded-full hover:bg-gray-800 transition disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isPending ? (
@@ -222,7 +224,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-medium text-black hover:text-gray-600 transition"
+              className="font-medium text-black hover:text-gray-500 transition"
             >
               Login
             </Link>
@@ -230,7 +232,7 @@ export default function SignupPage() {
         </motion.div>
       </div>
 
-      {/* RIGHT — branding panel */}
+      {/* Right — branding panel */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-[#020617] text-white">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
