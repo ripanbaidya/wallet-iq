@@ -1,55 +1,36 @@
+# ============================================================
+#  Base Configuration
+# ============================================================
+
 spring:
   application:
     name: walletiq
 
-  # DB - PostgreSQL
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:walletiq}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
+  # Profile
+  # Switch to 'prod' for production deployments.
+  profiles:
+    active: dev
 
-    # HikariCP Connection Pool
-    hikari:
-      pool-name: WalletIQHikariPool
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
-      minimum-idle: ${DB_POOL_MIN_IDLE:2}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000} # 30 seconds
-      idle-timeout: ${DB_IDLE_TIMEOUT:600000}   # 10 minutes
-      max-lifetime: ${DB_MAX_LIFETIME:1800000}  # 30 minutes
-      auto-commit: true
-      leak-detection-threshold: 60000 # 1 minute
+  # JSON Serialization
+  jackson:
+    time-zone: Asia/Kolkata
 
-  # JPA/ Hibernate
+  # JPA/ Hibernate (shared config)
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
-    open-in-view: false # Prevents accidental lazy loading
+    open-in-view: false   # Prevents accidental lazy loading
     hibernate:
       ddl-auto: validate
-      # ddl-auto: update # Not recommended for production
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: false
         generate_statistics: false
         jdbc:
-          batch_size: 20 # Ask driver to send upto 20 DML statements in a batch, Good for bulk insert/update
-          fetch_size: 50 # Ask driver to fetch x number of rows at a time, Good for pagination
+          batch_size: 20  # Batch up to 20 DML statements — good for bulk insert/update
+          fetch_size: 50  # Fetch 50 rows at a time — good for pagination
         order_inserts: true
         order_updates: true
-
-  # Redis Configuration
-  # Multiple Redis deployment options supported:
-  # 1. Redis-Upstash (Cloud): Visit https://upstash.com -> Redis -> Create DB -> Copy URL
-  # 2. Docker: Use docker-compose with redis:alpine image
-  # 3. Local Installation: Install Redis locally and use redis://localhost:6379
-  # Note: SSL is automatically enabled for Upstash URLs starting with rediss://
-  data:
-    redis:
-      url: ${REDIS_URL}
-      ssl:
-        enabled: true
 
   # Flyway - DB Migration
   flyway:
@@ -57,14 +38,10 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
-  # Json
-  jackson:
-    time-zone: Asia/Kolkata
-
-  # AI - Ollama + PgVector
+  # Spring AI (shared model config)
+  # Note: You can change the chat model, as per your requirement
   ai:
     ollama:
-      base-url: http://localhost:11434
       chat:
         options:
           model: llama3.1:8b
@@ -72,41 +49,16 @@ spring:
       embedding:
         options:
           model: nomic-embed-text:v1.5
-
     vectorstore:
       pgvector:
         dimensions: 768
         distance-type: cosine_distance
         index-type: hnsw
-        initialize-schema: false # We are managing schema manually
+        initialize-schema: false  # Schema managed manually via Flyway
         schema-name: public
         table-name: vector_store
 
-  # Mail Config
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    # your gmail address
-    username: ${MAIL_USERNAME}
-    # This is not the password of gmail, but app-specific password
-    # Visit - https://myaccount.google.com/security, enable two-step verification, after enabling
-    # Visit - https://myaccount.google.com/apppasswords, create app-specific password and use it
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          ssl:
-            trust: ${MAIL_SSL_TRUST:*}
-          quitwait: false
-        connectiontimeout: 5000
-        timeout: 5000
-        writetimeout: 5000
-
-# Server Config
+# Server
 server:
   port: ${SERVER_PORT:8080}
   servlet:
@@ -114,19 +66,16 @@ server:
     session:
       timeout: 30m
   compression:
-    enabled: true # Enable GZIP compression
+    enabled: true  # Enable GZIP compression
   error:
     whitelabel:
       enabled: false
-    # Do not expose internal exception messages
-    include-message: never
-    # Do not expose validation error details
-    # Use "on_param" only for debugging or internal APIs
-    include-binding-errors: never
+    include-message: never           # Do not expose internal exception messages
+    include-binding-errors: never    # Do not expose validation error details
     include-stacktrace: never
     include-exception: false
 
-# Swagger/OpenAPI
+# Swagger/ OpenAPI
 springdoc:
   api-docs:
     path: /api-docs
@@ -134,21 +83,15 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: ${SWAGGER_UI_ENABLED:true}
-    # Prevent loading default restore example
-    disable-swagger-default-url: true
-    # Shows API execution time(ms) in the UI
-    display-request-duration: true
+    disable-swagger-default-url: true     # Prevent loading default restore example
+    display-request-duration: true        # Show API execution time (ms) in the UI
     operations-sorter: alpha
     tags-sorter: alpha
-    # Controls UI expansion.
     doc-expansion: none
-    # Enable search bar to filter endpoints
     filter: true
-    # Controls whether Spring Actuator endpoints appear in Swagger.
     show-actuator: true
 
-
-# Application Specific Config
+# Application-Specific Config
 app:
   name: Wallet-IQ
   version: ${APPLICATION_VERSION:1.0.0}
@@ -161,18 +104,15 @@ app:
     email: support@walletiq.com
     working-hours: "Mon-Fri: 9 AM - 6 PM"
   social:
-    github: ${SOCIAL_GITHUB:https://github.com/ripan-baidya/walletiq}
+    github: ${SOCIAL_GITHUB:https://github.com/ripan-baidya}
   developer:
     name: Ripan Baidya
     email: official.ripanbaidya@gmail.com
-
   otp:
-    expiry-minutes: 5 # Otp is valid for 5 minutes
-
+    expiry-minutes: 5  # OTP is valid for 5 minutes
   mail:
     from: ${MAIL_USERNAME}
     from-name: WalletIQ
-
   api:
     servers:
       dev:
@@ -193,7 +133,6 @@ app:
       algorithm: "RSA"
       private-key-path: classpath:keys/private_key_pkcs8.pem
       public-key-path: classpath:keys/public_key.pem
-
     cors:
       enabled: ${CORS_ENABLED:true}
       allowed-origins:
@@ -211,13 +150,3 @@ app:
         - Authorization
       allow-credentials: true
       max-age: 3600
-
-logging:
-  level:
-    root: info
-    com.walletiq: debug
-    org.springframework.web: debug
-    org.springframework.security: debug
-    org.springframework.ai.chat.client.advisor: debug
-    org.springframework.data.redis: debug
-    org.springframework.cache: trace

@@ -1,0 +1,76 @@
+# ============================================================
+# Production
+# ============================================================
+
+spring:
+
+  # Database (production PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: WalletIQHikariPool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}    # 30 seconds
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}               # 10 minutes
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}              # 30 minutes
+      auto-commit: true
+      leak-detection-threshold: 60000                       # 1 minute
+
+  # JPA (prod: no SQL logging)
+  jpa:
+    show-sql: false
+
+  # Redis (production — SSL required)
+  data:
+    redis:
+      url: ${REDIS_URL}
+      ssl:
+        enabled: true
+
+  # Ollama
+  # Note: In order to change the provider, we
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL}
+
+  # Mail
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: ${MAIL_SSL_TRUST:smtp.gmail.com}
+          quitwait: false
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
+
+# Swagger/ OpenAPI (disabled in production)
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Logging (minimal in production)
+logging:
+  level:
+    root: warn
+    com.walletiq: info
+    org.springframework.web: warn
+    org.springframework.security: warn
+    org.springframework.ai.chat.client.advisor: warn
+    org.springframework.data.redis: warn
+    org.springframework.cache: warn
