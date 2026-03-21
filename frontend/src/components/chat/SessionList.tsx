@@ -40,11 +40,9 @@ const SessionList: React.FC<Props> = ({
       {/* ── Header ── */}
       <div className="px-4 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Conversations
-            </p>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Conversations
+          </p>
           <button
             onClick={onCreate}
             disabled={isCreating}
@@ -101,9 +99,7 @@ const SessionList: React.FC<Props> = ({
                 }`}
               >
                 {/* Icon */}
-                <div
-                  className={`mt-0.5 shrink-0 ${isActive ? "text-gray-400" : "text-gray-400"}`}
-                >
+                <div className="mt-0.5 shrink-0 text-gray-400">
                   <svg
                     width="13"
                     height="13"
@@ -121,12 +117,16 @@ const SessionList: React.FC<Props> = ({
                 {/* Text */}
                 <div className="min-w-0 flex-1">
                   <p
-                    className={`text-xs font-medium truncate leading-snug ${isActive ? "text-white" : "text-gray-800"}`}
+                    className={`text-xs font-medium truncate leading-snug ${
+                      isActive ? "text-white" : "text-gray-800"
+                    }`}
                   >
                     {session.title}
                   </p>
                   <p
-                    className={`text-xs mt-0.5 ${isActive ? "text-gray-400" : "text-gray-400"}`}
+                    className={`text-xs mt-0.5 ${
+                      isActive ? "text-gray-400" : "text-gray-400"
+                    }`}
                   >
                     {formatDate(session.updatedAt)}
                   </p>

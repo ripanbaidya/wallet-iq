@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { HiTrendingUp, HiTrendingDown } from "react-icons/hi";
 import { AppError } from "../../errors/AppError";
 import { FieldErrorMessage } from "../ui/FieldErrorMessage";
 import { FormError } from "../ui/FormError";
@@ -12,8 +13,7 @@ import type {
 } from "../../types/recurring.types";
 import type { TxnType } from "../../types/transaction.types";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
-
+/* Props */
 type CreateProps = {
   mode: "create";
   onSubmit: (data: CreateRecurringTransactionRequest) => void;
@@ -37,8 +37,7 @@ type BaseProps = {
 
 type Props = BaseProps & (CreateProps | EditProps);
 
-// ── Form state ────────────────────────────────────────────────────────────────
-
+/* Form state */
 interface FormState {
   title: string;
   amount: string;
@@ -79,7 +78,7 @@ const EMPTY: FormState = {
   paymentModeId: "",
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 
 const RecurringForm: React.FC<Props> = (props) => {
   const { open, onClose, isPending, submitError, categories, paymentModes } =
@@ -191,17 +190,33 @@ const RecurringForm: React.FC<Props> = (props) => {
 
   const isCreate = props.mode === "create";
 
+  // Shared input class
+  const inputCls =
+    "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black";
+
   return (
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/30 z-30" onClick={onClose} />
 
-      {/* Panel */}
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-40 flex flex-col">
+      {/* Panel
+          - Mobile  : full-screen bottom sheet (slides up from bottom)
+          - sm+     : right-side drawer, max-w-md
+      */}
+      <div
+        className="
+          fixed z-40 flex flex-col bg-white shadow-xl
+          /* mobile — bottom sheet */
+          bottom-0 left-0 right-0 max-h-[92dvh] rounded-t-2xl
+          /* sm+ — side drawer */
+          sm:inset-y-0 sm:right-0 sm:left-auto sm:bottom-auto
+          sm:w-full sm:max-w-md sm:max-h-none sm:rounded-none
+        "
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
               {isCreate
                 ? "New Recurring Transaction"
                 : "Edit Recurring Transaction"}
@@ -214,16 +229,16 @@ const RecurringForm: React.FC<Props> = (props) => {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 transition-colors text-xl leading-none"
+            className="text-gray-400 hover:text-gray-700 transition-colors text-xl leading-none ml-4 shrink-0"
           >
             ✕
           </button>
         </div>
 
-        {/* Form body */}
+        {/* Form body — scrollable */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-6 py-5 space-y-5"
+          className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-5"
         >
           {submitError && !submitError.isValidation && (
             <FormError error={submitError.message} />
@@ -238,7 +253,7 @@ const RecurringForm: React.FC<Props> = (props) => {
               onChange={(e) => set("title", e.target.value)}
               placeholder="e.g. Wifi Bill"
               autoFocus
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black"
+              className={inputCls}
             />
             <FieldErrorMessage message={fieldErrors.title} />
           </div>
@@ -253,15 +268,25 @@ const RecurringForm: React.FC<Props> = (props) => {
                     key={t}
                     type="button"
                     onClick={() => set("type", t)}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                       form.type === t
                         ? t === "INCOME"
-                          ? "bg-green-600 text-white"
+                          ? "bg-green-500 text-white"
                           : "bg-red-500 text-white"
                         : "bg-white text-gray-500 hover:bg-gray-50"
                     }`}
                   >
-                    {t === "INCOME" ? "↑ Income" : "↓ Expense"}
+                    {t === "INCOME" ? (
+                      <>
+                        <HiTrendingUp size={14} />
+                        Income
+                      </>
+                    ) : (
+                      <>
+                        <HiTrendingDown size={14} />
+                        Expense
+                      </>
+                    )}
                   </button>
                 ))}
               </div>
@@ -280,7 +305,7 @@ const RecurringForm: React.FC<Props> = (props) => {
               value={form.amount}
               onChange={(e) => set("amount", e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black"
+              className={inputCls}
             />
             <FieldErrorMessage message={fieldErrors.amount} />
           </div>
@@ -308,92 +333,97 @@ const RecurringForm: React.FC<Props> = (props) => {
             </div>
           </div>
 
-          {/* Start date */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={form.startDate}
-              onChange={(e) => set("startDate", e.target.value)}
-              disabled={!isCreate}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-400"
-            />
-            <FieldErrorMessage message={fieldErrors.startDate} />
-          </div>
+          {/* Start date + End date — side-by-side on sm+ */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(e) => set("startDate", e.target.value)}
+                disabled={!isCreate}
+                className={`${inputCls} disabled:bg-gray-50 disabled:text-gray-400`}
+              />
+              <FieldErrorMessage message={fieldErrors.startDate} />
+            </div>
 
-          {/* End date */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              End Date{" "}
-              <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="date"
-              value={form.endDate}
-              min={form.startDate || today()}
-              onChange={(e) => set("endDate", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black"
-            />
-            <FieldErrorMessage message={fieldErrors.endDate} />
-          </div>
-
-          {/* Category — always shown, required on create */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Category{" "}
-              {!isCreate && (
-                <span className="text-gray-400 font-normal">
-                  (optional — leave blank to keep current)
-                </span>
-              )}
-            </label>
-            <select
-              value={form.categoryId}
-              onChange={(e) => set("categoryId", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black bg-white"
-            >
-              <option value="">
-                {isCreate ? "Select category" : "Keep current category"}
-              </option>
-              {filteredCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            {isCreate && filteredCategories.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">
-                No {form.type.toLowerCase()} categories found. Create one first.
-              </p>
-            )}
-            <FieldErrorMessage message={fieldErrors.categoryId} />
-          </div>
-
-          {/* Payment mode */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Payment Mode{" "}
-              {!isCreate && (
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                End Date{" "}
                 <span className="text-gray-400 font-normal">(optional)</span>
-              )}
-            </label>
-            <select
-              value={form.paymentModeId}
-              onChange={(e) => set("paymentModeId", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black bg-white"
-            >
-              <option value="">
-                {isCreate ? "Select payment mode" : "Keep current payment mode"}
-              </option>
-              {paymentModes.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+              </label>
+              <input
+                type="date"
+                value={form.endDate}
+                min={form.startDate || today()}
+                onChange={(e) => set("endDate", e.target.value)}
+                className={inputCls}
+              />
+              <FieldErrorMessage message={fieldErrors.endDate} />
+            </div>
+          </div>
+
+          {/* Category + Payment mode — side-by-side on sm+ */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                Category{" "}
+                {!isCreate && (
+                  <span className="text-gray-400 font-normal text-xs">
+                    (optional)
+                  </span>
+                )}
+              </label>
+              <select
+                value={form.categoryId}
+                onChange={(e) => set("categoryId", e.target.value)}
+                className={`${inputCls} bg-white`}
+              >
+                <option value="">
+                  {isCreate ? "Select category" : "Keep current"}
                 </option>
-              ))}
-            </select>
-            <FieldErrorMessage message={fieldErrors.paymentModeId} />
+                {filteredCategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {isCreate && filteredCategories.length === 0 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  No {form.type.toLowerCase()} categories found. Create one
+                  first.
+                </p>
+              )}
+              <FieldErrorMessage message={fieldErrors.categoryId} />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                Payment Mode{" "}
+                {!isCreate && (
+                  <span className="text-gray-400 font-normal text-xs">
+                    (optional)
+                  </span>
+                )}
+              </label>
+              <select
+                value={form.paymentModeId}
+                onChange={(e) => set("paymentModeId", e.target.value)}
+                className={`${inputCls} bg-white`}
+              >
+                <option value="">
+                  {isCreate ? "Select payment mode" : "Keep current"}
+                </option>
+                {paymentModes.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <FieldErrorMessage message={fieldErrors.paymentModeId} />
+            </div>
           </div>
 
           {/* Note */}
@@ -407,13 +437,13 @@ const RecurringForm: React.FC<Props> = (props) => {
               placeholder="e.g. Monthly wifi bill"
               rows={3}
               maxLength={255}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black resize-none"
+              className={`${inputCls} resize-none`}
             />
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
+        {/* Footer — safe area aware on mobile */}
+        <div className="px-5 py-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] border-t border-gray-100 flex gap-2 shrink-0">
           <button
             onClick={handleSubmit}
             disabled={isPending}

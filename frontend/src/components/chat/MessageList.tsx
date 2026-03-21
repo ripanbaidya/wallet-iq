@@ -12,7 +12,7 @@ const formatTime = (dateStr: string) =>
     minute: "2-digit",
   });
 
-// ── Markdown-lite renderer ────────────────────────────────────────────────────
+// Markdown-lite renderer
 
 const renderInline = (text: string) => {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -65,15 +65,13 @@ const renderContent = (content: string) => {
   return elements;
 };
 
-// ── Typing indicator ──────────────────────────────────────────────────────────
+// Typing indicator
 
 const TypingIndicator = () => (
-  <div className="flex items-end gap-3 px-4">
-    {/* Avatar */}
-    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center shrink-0 shadow-sm">
+  <div className="flex items-end gap-2 sm:gap-3 px-3 sm:px-4">
+    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center shrink-0 shadow-sm">
       <span className="text-white text-xs font-bold">W</span>
     </div>
-    {/* Bubble */}
     <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
       <div className="flex gap-1.5 items-center h-4">
         {[0, 1, 2].map((i) => (
@@ -88,12 +86,12 @@ const TypingIndicator = () => (
   </div>
 );
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// Empty state
 
 const EmptyState = () => (
-  <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 text-center">
-    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center mb-4 shadow-lg">
-      <span className="text-white text-2xl font-bold">W</span>
+  <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-8 py-12 text-center">
+    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center mb-4 shadow-lg">
+      <span className="text-white text-xl sm:text-2xl font-bold">W</span>
     </div>
     <h3 className="text-sm font-semibold text-gray-800 mb-2">
       Ask WalletIQ anything
@@ -122,7 +120,7 @@ const EmptyState = () => (
   </div>
 );
 
-// ── Main component ────────────────────────────────────────────────────────────
+// Main component
 
 const MessageList: React.FC<Props> = ({ messages, isQuerying }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -143,25 +141,29 @@ const MessageList: React.FC<Props> = ({ messages, isQuerying }) => {
         return (
           <div
             key={msg.id}
-            className={`flex items-end gap-3 px-4 ${isUser ? "flex-row-reverse" : ""}`}
+            className={`flex items-end gap-2 sm:gap-3 px-3 sm:px-4 ${
+              isUser ? "flex-row-reverse" : ""
+            }`}
           >
             {/* Avatar */}
             {isUser ? (
-              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center shrink-0 shadow-sm">
                 <span className="text-white text-xs font-bold">U</span>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center shrink-0 shadow-sm">
                 <span className="text-white text-xs font-bold">W</span>
               </div>
             )}
 
-            {/* Bubble */}
+            {/* Bubble — wider on mobile since there's no sidebar */}
             <div
-              className={`max-w-[72%] space-y-1 ${isUser ? "items-end" : "items-start"} flex flex-col`}
+              className={`max-w-[82%] sm:max-w-[72%] space-y-1 flex flex-col ${
+                isUser ? "items-end" : "items-start"
+              }`}
             >
               <div
-                className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                className={`rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm leading-relaxed shadow-sm ${
                   isUser
                     ? "bg-gray-900 text-white rounded-br-sm"
                     : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"

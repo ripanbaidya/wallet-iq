@@ -41,10 +41,10 @@ const MessageInput: React.FC<Props> = ({ onSend, isDisabled }) => {
   };
 
   return (
-    <div className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 pb-4">
-      {/* Suggestion chips */}
+    <div className="shrink-0 bg-white border-t border-gray-100 px-3 sm:px-4 pt-3 pb-[calc(1rem_+_env(safe-area-inset-bottom))]">
+      {/* Suggestion chips — horizontally scrollable on mobile */}
       {!value && !isDisabled && (
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide pb-0.5 -mx-3 sm:mx-0 px-3 sm:px-0 sm:flex-wrap">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -52,7 +52,7 @@ const MessageInput: React.FC<Props> = ({ onSend, isDisabled }) => {
                 setValue(s);
                 textareaRef.current?.focus();
               }}
-              className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 transition-all"
+              className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 transition-all whitespace-nowrap shrink-0 sm:shrink sm:whitespace-normal"
             >
               {s}
             </button>
@@ -62,7 +62,7 @@ const MessageInput: React.FC<Props> = ({ onSend, isDisabled }) => {
 
       {/* Input box */}
       <div
-        className={`flex items-end gap-2 bg-gray-50 border rounded-2xl px-4 py-2.5 transition-all ${
+        className={`flex items-end gap-2 bg-gray-50 border rounded-2xl px-3 sm:px-4 py-2.5 transition-all ${
           isDisabled
             ? "border-gray-100"
             : "border-gray-200 focus-within:border-gray-400 focus-within:bg-white focus-within:shadow-sm"
@@ -113,8 +113,8 @@ const MessageInput: React.FC<Props> = ({ onSend, isDisabled }) => {
         </button>
       </div>
 
-      {/* Hint */}
-      <p className="text-xs text-gray-400 text-center mt-2">
+      {/* Hint — hidden on very small screens to save space */}
+      <p className="hidden sm:block text-xs text-gray-400 text-center mt-2">
         Enter to send · Shift + Enter for new line
       </p>
     </div>

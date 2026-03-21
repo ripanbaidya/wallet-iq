@@ -1,16 +1,3 @@
-/**
- * ProfilePage.tsx
- *
- * Thin orchestrator — all data fetching and mutations live here.
- * UI is split across focused components in components/profile/:
- *
- *   ProfileHeader     — avatar (photo-ready), name edit, badges
- *   AccountInfoCard   — email / status / verified info rows
- *   EmailVerifyPanel  — slide-in OTP flow (like TransactionForm)
- *   DangerZone        — delete account (disabled until backend ready)
- *   profileHelpers    — pure utilities (getInitials, formatCountdown, constants)
- */
-
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -31,14 +18,11 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const { user: authUser, setAuth, accessToken, refreshToken } = useAuthStore();
 
-  // ── Panel state ───────────────────────────────────────────────────────────
   const [verifyPanelOpen, setVerifyPanelOpen] = useState(false);
-
-  // ── Name update feedback ──────────────────────────────────────────────────
   const [nameSuccess, setNameSuccess] = useState("");
   const [updateError, setUpdateError] = useState<AppError | null>(null);
 
-  // ── Fetch profile ─────────────────────────────────────────────────────────
+  /* Fetch profile */
   const { data, isLoading, error, refetch } = useAppQuery({
     queryKey: ["profile"],
     queryFn: () => userService.getProfile(),
@@ -46,11 +30,10 @@ export default function ProfilePage() {
 
   const profile = data?.data;
 
-  // ── Update name ───────────────────────────────────────────────────────────
+  /* Update name */
   const { mutate: updateName, isPending: isUpdating } = useAppMutation({
     mutationFn: (fullName: string) => userService.updateProfile({ fullName }),
     onSuccess: (res) => {
-      // Keep Zustand in sync so sidebar shows the new name immediately
       if (authUser && accessToken && refreshToken) {
         setAuth(
           { ...authUser, fullName: res.data.fullName },
@@ -66,7 +49,6 @@ export default function ProfilePage() {
     onError: (err: AppError) => setUpdateError(err),
   });
 
-  // ── Guards ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex justify-center py-24">
@@ -81,18 +63,16 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-xl mx-auto space-y-4">
-      {/* Page heading — consistent with other app pages */}
-      <div>
+    <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-0 py-2 sm:py-4 space-y-3 sm:space-y-4">
+      {/* Page heading */}
+      <div className="mb-1">
         <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
         <p className="text-sm text-gray-500 mt-0.5">
           Manage your account details.
         </p>
       </div>
 
-      {/* Avatar + name edit + badges */}
       <ProfileHeader
         profile={profile}
         isUpdating={isUpdating}
@@ -101,16 +81,13 @@ export default function ProfilePage() {
         updateError={updateError}
       />
 
-      {/* Email / status / verified rows */}
       <AccountInfoCard
         profile={profile}
         onOpenVerify={() => setVerifyPanelOpen(true)}
       />
 
-      {/* Danger zone */}
       <DangerZone />
 
-      {/* Email verification slide-in panel */}
       <EmailVerifyPanel
         open={verifyPanelOpen}
         email={profile.email}

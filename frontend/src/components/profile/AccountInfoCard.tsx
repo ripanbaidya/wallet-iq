@@ -2,84 +2,101 @@ import type { UserProfileResponse } from "../../types/user.types";
 
 interface Props {
   profile: UserProfileResponse;
-  /** Called when user clicks "Verify email" — opens the slide panel */
   onOpenVerify: () => void;
 }
 
-/**
- * Reusable label + value row with a bottom hairline.
- * `last:border-0` removes the border on the last row.
- */
 const InfoRow: React.FC<{
   label: string;
   value: React.ReactNode;
   action?: React.ReactNode;
 }> = ({ label, value, action }) => (
-  <div className="flex items-center justify-between py-3.5 border-b border-gray-100 last:border-0">
-    <span className="text-sm text-gray-500">{label}</span>
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-900 font-medium text-right">
+  <div className="flex items-center justify-between gap-3 py-3.5 border-b border-gray-100 last:border-0">
+    <span className="text-sm text-gray-500 shrink-0">{label}</span>
+    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <span className="text-sm text-gray-900 font-medium text-right truncate">
         {value}
       </span>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   </div>
 );
 
-/**
- * It will Shows email, account status and email-verified status in a clean list.
- * If the email is not verified, a small "Verify now" button appears inline
- * that opens the EmailVerifyPanel.
- */
 const AccountInfoCard: React.FC<Props> = ({ profile, onOpenVerify }) => (
-  <div className="bg-white border border-gray-200 rounded-xl px-5">
-    {/* Section label — matches homepage eyebrow style */}
-    <p className="text-xs text-gray-400 uppercase tracking-widest pt-4 pb-1">
-      Account details
-    </p>
+  <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+    {/* Section header */}
+    <div className="px-4 sm:px-5 pt-4 pb-2 border-b border-gray-100">
+      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+        Account details
+      </p>
+    </div>
 
-    <InfoRow label="Email" value={profile.email} />
+    <div className="px-4 sm:px-5">
+      <InfoRow
+        label="Email"
+        value={
+          <span className="truncate max-w-[160px] sm:max-w-xs block">
+            {profile.email}
+          </span>
+        }
+      />
 
-    <InfoRow
-      label="Account status"
-      value={
-        <span
-          className={
-            profile.active
-              ? "text-green-600 font-medium"
-              : "text-red-500 font-medium"
-          }
-        >
-          {profile.active ? "Active" : "Inactive"}
-        </span>
-      }
-    />
-
-    <InfoRow
-      label="Email verified"
-      value={
-        <span
-          className={
-            profile.isEmailVerified
-              ? "text-blue-600 font-medium"
-              : "text-amber-600 font-medium"
-          }
-        >
-          {profile.isEmailVerified ? "Yes" : "No"}
-        </span>
-      }
-      action={
-        /* Only show "Verify now" when not yet verified */
-        !profile.isEmailVerified ? (
-          <button
-            onClick={onOpenVerify}
-            className="text-xs font-medium text-gray-900 border border-gray-900 px-2.5 py-0.5 rounded-lg hover:bg-gray-900 hover:text-white transition-colors"
+      <InfoRow
+        label="Account status"
+        value={
+          <span
+            className={`inline-flex items-center gap-1.5 font-medium ${
+              profile.active ? "text-green-600" : "text-red-500"
+            }`}
           >
-            Verify now
-          </button>
-        ) : null
-      }
-    />
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                profile.active ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            {profile.active ? "Active" : "Inactive"}
+          </span>
+        }
+      />
+
+      <InfoRow
+        label="Email verified"
+        value={
+          <span
+            className={`font-medium ${
+              profile.isEmailVerified ? "text-blue-600" : "text-amber-600"
+            }`}
+          >
+            {profile.isEmailVerified ? "Verified" : "Not verified"}
+          </span>
+        }
+        action={
+          !profile.isEmailVerified ? (
+            <button
+              onClick={onOpenVerify}
+              className="text-xs font-semibold text-gray-900 border border-gray-900 px-2.5 py-1 rounded-lg hover:bg-gray-900 hover:text-white transition-colors whitespace-nowrap"
+            >
+              Verify now
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Done
+            </span>
+          )
+        }
+      />
+    </div>
   </div>
 );
 

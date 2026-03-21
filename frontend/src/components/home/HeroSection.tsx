@@ -3,18 +3,16 @@ import { Link } from "react-router-dom";
 
 // Typewriter phrases cycling below the headline
 const PHRASES = [
-  "Track every rupee, effortlessly.",
-  "Ask your AI assistant anything.",
-  "Hit your savings goals on time.",
-  "Stay well inside your budget.",
+  "Track every rupee. Miss nothing.",
+  "Ask your AI. Get real answers.",
+  "Stay in control of every expense.",
+  "Reach your savings goals—faster.",
+  "Know exactly where your money goes.",
+  "Smarter decisions, powered by AI.",
+  "No surprises at month-end.",
+  "All your finances. One place.",
 ];
 
-/**
- * HeroSection
- * Dark background (#0f0f0f) so the page opens with impact.
- * Accent yellow (#e8ff4f) used on one key word in the headline only.
- * Typewriter cycles through value props.
- */
 const HeroSection: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [phraseIndex, setPhraseIndex] = useState(0);

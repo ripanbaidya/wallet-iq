@@ -14,9 +14,9 @@ import { FiDownload } from "react-icons/fi";
 import TransactionFilters, {
   DEFAULT_FILTERS,
   type FilterState,
-} from "../../components/transactions/TransactionFilters";
-import TransactionTable from "../../components/transactions/TransactionTable";
-import TransactionForm from "../../components/transactions/TransactionForm";
+} from "../../components/transaction/TransactionFilters";
+import TransactionTable from "../../components/transaction/TransactionTable";
+import TransactionForm from "../../components/transaction/TransactionForm";
 
 import type {
   CreateTransactionRequest,
@@ -39,16 +39,9 @@ const EMPTY_PAGE_INFO: PageInfo = {
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
 
-  /* List state */
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
-  /* Panel state */
-  /* 
-    null  → panel closed
-    false → create mode
-    TransactionResponse → edit mode with that transaction pre-filled
-  */
   const [editing, setEditing] = useState<TransactionResponse | null | false>(
     null,
   );
@@ -58,7 +51,6 @@ export default function TransactionsPage() {
   const isFormOpen = editing !== null;
   const isEditMode = editing !== null && editing !== false;
 
-  // Transactions query
   const txnQuery = useAppQuery({
     queryKey: ["transactions", page, filters],
     queryFn: () =>
@@ -72,23 +64,21 @@ export default function TransactionsPage() {
     placeholderData: (prev) => prev,
   });
 
-  // Category queries (both types for form dropdown)
   const categoryIncomeQuery = useAppQuery({
     queryKey: ["categories", "INCOME"],
     queryFn: () => categoryService.getAll("INCOME"),
   });
+
   const categoryExpenseQuery = useAppQuery({
     queryKey: ["categories", "EXPENSE"],
     queryFn: () => categoryService.getAll("EXPENSE"),
   });
 
-  // Payment modes
   const paymentModeQuery = useAppQuery({
     queryKey: ["payment-modes"],
     queryFn: () => paymentModeService.getAll(),
   });
 
-  // Handler
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -100,7 +90,6 @@ export default function TransactionsPage() {
     }
   };
 
-  // Create
   const { mutate: create, isPending: isCreating } = useAppMutation({
     mutationFn: (data: CreateTransactionRequest) =>
       transactionService.create(data),
@@ -113,7 +102,6 @@ export default function TransactionsPage() {
     onError: (err: AppError) => setSubmitError(err),
   });
 
-  // Update
   const { mutate: update, isPending: isUpdating } = useAppMutation({
     mutationFn: ({
       id,
@@ -130,7 +118,6 @@ export default function TransactionsPage() {
     onError: (err: AppError) => setSubmitError(err),
   });
 
-  // Delete
   const { mutate: remove, isPending: isDeleting } = useAppMutation({
     mutationFn: (id: string) => transactionService.delete(id),
     onSuccess: () => {
@@ -140,19 +127,18 @@ export default function TransactionsPage() {
     onError: (err: AppError) => console.error("Delete failed", err.message),
   });
 
-  // Helpers
   const openCreate = () => {
     setSubmitError(null);
-    setEditing(false); // false = create mode, panel open
+    setEditing(false);
   };
 
   const openEdit = (txn: TransactionResponse) => {
     setSubmitError(null);
-    setEditing(txn); // TransactionResponse = edit mode
+    setEditing(txn);
   };
 
   const closeForm = () => {
-    setEditing(null); // null = closed
+    setEditing(null);
     setSubmitError(null);
   };
 
@@ -166,7 +152,6 @@ export default function TransactionsPage() {
     setPage(0);
   };
 
-  // Derived data
   const transactions = txnQuery.data?.data?.content ?? [];
   const pageInfo: PageInfo = txnQuery.data?.data?.page ?? EMPTY_PAGE_INFO;
 
@@ -174,52 +159,61 @@ export default function TransactionsPage() {
     ...(categoryIncomeQuery.data?.data ?? []),
     ...(categoryExpenseQuery.data?.data ?? []),
   ];
+
   const paymentModes = paymentModeQuery.data?.data ?? [];
 
   const isPageLoading = txnQuery.isLoading;
   const isPageRefetching = txnQuery.isFetching && !txnQuery.isLoading;
   const isPending = isCreating || isUpdating;
 
-  // Render
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    // Added padding for mobile safety
+    <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-0 space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-2 justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Transactions</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* LEFT */}
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+            Transactions
+          </h1>
+
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
             {pageInfo.totalElements > 0
-              ? `${pageInfo.totalElements} transaction${pageInfo.totalElements === 1 ? "" : "s"} total`
+              ? `${pageInfo.totalElements} transaction${
+                  pageInfo.totalElements === 1 ? "" : "s"
+                } total`
               : "Track your income and expenses."}
           </p>
         </div>
 
-        {/* Export CSV button */}
-        <button
-          onClick={handleExport}
-          disabled={isExporting}
-          className="text-sm font-medium border border-gray-200 text-gray-700 px-4 py-2 rounded-lg 
-             hover:bg-gray-100 hover:border-gray-300 
-             transition-all duration-200 
-             disabled:opacity-50 disabled:cursor-not-allowed 
-             flex items-center gap-2 active:scale-[0.98]"
-        >
-          {isExporting ? (
-            <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <FiDownload className="text-base" />
-          )}
+        {/* RIGHT ACTIONS */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+          {/* Export */}
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm font-medium border border-gray-200 text-gray-700 px-3 sm:px-4 py-2 rounded-lg 
+            hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 
+            disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+          >
+            {isExporting ? (
+              <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FiDownload className="text-base" />
+            )}
+            <span className="whitespace-nowrap">
+              {isExporting ? "Exporting..." : "Export CSV"}
+            </span>
+          </button>
 
-          <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
-        </button>
-
-        {/* New Transaction button */}
-        <button
-          onClick={openCreate}
-          className="text-sm bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          + New Transaction
-        </button>
+          {/* New Transaction */}
+          <button
+            onClick={openCreate}
+            className="w-full sm:w-auto text-sm bg-black text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+          >
+            + New Transaction
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -237,12 +231,13 @@ export default function TransactionsPage() {
       ) : txnQuery.error ? (
         <QueryError error={txnQuery.error} onRetry={() => txnQuery.refetch()} />
       ) : transactions.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg py-16 text-center">
+        <div className="bg-white border border-gray-200 rounded-lg py-16 text-center px-4">
           <p className="text-sm text-gray-400 mb-3">
             {filters.type || filters.dateFrom || filters.dateTo
               ? "No transactions match the current filters."
               : "No transactions yet."}
           </p>
+
           {!(filters.type || filters.dateFrom || filters.dateTo) && (
             <button
               onClick={openCreate}
@@ -253,12 +248,13 @@ export default function TransactionsPage() {
           )}
         </div>
       ) : (
-        <div className="relative">
+        <div className="relative w-full">
           {isPageRefetching && (
             <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-lg">
               <Spinner />
             </div>
           )}
+
           <TransactionTable
             transactions={transactions}
             pageInfo={pageInfo}
@@ -271,7 +267,7 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      {/* Create / Edit panel — single component, mode-aware */}
+      {/* Form */}
       {isFormOpen &&
         (isEditMode ? (
           <TransactionForm

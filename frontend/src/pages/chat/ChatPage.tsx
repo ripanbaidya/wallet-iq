@@ -25,7 +25,10 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
 
-  // ── Sessions ──────────────────────────────────────────────────────────────
+  // Controls the mobile sidebar drawer
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Sessions
   const sessionsQuery = useAppQuery({
     queryKey: ["chat-sessions"],
     queryFn: () => chatService.getSessions(),
@@ -33,7 +36,7 @@ export default function ChatPage() {
 
   const sessions = sessionsQuery.data?.data ?? [];
 
-  // ── Messages for active session ───────────────────────────────────────────
+  // Messages for active session
   const messagesQuery = useAppQuery({
     queryKey: ["chat-messages", activeSession?.id],
     queryFn: () => chatService.getMessages(activeSession!.id),
@@ -50,7 +53,7 @@ export default function ChatPage() {
     setMessages(serverMessages);
   }
 
-  // ── Create session ────────────────────────────────────────────────────────
+  // Create session
   const { mutate: createSession, isPending: isCreatingSession } =
     useAppMutation({
       mutationFn: () => chatService.createSession({}),
@@ -58,12 +61,13 @@ export default function ChatPage() {
         queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
         setActiveSession(res.data);
         setMessages([]);
+        setSidebarOpen(false); // close drawer on mobile after creating
       },
       onError: (err: AppError) =>
         console.error("Create session failed", err.message),
     });
 
-  // ── Delete session ────────────────────────────────────────────────────────
+  // Delete session
   const { mutate: deleteSession, isPending: isDeletingSession } =
     useAppMutation({
       mutationFn: (id: string) => chatService.deleteSession(id),
@@ -78,7 +82,7 @@ export default function ChatPage() {
         console.error("Delete session failed", err.message),
     });
 
-  // ── Send query ────────────────────────────────────────────────────────────
+  // Send query
   const { mutate: sendQuery } = useAppMutation({
     mutationFn: ({
       sessionId,
@@ -126,12 +130,13 @@ export default function ChatPage() {
     },
   });
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // Handlers
   const handleSelectSession = (session: ChatSessionResponse) => {
     if (session.id === activeSession?.id) return;
     setActiveSession(session);
     setMessages([]);
     setIsQuerying(false);
+    setSidebarOpen(false); // close drawer on mobile after selecting
   };
 
   const handleSend = (question: string) => {
@@ -139,42 +144,86 @@ export default function ChatPage() {
     sendQuery({ sessionId: activeSession.id, question });
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // Sidebar content
+  const sidebarContent = sessionsQuery.isLoading ? (
+    <div className="flex justify-center py-10">
+      <Spinner />
+    </div>
+  ) : sessionsQuery.error ? (
+    <div className="p-4">
+      <QueryError
+        error={sessionsQuery.error}
+        onRetry={() => sessionsQuery.refetch()}
+      />
+    </div>
+  ) : (
+    <SessionList
+      sessions={sessions}
+      activeSessionId={activeSession?.id ?? null}
+      onSelect={handleSelectSession}
+      onCreate={() => createSession(undefined)}
+      onDelete={(id) => deleteSession(id)}
+      isCreating={isCreatingSession}
+      isDeleting={isDeletingSession}
+    />
+  );
+
+  // Render
   return (
-    <div className="flex h-[calc(100vh-5rem)] rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white">
-      {/* ══ Left sidebar ══ */}
-      <div className="w-60 shrink-0 flex flex-col bg-gray-50 border-r border-gray-200">
-        {sessionsQuery.isLoading ? (
-          <div className="flex justify-center py-10">
-            <Spinner />
-          </div>
-        ) : sessionsQuery.error ? (
-          <div className="p-4">
-            <QueryError
-              error={sessionsQuery.error}
-              onRetry={() => sessionsQuery.refetch()}
-            />
-          </div>
-        ) : (
-          <SessionList
-            sessions={sessions}
-            activeSessionId={activeSession?.id ?? null}
-            onSelect={handleSelectSession}
-            onCreate={() => createSession(undefined)}
-            onDelete={(id) => deleteSession(id)}
-            isCreating={isCreatingSession}
-            isDeleting={isDeletingSession}
-          />
-        )}
+    <div className="flex h-[calc(100vh_-_5rem)] rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white relative">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Left sidebar
+          - Mobile  : fixed overlay drawer, slides in from left (z-30)
+          - md+     : static column, always visible
+      */}
+      <div
+        className={`
+          fixed top-0 left-0 h-full w-64 bg-gray-50 border-r border-gray-200 z-30 flex flex-col
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          md:static md:w-60 md:shrink-0 md:translate-x-0 md:z-auto md:transition-none
+        `}
+      >
+        {sidebarContent}
       </div>
 
       {/* ══ Right: conversation panel ══ */}
       <div className="flex-1 flex flex-col min-w-0 bg-gray-50/30">
         {!activeSession ? (
           /* ── No session selected ── */
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center mb-5 shadow-lg">
-              <span className="text-white text-2xl font-bold">W</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 sm:px-8">
+            {/* Mobile: hamburger to open sidebar */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+              aria-label="Open conversations"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center mb-5 shadow-lg">
+              <span className="text-white text-xl sm:text-2xl font-bold">
+                W
+              </span>
             </div>
             <h2 className="text-base font-semibold text-gray-900 mb-1.5">
               WalletIQ AI Assistant
@@ -208,7 +257,7 @@ export default function ChatPage() {
             </button>
 
             {/* Feature hints */}
-            <div className="mt-8 grid grid-cols-3 gap-3 text-xs text-gray-500 max-w-sm">
+            <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3 text-xs text-gray-500 max-w-sm">
               {[
                 { icon: "🔍", label: "Semantic search over your transactions" },
                 { icon: "💡", label: "Budget & savings insights" },
@@ -216,7 +265,7 @@ export default function ChatPage() {
               ].map(({ icon, label }) => (
                 <div
                   key={label}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white border border-gray-100 text-center"
+                  className="flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl bg-white border border-gray-100 text-center"
                 >
                   <span className="text-xl">{icon}</span>
                   <span className="leading-snug text-gray-400">{label}</span>
@@ -228,8 +277,29 @@ export default function ChatPage() {
           /* ── Active session ── */
           <>
             {/* Conversation header */}
-            <div className="shrink-0 flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-100 shadow-sm">
-              <div className="min-w-0">
+            <div className="shrink-0 flex items-center gap-3 px-3 sm:px-5 py-3.5 bg-white border-b border-gray-100 shadow-sm">
+              {/* Hamburger — mobile only */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+                aria-label="Open conversations"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {activeSession.title}
                 </p>
@@ -243,8 +313,8 @@ export default function ChatPage() {
                 </p>
               </div>
 
-              {/* Header actions */}
-              <div className="flex items-center gap-2">
+              {/* New chat button */}
+              <div className="shrink-0">
                 <button
                   onClick={() => createSession(undefined)}
                   disabled={isCreatingSession}
@@ -264,7 +334,7 @@ export default function ChatPage() {
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  New chat
+                  <span className="hidden sm:inline">New chat</span>
                 </button>
               </div>
             </div>

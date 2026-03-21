@@ -19,31 +19,72 @@ import {
   RiShieldUserLine,
 } from "react-icons/ri";
 
-// ── [CHANGE 1] Import NotificationBell ────────────────────────────────────────
 import NotificationBell from "../components/notifications/NotificationBell";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard", icon: RiDashboardLine },
-  { label: "Transactions", path: "/transactions", icon: RiExchangeDollarLine },
-  { label: "Recurring", path: "/recurring", icon: RiRepeat2Line },
-  { label: "Categories", path: "/categories", icon: RiPriceTag3Line },
-  { label: "Payment Modes", path: "/payment-modes", icon: RiBankCardLine },
-  { label: "Budgets", path: "/budgets", icon: RiPieChartLine },
-  { label: "Savings Goals", path: "/savings", icon: RiGovernmentLine },
-  { label: "Chat", path: "/chat", icon: RiChatSmile2Line },
-  { label: "Profile", path: "/profile", icon: RiUserLine },
-  { label: "About", path: "/about", icon: RiInformationLine },
+// Nav items
+
+type NavItem = {
+  label: string;
+  path: string;
+  icon: React.ElementType;
+};
+
+type NavGroup = {
+  heading?: string;
+  items: NavItem[];
+};
+
+/**
+ * Grouped nav structure — rendered in both desktop sidebar and mobile drawer.
+ * Headings are shown in full-label mode; hidden in icon-only (tablet) mode.
+ */
+const NAV_GROUPS: NavGroup[] = [
+  {
+    heading: "Overview",
+    items: [{ label: "Dashboard", path: "/dashboard", icon: RiDashboardLine }],
+  },
+  {
+    heading: "Money",
+    items: [
+      {
+        label: "Transactions",
+        path: "/transactions",
+        icon: RiExchangeDollarLine,
+      },
+      { label: "Recurring", path: "/recurring", icon: RiRepeat2Line },
+      { label: "Budgets", path: "/budgets", icon: RiPieChartLine },
+      { label: "Savings Goals", path: "/savings", icon: RiGovernmentLine },
+    ],
+  },
+  {
+    heading: "Settings",
+    items: [
+      { label: "Categories", path: "/categories", icon: RiPriceTag3Line },
+      { label: "Payment Modes", path: "/payment-modes", icon: RiBankCardLine },
+    ],
+  },
+  {
+    heading: "More",
+    items: [
+      { label: "Chat", path: "/chat", icon: RiChatSmile2Line },
+      { label: "Profile", path: "/profile", icon: RiUserLine },
+      { label: "About", path: "/about", icon: RiInformationLine },
+    ],
+  },
 ];
 
-const ADMIN_NAV_ITEM = {
+// Flat list — used for the icon-only tablet sidebar and the bottom tab bar
+const NAV_ITEMS_FLAT: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
+
+const ADMIN_NAV_ITEM: NavItem = {
   label: "Admin Panel",
   path: "/admin",
   icon: RiShieldUserLine,
 };
 
 /**
- * Bottom tab bar shows only the 5 most important items on mobile.
- * The rest are accessible via the drawer.
+ * Bottom tab bar — 5 most important destinations, always visible on mobile.
+ * Everything else is reachable via the drawer.
  */
 const BOTTOM_TAB_PATHS = [
   "/dashboard",
@@ -52,12 +93,12 @@ const BOTTOM_TAB_PATHS = [
   "/chat",
   "/profile",
 ];
-
-const BOTTOM_TAB_ITEMS = NAV_ITEMS.filter((item) =>
+const BOTTOM_TAB_ITEMS = NAV_ITEMS_FLAT.filter((item) =>
   BOTTOM_TAB_PATHS.includes(item.path),
 );
 
-// Helper
+// Helpers
+
 const getInitials = (fullName?: string): string => {
   if (!fullName) return "U";
   return fullName
@@ -68,13 +109,13 @@ const getInitials = (fullName?: string): string => {
     .join("");
 };
 
-// ─── Shared nav link renderer ─────────────────────────────────────────────────
+// Shared nav link renderers
 
-/** Full nav link — icon + label, used in desktop sidebar and mobile drawer */
-const FullNavLink: React.FC<{
-  item: (typeof NAV_ITEMS)[number];
-  onClick?: () => void;
-}> = ({ item, onClick }) => {
+/** Full nav link — icon + label — used in desktop sidebar and mobile drawer */
+const FullNavLink: React.FC<{ item: NavItem; onClick?: () => void }> = ({
+  item,
+  onClick,
+}) => {
   const Icon = item.icon;
   return (
     <NavLink
@@ -101,9 +142,7 @@ const FullNavLink: React.FC<{
 };
 
 /** Icon-only nav link — used in collapsed tablet sidebar */
-const IconNavLink: React.FC<{ item: (typeof NAV_ITEMS)[number] }> = ({
-  item,
-}) => {
+const IconNavLink: React.FC<{ item: NavItem }> = ({ item }) => {
   const Icon = item.icon;
   return (
     <NavLink
@@ -122,7 +161,39 @@ const IconNavLink: React.FC<{ item: (typeof NAV_ITEMS)[number] }> = ({
   );
 };
 
-// ─── User footer — shared between desktop sidebar and mobile drawer ────────────
+// Grouped nav renderer — desktop sidebar + mobile drawer
+
+const GroupedNav: React.FC<{
+  onItemClick?: () => void;
+  showAdmin: boolean;
+}> = ({ onItemClick, showAdmin }) => (
+  <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+    {NAV_GROUPS.map((group) => (
+      <div key={group.heading}>
+        {group.heading && (
+          <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400 select-none">
+            {group.heading}
+          </p>
+        )}
+        <div className="space-y-0.5">
+          {group.items.map((item) => (
+            <FullNavLink key={item.path} item={item} onClick={onItemClick} />
+          ))}
+        </div>
+      </div>
+    ))}
+
+    {showAdmin && (
+      <div>
+        <div className="mx-3 my-1 border-t border-gray-100" />
+        <FullNavLink item={ADMIN_NAV_ITEM} onClick={onItemClick} />
+      </div>
+    )}
+  </nav>
+);
+
+// User footer
+
 const UserFooter: React.FC<{
   user: ReturnType<typeof useAuth>["user"];
   logout: () => void;
@@ -180,34 +251,17 @@ const UserFooter: React.FC<{
   );
 };
 
-// ─── Admin divider + link block ───────────────────────────────────────────────
-
-const AdminNavSection: React.FC<{ onClick?: () => void }> = ({ onClick }) => (
-  <>
-    <div className="mx-3 my-2 border-t border-gray-100" />
-    <FullNavLink item={ADMIN_NAV_ITEM} onClick={onClick} />
-  </>
-);
-
-const AdminIconNavSection: React.FC = () => (
-  <>
-    <div className="w-6 my-1 border-t border-gray-100" />
-    <IconNavLink item={ADMIN_NAV_ITEM} />
-  </>
-);
-
-// ─── Main Sidebar component ───────────────────────────────────────────────────
+// Main Sidebar
 
 /**
- * Sidebar — three responsive modes:
+ * Three responsive modes
  *
- * Mobile  (< md)  : hidden sidebar + bottom tab bar (5 key items)
- *                   + hamburger button → full-screen drawer overlay
+ * Mobile  (< md)  : fixed top bar + bottom tab bar (5 key items)
+ *                   + hamburger → full drawer with all nav items
  * Tablet  (md)    : icon-only collapsed sidebar (w-16)
- * Desktop (lg+)   : full sidebar with labels (w-60)
+ * Desktop (lg+)   : full sidebar with grouped labels (w-60)
  */
 const Sidebar: React.FC = () => {
-  // isAdmin is set in the auth store at login time by probing /admin/users/count
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -216,9 +270,8 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* DESKTOP sidebar  (lg+) — full labels */}
+      {/* DESKTOP sidebar (lg+) */}
       <aside className="hidden lg:flex w-60 min-h-screen bg-white border-r border-gray-100 flex-col">
-        {/* ── [CHANGE 2] Desktop logo header — bell sits right of logo ── */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <span
             className="text-xl font-bold tracking-tight text-gray-900 cursor-pointer select-none"
@@ -232,20 +285,13 @@ const Sidebar: React.FC = () => {
           <NotificationBell align="left" />
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => (
-            <FullNavLink key={item.path} item={item} />
-          ))}
-          {isAdmin && <AdminNavSection />}
-        </nav>
+        <GroupedNav showAdmin={isAdmin} />
 
         <UserFooter user={user} logout={logout} />
       </aside>
 
-      {/* TABLET sidebar  (md → lg) — icon only, no labels */}
+      {/* TABLET sidebar (md → lg) — icon only */}
       <aside className="hidden md:flex lg:hidden w-16 min-h-screen bg-white border-r border-gray-100 flex-col items-center">
-        {/* Logo — just "W" */}
         <div
           className="w-full flex items-center justify-center py-5 border-b border-gray-100 cursor-pointer select-none"
           onClick={() => navigate("/home")}
@@ -255,27 +301,26 @@ const Sidebar: React.FC = () => {
           </span>
         </div>
 
-        {/* ── [CHANGE 3] Tablet — bell icon between logo and nav ── */}
         <div className="py-2 flex justify-center border-b border-gray-100 w-full">
           <NotificationBell size="sm" align="left" />
         </div>
 
-        {/* Icon-only nav */}
-        <nav className="flex-1 flex flex-col items-center py-4 gap-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => (
+        <nav className="flex-1 flex flex-col items-center py-4 gap-1 overflow-y-auto w-full">
+          {NAV_ITEMS_FLAT.map((item) => (
             <IconNavLink key={item.path} item={item} />
           ))}
-          {isAdmin && <AdminIconNavSection />}
+          {isAdmin && (
+            <>
+              <div className="w-6 my-1 border-t border-gray-100" />
+              <IconNavLink item={ADMIN_NAV_ITEM} />
+            </>
+          )}
         </nav>
 
         <UserFooter user={user} logout={logout} collapsed />
       </aside>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          MOBILE  (< md)
-          ════════════════════════════════════════════════════════════════════ */}
-
-      {/* ── [CHANGE 4] Mobile top bar — bell sits between logo and hamburger ── */}
+      {/* MOBILE top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100 flex items-center justify-between px-4 h-14">
         <span
           className="text-lg font-bold tracking-tight text-gray-900 cursor-pointer select-none"
@@ -298,19 +343,16 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Spacer so content doesn't hide behind the top bar */}
+      {/* Spacer — keeps content below the fixed top bar */}
       <div className="md:hidden h-14 shrink-0" />
 
-      {/* ── Mobile drawer overlay ── */}
+      {/* MOBILE drawer */}
       {drawerOpen && (
         <>
-          {/* Backdrop */}
           <div
             className="md:hidden fixed inset-0 bg-black/40 z-50"
             onClick={closeDrawer}
           />
-
-          {/* Drawer panel — slides in from left */}
           <div className="md:hidden fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col shadow-2xl">
             {/* Drawer header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -335,26 +377,16 @@ const Sidebar: React.FC = () => {
               </button>
             </div>
 
-            {/* All nav links */}
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-              {NAV_ITEMS.map((item) => (
-                <FullNavLink
-                  key={item.path}
-                  item={item}
-                  onClick={closeDrawer}
-                />
-              ))}
-              {isAdmin && <AdminNavSection onClick={closeDrawer} />}
-            </nav>
+            {/* Grouped nav — same as desktop */}
+            <GroupedNav onItemClick={closeDrawer} showAdmin={isAdmin} />
 
             <UserFooter user={user} logout={logout} />
           </div>
         </>
       )}
 
-      {/* ── Mobile bottom tab bar ── */}
-      {/* Shows 5 key destinations — always visible, drawer for the rest */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex items-center justify-around px-2 h-16 safe-area-inset-bottom">
+      {/* MOBILE bottom tab bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex items-center justify-around px-2 h-[calc(4rem_+_env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]">
         {BOTTOM_TAB_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
@@ -389,8 +421,8 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Spacer so page content clears the bottom tab bar on mobile */}
-      <div className="md:hidden h-16 shrink-0 order-last" />
+      {/* Spacer — keeps content above the fixed bottom tab bar */}
+      <div className="md:hidden h-[calc(4rem_+_env(safe-area-inset-bottom))] shrink-0 order-last" />
     </>
   );
 };

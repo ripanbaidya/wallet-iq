@@ -31,7 +31,7 @@ const HomeNavbar: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/home" className="text-lg font-bold tracking-tight">
+        <Link to="/home" className="text-2xl font-bold tracking-tight">
           <span className={scrolled ? "text-gray-900" : "text-white"}>
             Wallet
           </span>

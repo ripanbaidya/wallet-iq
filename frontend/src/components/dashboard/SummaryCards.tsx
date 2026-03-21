@@ -14,6 +14,7 @@ const fmt = (amount: number) =>
 const SummaryCards: React.FC<Props> = ({ summary }) => {
   const { totalIncome, totalExpense, netBalance } = summary;
 
+  // Calculate savings rate safely
   const savingsRate =
     totalIncome > 0 ? Math.max(0, (netBalance / totalIncome) * 100) : 0;
 
@@ -58,19 +59,37 @@ const SummaryCards: React.FC<Props> = ({ summary }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    // Responsive grid:
+    // 2 cols on mobile → 3 on tablet → 4 on desktop
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`${card.bg} border ${card.border} rounded-lg p-4`}
+          className={`${card.bg} border ${card.border} rounded-lg p-4 min-w-0`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-gray-500 font-medium">{card.label}</p>
-            <span className={`text-sm font-semibold ${card.color}`}>
+          {/* Top row: label + icon */}
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <p className="text-xs text-gray-500 font-medium truncate">
+              {card.label}
+            </p>
+
+            {/* Prevent icon shrinking */}
+            <span
+              className={`text-sm font-semibold ${card.color} flex-shrink-0`}
+            >
               {card.icon}
             </span>
           </div>
-          <p className={`text-xl font-semibold ${card.color}`}>{card.value}</p>
+
+          {/* Value */}
+          <p
+            className={`
+              text-lg sm:text-xl font-semibold ${card.color}
+              truncate        /* prevents overflow on small screens */
+            `}
+          >
+            {card.value}
+          </p>
         </div>
       ))}
     </div>

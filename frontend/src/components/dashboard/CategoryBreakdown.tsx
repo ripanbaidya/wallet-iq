@@ -31,21 +31,26 @@ const CategoryBreakdown: React.FC<Props> = ({ title, data, type }) => {
   return (
     <div>
       <h3 className="text-sm font-medium text-gray-700 mb-3">{title}</h3>
+
       <div className="space-y-3">
         {data.map((item) => (
-          <div key={item.categoryName}>
+          <div key={item.categoryName} className="min-w-0">
             {/* Label row */}
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-600 truncate max-w-[60%]">
+            <div className="flex items-center justify-between gap-2 text-xs mb-1">
+              {/* LEFT: Category */}
+              <span className="text-gray-600 truncate flex-1 min-w-0">
                 {item.categoryName}
               </span>
-              <span className="text-gray-700 font-medium ml-2 whitespace-nowrap">
+
+              {/* RIGHT: Amount + % */}
+              <span className="text-gray-700 font-medium whitespace-nowrap flex-shrink-0">
                 {fmt(item.amount)}{" "}
                 <span className="text-gray-400 font-normal">
                   ({item.percentage.toFixed(1)}%)
                 </span>
               </span>
             </div>
+
             {/* Progress bar */}
             <div className={`h-1.5 rounded-full ${barBg} overflow-hidden`}>
               <div

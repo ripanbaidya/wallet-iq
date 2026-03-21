@@ -31,7 +31,6 @@ const BudgetCard: React.FC<Props> = ({ budget, onDelete, isDeleting }) => {
 
   // Determine bar color from status
   const getBarColor = (
-    pct: number,
     limitBreached: boolean,
     thresholdBreached: boolean,
   ) => {
@@ -134,7 +133,6 @@ const BudgetCard: React.FC<Props> = ({ budget, onDelete, isDeleting }) => {
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${getBarColor(
-                      status.usagePercentage,
                       status.limitBreached,
                       status.thresholdBreached,
                     )}`}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { RiShieldCheckLine } from "react-icons/ri";
 import { motion } from "framer-motion";
 
 import { useAppMutation } from "../../hooks/useAppMutation";
@@ -151,6 +152,7 @@ export default function LoginPage() {
             </p>
           </motion.div>
         </motion.div>
+        
       </div>
 
       {/* RIGHT — form panel */}
@@ -161,8 +163,21 @@ export default function LoginPage() {
           animate="show"
           className="w-full max-w-md"
         >
-          <motion.div variants={item} className="mb-6">
+          {/* <motion.div variants={item} className="mb-6">
             <h2 className="text-3xl font-semibold">Welcome back</h2>
+          </motion.div> */}
+          <motion.div variants={item} className="mb-8 text-center">
+            <div className="flex justify-center mb-3 text-indigo-500 text-2xl">
+              <RiShieldCheckLine />
+            </div>
+
+            <h2 className="text-3xl font-semibold text-gray-900 dark:text-black">
+              Welcome back
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Securely login to your account
+            </p>
           </motion.div>
 
           {/* Top-level form error */}
@@ -177,12 +192,11 @@ export default function LoginPage() {
           >
             {/* Email */}
             <motion.div variants={item}>
-              <label className="block text-sm text-gray-600 mb-1">
-                Email address
-              </label>
+              <label className="block text-sm text-gray-600 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
+                placeholder="ripanbaidya@example.com"
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
               />
@@ -198,6 +212,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  placeholder="********"
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
                 />

@@ -144,7 +144,7 @@ export default function SignupPage() {
                 type="email"
                 name="email"
                 value={form.email}
-                placeholder="ripanbaidya@gmail.com"
+                placeholder="ripanbaidya@example.com"
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
               />

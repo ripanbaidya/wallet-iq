@@ -15,14 +15,14 @@ import BudgetCard from "../../components/budgets/BudgetCard";
 
 import type { CreateBudgetRequest } from "../../types/budget.types";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 const currentMonth = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// Page
 
 export default function BudgetsPage() {
   const queryClient = useQueryClient();
@@ -31,20 +31,20 @@ export default function BudgetsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitError, setSubmitError] = useState<AppError | null>(null);
 
-  // ── Budgets for selected month ────────────────────────────────────────────
+  // Budgets for selected month
   const budgetQuery = useAppQuery({
     queryKey: ["budgets", month],
     queryFn: () => budgetService.getByMonth(month),
     placeholderData: (prev) => prev,
   });
 
-  // ── Expense categories for the form ──────────────────────────────────────
+  // Expense categories for the form
   const categoryQuery = useAppQuery({
     queryKey: ["categories", "EXPENSE"],
     queryFn: () => categoryService.getAll("EXPENSE"),
   });
 
-  // ── Create ────────────────────────────────────────────────────────────────
+  // Create
   const { mutate: create, isPending: isCreating } = useAppMutation({
     mutationFn: (data: CreateBudgetRequest) => budgetService.create(data),
     onSuccess: () => {
@@ -55,7 +55,7 @@ export default function BudgetsPage() {
     onError: (err: AppError) => setSubmitError(err),
   });
 
-  // ── Delete ────────────────────────────────────────────────────────────────
+  // Delete
   // Note: backend has no DELETE /budgets endpoint exposed in the API docs,
   // so we only support create + view. If you add one later, wire it here.
   // For now the delete button is omitted from BudgetCard.
@@ -67,7 +67,7 @@ export default function BudgetsPage() {
     },
   });
 
-  // ── Derived ───────────────────────────────────────────────────────────────
+  // Derived
   const budgets = budgetQuery.data?.data ?? [];
   const expenseCategories = (categoryQuery.data?.data ?? []).filter(
     (c) => c.categoryType === "EXPENSE",
@@ -77,7 +77,7 @@ export default function BudgetsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Budgets</h1>
@@ -99,7 +99,7 @@ export default function BudgetsPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       {budgetQuery.isLoading ? (
         <div className="flex justify-center py-16">
           <Spinner />
@@ -153,7 +153,7 @@ export default function BudgetsPage() {
         </div>
       )}
 
-      {/* ── Create panel ── */}
+      {/* Create panel */}
       <BudgetForm
         open={showForm}
         onClose={() => setShowForm(false)}
