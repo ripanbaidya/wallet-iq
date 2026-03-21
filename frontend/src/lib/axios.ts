@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { parseError } from '../errors/errorUtils';
+import { parseError } from '../shared/utils/errorUtils';
 import { useAuthStore } from '../store/authStore';
 
 /**
