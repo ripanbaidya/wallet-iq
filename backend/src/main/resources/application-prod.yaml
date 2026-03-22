@@ -69,13 +69,20 @@ spring:
         timeout: 5000
         writetimeout: 5000
 
-
-
 springdoc:
   api-docs:
     enabled: false
   swagger-ui:
     enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: NEVER
 
 app:
   security:
