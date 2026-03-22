@@ -22,13 +22,23 @@ public record AuthUserResponse(
         description = "Email address of the user",
         example = "ripan@example.com"
     )
-    String email
+    String email,
+
+    @Schema(
+        description = "Role of the user",
+        example = "USER",
+        allowableValues = {"USER", "ADMIN"}
+    )
+    String role
 
 ) {
 
     public static AuthUserResponse from(User user) {
         return new AuthUserResponse(
             user.getId().toString(),
-            user.getFullName(), user.getEmail());
+            user.getFullName(),
+            user.getEmail(),
+            user.getRole().name()
+        );
     }
 }

@@ -1,43 +1,55 @@
-# ============================================================
-# Production
-# ============================================================
-
 spring:
+  config:
+    activate:
+      on-profile: prod
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
 
-  # Database (production PostgreSQL)
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: WalletIQHikariPool
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
-      minimum-idle: ${DB_POOL_MIN_IDLE:5}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}    # 30 seconds
-      idle-timeout: ${DB_IDLE_TIMEOUT:600000}               # 10 minutes
-      max-lifetime: ${DB_MAX_LIFETIME:1800000}              # 30 minutes
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
       auto-commit: true
-      leak-detection-threshold: 60000                       # 1 minute
+      leak-detection-threshold: 60000
 
-  # JPA (prod: no SQL logging)
   jpa:
     show-sql: false
 
-  # Redis (production — SSL required)
   data:
     redis:
       url: ${REDIS_URL}
       ssl:
         enabled: true
 
-  # Ollama
-  # Note: In order to change the provider, we
   ai:
-    ollama:
-      base-url: ${OLLAMA_BASE_URL}
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+          temperature: 0.7
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+    vectorstore:
+      pgvector:
+        dimensions: ${PGVECTOR_DIMENSIONS:1536}
+        distance-type: cosine_distance
+        index-type: hnsw
+        initialize-schema: false
+        schema-name: public
+        table-name: vector_store
 
-  # Mail
   mail:
     host: smtp.gmail.com
     port: 587
@@ -51,26 +63,53 @@ spring:
             enable: true
             required: true
           ssl:
-            trust: ${MAIL_SSL_TRUST:smtp.gmail.com}
+            trust: smtp.gmail.com
           quitwait: false
         connectiontimeout: 5000
         timeout: 5000
         writetimeout: 5000
 
-# Swagger/ OpenAPI (disabled in production)
+
+
 springdoc:
   api-docs:
     enabled: false
   swagger-ui:
     enabled: false
 
-# Logging (minimal in production)
+app:
+  security:
+    cors:
+      enabled: true
+      allowed-origins:
+        - ${CORS_ALLOWED_ORIGINS:https://walletiq.vercel.app}
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+      allow-credentials: true
+      max-age: 3600
+
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    currency: INR
+    subscription-amount: 19900 # amount in paise (₹199)
+    subscription-days: 30 # how many days one payment gives
+
 logging:
   level:
     root: warn
     com.walletiq: info
     org.springframework.web: warn
     org.springframework.security: warn
-    org.springframework.ai.chat.client.advisor: warn
+    org.springframework.ai: warn
     org.springframework.data.redis: warn
     org.springframework.cache: warn

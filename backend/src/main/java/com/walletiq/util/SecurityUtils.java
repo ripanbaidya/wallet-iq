@@ -8,6 +8,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;
 
+/**
+ * Utility class for accessing the currently authenticated user
+ * from the Spring {@link SecurityContextHolder}.
+ */
 public final class SecurityUtils {
 
     private SecurityUtils() {

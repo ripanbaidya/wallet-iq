@@ -143,6 +143,15 @@ public enum ErrorCode {
 
 
     // =========================
+    // Subscription
+    // =========================
+    SUBSCRIPTION_ALREADY_ACTIVE(ErrorType.CONFLICT, "You already have an active subscription"),
+    SUBSCRIPTION_NOT_FOUND(ErrorType.NOT_FOUND, "Subscription not found"),
+    PAYMENT_ORDER_CREATION_FAILED(ErrorType.INTERNAL, "Failed to create payment order"),
+    PAYMENT_SIGNATURE_INVALID(ErrorType.VALIDATION, "Payment signature verification failed"),
+    SUBSCRIPTION_REQUIRED(ErrorType.AUTHORIZATION, "An active subscription is required to use AI chat"),
+
+    // =========================
     // General
     // =========================
     VALIDATION_FAILED(ErrorType.VALIDATION, "One or more request fields are invalid"),

@@ -48,8 +48,8 @@ public class CategoryController {
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
-            description = "Transactions fetched successfully",
-            content = @Content(schema = @Schema(implementation = CategoryResponse.class))
+            description = "Categories fetched successfully",
+            content = @Content(schema = @Schema(implementation = ResponseWrapper.class))
         ),
         @ApiResponse(
             responseCode = "400",
@@ -59,11 +59,7 @@ public class CategoryController {
     })
     @GetMapping
     public ResponseEntity<ResponseWrapper<List<CategoryResponse>>> getAllCategories(
-        @Parameter(
-            description = "Category type filter (INCOME or EXPENSE)",
-            required = true
-        )
-        @RequestParam CategoryType type
+        @RequestParam("type") CategoryType type
     ) {
         return ResponseUtil.ok(
             "Categories fetched successfully",
@@ -120,7 +116,6 @@ public class CategoryController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<ResponseWrapper<CategoryResponse>> updateCategory(
-        @Parameter(description = "Unique identifier of the category", required = true)
         @PathVariable UUID id,
 
         @Valid @RequestBody UpdateCategoryRequest request
@@ -148,7 +143,6 @@ public class CategoryController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(
-        @Parameter(description = "Unique identifier of the category", required = true)
         @PathVariable UUID id
     ) {
         categoryService.delete(id);

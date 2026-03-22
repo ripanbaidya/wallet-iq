@@ -1,45 +1,59 @@
-# ============================================================
 # Development
-# ============================================================
-
 spring:
+  config:
+    activate:
+      on-profile: dev
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
 
-  # Database (local PostgreSQL)
+  # Database
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:walletiq}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5432/walletiq
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: WalletIQHikariPool
       maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
       minimum-idle: ${DB_POOL_MIN_IDLE:2}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}    # 30 seconds
-      idle-timeout: ${DB_IDLE_TIMEOUT:600000}               # 10 minutes
-      max-lifetime: ${DB_MAX_LIFETIME:1800000}              # 30 minutes
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000} # 30 seconds
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}  # 10 minutes
+      max-lifetime: ${DB_MAX_LIFETIME:1800000} # 30 minutes
       auto-commit: true
-      leak-detection-threshold: 60000                       # 1 minute
+      leak-detection-threshold: 60000 # 1 minute
 
-  # JPA (dev-only overrides)
+  # JPA
   jpa:
     show-sql: true
 
-  # Redis (local / Docker / Upstash)
-  # Options:
-  #   1. Upstash (Cloud)  → https://upstash.com, copy rediss:// URL
-  #   2. Docker           → redis://localhost:6379
-  #   3. Local install    → redis://localhost:6379
-  # Note: SSL is required for Upstash (rediss://) URLs.
+  # Redis
   data:
     redis:
       url: ${REDIS_URL}
       ssl:
         enabled: true
 
-  # Ollama (local instance)
+  # Ollama
   ai:
     ollama:
       base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.1:8b
+          temperature: 0.7
+      embedding:
+        options:
+          model: nomic-embed-text:v1.5
+    vectorstore:
+      pgvector:
+        dimensions: 768
+        distance-type: cosine_distance
+        index-type: hnsw
+        initialize-schema: false
+        schema-name: public
+        table-name: vector_store
 
   # Mail (Gmail SMTP)
   # App-specific password required — NOT your Gmail password.
@@ -63,7 +77,17 @@ spring:
         timeout: 5000
         writetimeout: 5000
 
-# Logging (verbose for development)
+# Razorpay
+# Visit: https://razorpay.com
+app:
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_STtxF7zD3d2bmB}
+    key-secret: ${RAZORPAY_KEY_SECRET:d3f4ULGJeVKDHvhJmi34VZ18}
+    currency: INR
+    subscription-amount: 19900   # amount in paise (₹199)
+    subscription-days: 30        # how many days one payment gives
+
+# Logging
 logging:
   level:
     root: info

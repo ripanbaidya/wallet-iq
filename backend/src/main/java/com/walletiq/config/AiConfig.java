@@ -1,9 +1,11 @@
 package com.walletiq.config;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Configuration for AI-related components.
@@ -15,10 +17,19 @@ public class AiConfig {
 
     /**
      * Creates a {@link ChatClient} using the configured Ollama chat model.
-     * Note: Change the model as per the requirements.
      */
     @Bean
-    public ChatClient chatClient(OllamaChatModel chatModel) {
+    @Profile("dev")
+    public ChatClient ollamChatClient(OllamaChatModel chatModel) {
+        return ChatClient.builder(chatModel).build();
+    }
+
+    /**
+     * Creates a {@link ChatClient} using the configured OpenAI chat model.
+     */
+    @Bean
+    @Profile("prod")
+    public ChatClient openAiChatClient(OpenAiChatModel chatModel) {
         return ChatClient.builder(chatModel).build();
     }
 }

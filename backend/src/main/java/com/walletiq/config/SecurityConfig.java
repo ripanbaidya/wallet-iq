@@ -7,10 +7,12 @@ import com.walletiq.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -33,6 +35,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -40,7 +43,8 @@ public class SecurityConfig {
      * Public endpoints related to authentication and application access.
      */
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/auth/**", "/app/**", "/test/**", "/ws/**", "/error"
+        "/auth/**", "/app/**", "/test/**", "/ws/**", "/error",
+        "/subscriptions"
     };
 
     /**
@@ -59,7 +63,7 @@ public class SecurityConfig {
 
 
     private static final String ADMIN_ENDPOINT = "/admin/**";
-    private static final String API_PATH = "/api/**";
+    private static final String API_PATH = "/**";
     private static final String ROLE_ADMIN = "ADMIN";
 
     private final CorsProperties corsProperties;
@@ -82,6 +86,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                 .requestMatchers(ACTUATOR_ENDPOINTS).permitAll()

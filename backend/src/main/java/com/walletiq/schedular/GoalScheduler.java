@@ -1,5 +1,6 @@
 package com.walletiq.schedular;
 
+import com.walletiq.service.NotificationService;
 import com.walletiq.service.SavingsGoalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class GoalScheduler {
 
     private final SavingsGoalService goalService;
+    private final NotificationService notificationService;
 
     /**
      * Check for expired goals every day at 12:30 AM

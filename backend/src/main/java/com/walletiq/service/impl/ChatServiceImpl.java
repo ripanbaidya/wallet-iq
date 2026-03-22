@@ -7,12 +7,14 @@ import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.MessageRole;
 import com.walletiq.exception.ChatSessionException;
+import com.walletiq.exception.SubscriptionException;
 import com.walletiq.mapper.ChatMapper;
 import com.walletiq.repository.ChatMessageRepository;
 import com.walletiq.repository.ChatSessionRepository;
 import com.walletiq.repository.UserRepository;
 import com.walletiq.service.ChatService;
 import com.walletiq.service.RAGQueryService;
+import com.walletiq.service.SubscriptionService;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ import java.util.UUID;
 public class ChatServiceImpl implements ChatService {
 
     private final RAGQueryService ragQueryService;
+    private final SubscriptionService subscriptionService;
 
     private final UserRepository userRepository;
     private final ChatSessionRepository chatSessionRepository;
@@ -87,14 +90,25 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatQueryResponse query(UUID sessionId, ChatQueryRequest req) {
-        ChatSession session = getOwnedSession(sessionId);
         User user = currentUser();
+
+        // Checking whether a user has any active subscription or not.
+        if (!subscriptionService.hasActiveSubscription(user.getId())) {
+            throw new SubscriptionException(ErrorCode.SUBSCRIPTION_REQUIRED);
+        }
+
+        ChatSession session = getOwnedSession(sessionId);
+
+        // Fetch existing conversation history BEFORE saving the new user message
+        // so the current question is not included in the history passed to the LLM
+        List<ChatMessage> history = chatMessageRepository
+            .findBySessionIdOrderByCreatedAtAsc(session.getId());
 
         // Persist user message
         saveMessage(session, MessageRole.USER, req.question());
 
         // RAG query
-        String answer = ragQueryService.query(req.question(), user.getId());
+        String answer = ragQueryService.query(req.question(), user.getId(), history);
 
         // Persist assistant reply
         saveMessage(session, MessageRole.ASSISTANT, answer);

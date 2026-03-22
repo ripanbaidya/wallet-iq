@@ -21,17 +21,19 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      * (where user is null) and the user's own categories, filtered by type.
      *
      * @param user         the user whose categories to fetch
-     * @param categoryType the type of categories to filter by
+     * @param type the type of categories to filter by
      * @return list of categories sorted by name
      */
     @Query("""
             select c from Category c
-            where c.categoryType = :categoryType
-              and (c.user is null or c.user = :user)
+            where c.categoryType = :type
+            and (c.user is null or c.user = :user)
             order by c.name asc
         """)
-    List<Category> findAllVisibleToUser(@Param("user") User user,
-                                        @Param("categoryType") CategoryType categoryType);
+    List<Category> findAllVisibleToUser(
+        @Param("user") User user,
+        @Param("type") CategoryType type
+    );
 
     /**
      * Checks if a category with the given name already exists for the user.

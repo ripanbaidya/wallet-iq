@@ -22,6 +22,7 @@ export const PROTECTED_ROUTES = {
   profile: '/profile',
   about: '/about',
   admin: '/admin',
+  subscription: '/subscription',
 } as const;
 
 /* Combined (convenience re-export) */

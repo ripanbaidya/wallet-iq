@@ -1,6 +1,6 @@
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -28,16 +28,14 @@ const formatINR = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-// Custom tooltip for better UI (mobile-friendly small size)
+// Tooltip (unchanged)
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 text-xs max-w-[200px]">
-      {/* Date label */}
       <p className="font-medium text-gray-700 mb-1 truncate">{label}</p>
 
-      {/* Income / Expense values */}
       {payload.map((entry: any) => (
         <p key={entry.name} style={{ color: entry.color }} className="truncate">
           {entry.name}: {formatINR(entry.value)}
@@ -48,7 +46,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const DailyTrendChart: React.FC<Props> = ({ data }) => {
-  // Empty state (fixed height to avoid layout shift)
   if (!data.length) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-gray-400 text-center px-2">
@@ -57,71 +54,48 @@ const DailyTrendChart: React.FC<Props> = ({ data }) => {
     );
   }
 
-  // Normalize data → formatted date labels
   const chartData = data.map((item) => ({
     ...item,
     date: formatDay(item.date),
   }));
 
   return (
-    // Responsive container handles width automatically
     <ResponsiveContainer width="100%" height={240}>
-      <AreaChart data={chartData}>
-        {/* Gradient fills for smooth UI */}
-        <defs>
-          <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-          </linearGradient>
-
-          <linearGradient id="expense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-
-        {/* Light grid for readability */}
+      <BarChart data={chartData}>
+        {/* Grid */}
         <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
 
-        {/* X-axis: small font for mobile */}
+        {/* X-axis */}
         <XAxis
           dataKey="date"
           tick={{ fontSize: 11 }}
-          interval="preserveStartEnd" // prevents overcrowding on small screens
+          interval="preserveStartEnd"
         />
 
-        {/* Y-axis: compact currency formatting */}
-        <YAxis
-          tickFormatter={(v) => `₹${v}`}
-          width={40} // prevents label clipping on small screens
-        />
+        {/* Y-axis */}
+        <YAxis tickFormatter={(v) => `₹${v}`} width={40} />
 
-        {/* Tooltip (custom, mobile safe) */}
+        {/* Tooltip */}
         <Tooltip content={<CustomTooltip />} />
 
-        {/* Legend: may wrap on smaller screens automatically */}
+        {/* Legend */}
         <Legend wrapperStyle={{ fontSize: "12px" }} />
 
-        {/* Income Area */}
-        <Area
-          type="monotone"
+        {/* Bars */}
+        <Bar
           dataKey="income"
-          stroke="#22c55e"
-          fill="url(#income)"
-          strokeWidth={2} // slightly clearer on high-density screens
-          dot={false} // reduces clutter on mobile
+          fill="#22c55e"
+          radius={[4, 4, 0, 0]}
+          barSize={12}
         />
 
-        {/* Expense Area */}
-        <Area
-          type="monotone"
+        <Bar
           dataKey="expense"
-          stroke="#ef4444"
-          fill="url(#expense)"
-          strokeWidth={2}
-          dot={false}
+          fill="#ef4444"
+          radius={[4, 4, 0, 0]}
+          barSize={12}
         />
-      </AreaChart>
+      </BarChart>
     </ResponsiveContainer>
   );
 };

@@ -18,6 +18,7 @@ import {
   RiMenuLine,
   RiCloseLine,
   RiShieldUserLine,
+  RiVipCrownLine,
 } from "react-icons/ri";
 
 import NotificationBell from "../../../features/notifications/components/NotificationBell";
@@ -76,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Chat", path: ROUTES.chat, icon: RiChatSmile2Line },
       { label: "Profile", path: ROUTES.profile, icon: RiUserLine },
       { label: "About", path: ROUTES.about, icon: RiInformationLine },
+      { label: "Subscription", path: ROUTES.subscription, icon: RiVipCrownLine },
     ],
   },
 ];

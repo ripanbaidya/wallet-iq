@@ -29,6 +29,7 @@ export interface AuthUserResponse {
     id: string;
     fullName: string;
     email: string;
+    role: 'USER' | 'ADMIN';
 }
 
 export interface SendOtpRequest {

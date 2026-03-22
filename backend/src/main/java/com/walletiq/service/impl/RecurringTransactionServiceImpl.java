@@ -4,6 +4,7 @@ import com.walletiq.dto.recurringtransaction.*;
 import com.walletiq.dto.transaction.CreateTransactionRequest;
 import com.walletiq.entity.*;
 import com.walletiq.enums.ErrorCode;
+import com.walletiq.enums.NotificationType;
 import com.walletiq.enums.RecurringFrequency;
 import com.walletiq.enums.TxnType;
 import com.walletiq.exception.RecurringTransactionException;
@@ -11,7 +12,6 @@ import com.walletiq.mapper.RecurringTransactionMapper;
 import com.walletiq.repository.*;
 import com.walletiq.service.*;
 import com.walletiq.util.SecurityUtils;
-import com.walletiq.validator.RecurringTransactionValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,15 +34,12 @@ import java.util.*;
 public class RecurringTransactionServiceImpl implements RecurringTransactionService {
 
     private final CategoryService categoryService;
-    private final EmbeddingService embeddingService;
     private final PaymentModeService paymentModeService;
     private final TransactionService transactionService;
+    private final NotificationService notificationService;
 
     private final UserRepository userRepository;
-    private final TransactionRepository transactionRepository;
     private final RecurringTransactionRepository recurringRepository;
-
-    private final RecurringTransactionValidator validator;
 
     /**
      * Create a new recurring transaction.
@@ -51,7 +48,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public RecurringTransactionResponse create(RecurringTransactionRequest request) {
 
-        validator.validateDateRange(request.startDate(), request.endDate());
+        validateDateRange(request.startDate(), request.endDate());
 
         RecurringTransaction recurring = buildRecurringTransaction(request, getCurrentUser());
 
@@ -109,7 +106,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
         updateIfPresent(request.note(), recurring::setNote);
 
         if (request.endDate() != null) {
-            validator.validateDateRange(recurring.getStartDate(), request.endDate());
+            validateDateRange(recurring.getStartDate(), request.endDate());
             recurring.setEndDate(request.endDate());
         }
 
@@ -220,6 +217,13 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
                 }
 
                 recurringRepository.save(recurring);
+
+                // Send Notification
+                notificationService.send(
+                    NotificationType.RECURRING_TRANSACTION,
+                    "Recurring transaction '" + recurring.getTitle() + "' of ₹" + recurring.getAmount() + " processed successfully."
+                );
+
             } catch (Exception ex) {
                 log.error("Failed processing recurring {}", recurring.getId(), ex);
             }
@@ -342,6 +346,12 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
                     ? new RecurringTransactionException(ErrorCode.RECURRING_ACCESS_DENIED)
                     : new RecurringTransactionException(ErrorCode.RECURRING_NOT_FOUND);
             });
+    }
+
+    public void validateDateRange(LocalDate start, LocalDate end) {
+        if (end != null && !end.isAfter(start)) {
+            throw new RecurringTransactionException(ErrorCode.RECURRING_END_DATE_BEFORE_START);
+        }
     }
 
     /**

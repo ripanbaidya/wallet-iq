@@ -213,11 +213,11 @@ public class TransactionController {
         ),
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseWrapper<Void>> deleteTransaction(
+    public ResponseEntity<Void> deleteTransaction(
         @Parameter(description = "Unique identifier of the transaction", required = true)
         @PathVariable UUID id
     ) {
         transactionService.deleteTransaction(id);
-        return ResponseUtil.ok("Transaction Deleted Successfully");
+        return ResponseUtil.noContent();
     }
 }

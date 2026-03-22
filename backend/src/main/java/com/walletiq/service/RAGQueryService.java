@@ -1,6 +1,8 @@
 package com.walletiq.service;
 
+import com.walletiq.entity.ChatMessage;
 import com.walletiq.enums.ErrorCode;
+import com.walletiq.enums.MessageRole;
 import com.walletiq.exception.RagQueryException;
 import com.walletiq.exception.VectorSearchException;
 import jakarta.annotation.PostConstruct;
@@ -30,6 +32,8 @@ public class RAGQueryService {
     // Number of most relevant documents retrieved from the vector store.
     // A value between 5–10 generally works well for RAG context windows.
     private static final int TOP_K = 8;
+    // Cap to last 10 messages to avoid token overflow
+    private static final int MAX_HISTORY = 10;
 
 
     // Vector store used for semantic search over embedded transaction documents.
@@ -76,8 +80,7 @@ public class RAGQueryService {
      * @throws RagQueryException     if the LLM call fails
      * @throws VectorSearchException if the vector store search fails unrecoverably
      */
-    public String query(String question, UUID userId) {
-
+    public String query(String question, UUID userId, List<ChatMessage> history) {
         // Retrieve relevant transactions for this user only
         List<Document> context = retrieve(question, userId);
 
@@ -102,7 +105,7 @@ public class RAGQueryService {
             """.formatted(budgetContext, goalContext, transactionContext);
 
         // Call LLM
-        String rawResponse = callLlm(fullContext, question, userId);
+        String rawResponse = callLlm(fullContext, question, userId, history);
 
         // Sanitize the response
         return sanitizeMarkdown(rawResponse);
@@ -129,24 +132,54 @@ public class RAGQueryService {
         }
     }
 
-    private String callLlm(String contextBlock, String question, UUID userId) {
+    private String callLlm(String contextBlock, String question, UUID userId,
+                           List<ChatMessage> history) {
         try {
+            List<ChatMessage> recentHistory = history.size() > MAX_HISTORY
+                ? history.subList(history.size() - MAX_HISTORY, history.size())
+                : history;
+
+            // Build the conversation history block for context
+            String historyBlock = buildHistoryBlock(recentHistory);
+
             return chatClient.prompt()
                 .system(systemPrompt)
                 .user("""
+                    %s
                     Context (your transactions):
                     %s
                     
                     Question: %s
-                    """.formatted(contextBlock, question))
+                    """.formatted(historyBlock, contextBlock, question))
                 .call()
                 .content();
         } catch (Exception e) {
-            log.error("LLM call failed for userId={} question={}", userId, question, e);
-            throw new RagQueryException(ErrorCode.RAG_QUERY_FAILED,
-                "LLM call failed for userId=" + userId, e
-            );
+            log.error("LLM call failed for userId: {} question: {}", userId, question, e);
+            throw new RagQueryException(ErrorCode.RAG_QUERY_FAILED, "LLM call failed for userId=" + userId, e);
         }
+    }
+
+    /**
+     * Formats past conversation messages into a readable block that the LLM can
+     * use as context for the current question.
+     *
+     * @param history the list of previous messages to format
+     * @return formatted history block, or empty string if there is no history
+     */
+    private String buildHistoryBlock(List<ChatMessage> history) {
+        if (history == null || history.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== CONVERSATION HISTORY ===\n");
+
+        for (ChatMessage message : history) {
+            String role = message.getRole() == MessageRole.USER
+                ? MessageRole.USER.name() : MessageRole.ASSISTANT.name();
+            sb.append(role).append(": ").append(message.getContent()).append("\n");
+        }
+        sb.append("=== END OF HISTORY ===\n\n");
+        return sb.toString();
     }
 
     /**

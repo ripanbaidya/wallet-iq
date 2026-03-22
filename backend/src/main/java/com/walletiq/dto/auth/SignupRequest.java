@@ -19,13 +19,13 @@ public record SignupRequest(
     @NotBlank(message = "Full name is required")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
     @Pattern(
-        regexp = "^[A-Za-z ]+$",
-        message = "Full name can only contain letters and spaces"
+        regexp = "^[A-Za-z .'-]+$",
+        message = "Full name can only contain letters, spaces, and valid symbols (.-')"
     )
     String fullName,
 
     @Schema(
-        description = "User email address used for authentication and communication",
+        description = "User email address used for authentication",
         example = "ripan@gmail.com",
         requiredMode = Schema.RequiredMode.REQUIRED
     )
@@ -36,7 +36,7 @@ public record SignupRequest(
 
     @Schema(
         description = "User account password",
-        example = "MySecurePassword123!",
+        example = "MySecure123",
         minLength = 8,
         maxLength = 64,
         requiredMode = Schema.RequiredMode.REQUIRED
@@ -44,7 +44,7 @@ public record SignupRequest(
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters")
     @Pattern(
-        regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]+$",
         message = "Password must contain at least one letter and one number"
     )
     String password

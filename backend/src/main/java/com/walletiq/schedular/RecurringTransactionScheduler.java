@@ -14,8 +14,8 @@ public class RecurringTransactionScheduler {
     private final RecurringTransactionService recurringTransactionService;
 
     /**
-     * Runs daily at 08:00 AM server time.
      * Processes all recurring transactions that are due or overdue.
+     * <p>Runs daily at <b>08:00 AM</b> server time.
      */
     @Scheduled(cron = "0 0 8 * * *")
     public void processDueRecurringTransactions() {

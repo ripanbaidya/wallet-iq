@@ -47,7 +47,7 @@ public class PaymentModeServiceImpl implements PaymentModeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, allEntries = true)
     public PaymentModeResponse create(CreatePaymentModeRequest request) {
         User currentUser = currentUser();
 
@@ -67,7 +67,7 @@ public class PaymentModeServiceImpl implements PaymentModeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, allEntries = true)
     public PaymentModeResponse update(UUID id, UpdatePaymentModeRequest request) {
         User currentUser = currentUser();
 
@@ -89,7 +89,7 @@ public class PaymentModeServiceImpl implements PaymentModeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.PAYMENT_MODES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.PAYMENT_MODES, allEntries = true)
     public void delete(UUID id) {
         User currentUser = currentUser();
 

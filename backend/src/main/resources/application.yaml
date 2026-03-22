@@ -1,15 +1,7 @@
-# ============================================================
-#  Base Configuration
-# ============================================================
-
+# Base Configuration
 spring:
   application:
     name: walletiq
-
-  # Profile
-  # Switch to 'prod' for production deployments.
-  profiles:
-    active: dev
 
   # JSON Serialization
   jackson:
@@ -38,26 +30,6 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
-  # Spring AI (shared model config)
-  # Note: You can change the chat model, as per your requirement
-  ai:
-    ollama:
-      chat:
-        options:
-          model: llama3.1:8b
-          temperature: 0.7
-      embedding:
-        options:
-          model: nomic-embed-text:v1.5
-    vectorstore:
-      pgvector:
-        dimensions: 768
-        distance-type: cosine_distance
-        index-type: hnsw
-        initialize-schema: false  # Schema managed manually via Flyway
-        schema-name: public
-        table-name: vector_store
-
 # Server
 server:
   port: ${SERVER_PORT:8080}
@@ -83,8 +55,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: ${SWAGGER_UI_ENABLED:true}
-    disable-swagger-default-url: true     # Prevent loading default restore example
-    display-request-duration: true        # Show API execution time (ms) in the UI
+    # Prevent loading default restore example
+    disable-swagger-default-url: true
+    # Show API execution time (ms) in the UI
+    display-request-duration: true
     operations-sorter: alpha
     tags-sorter: alpha
     doc-expansion: none
@@ -98,18 +72,18 @@ app:
   build-number: ${APPLICATION_BUILD_NUMBER:1.0.0}
   copyright: ${APPLICATION_COPYRIGHT:© 2026 walletiq. All rights reserved}
   license:
-    name: Apache License, Version 2.0
+    name: Apache License 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.txt
   support:
-    email: support@walletiq.com
-    working-hours: "Mon-Fri: 9 AM - 6 PM"
+    email: official.ripanbaidya@gmail.com
+    working-hours: "Mon-Sun: 9 AM -  5 PM"
   social:
-    github: ${SOCIAL_GITHUB:https://github.com/ripan-baidya}
+    github: https://github.com/ripanbaidya
   developer:
     name: Ripan Baidya
     email: official.ripanbaidya@gmail.com
   otp:
-    expiry-minutes: 5  # OTP is valid for 5 minutes
+    expiry-minutes: 5 # OTP is valid for 5 minutes
   mail:
     from: ${MAIL_USERNAME}
     from-name: WalletIQ
@@ -126,15 +100,15 @@ app:
       header: "Authorization"
       prefix: "Bearer "
       access-token:
-        expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000}
+        expiry: ${JWT_ACCESS_TOKEN_EXPIRY}
       refresh-token:
-        expiry: ${JWT_REFRESH_TOKEN_EXPIRY:86400000}
+        expiry: ${JWT_REFRESH_TOKEN_EXPIRY}
     rsa:
       algorithm: "RSA"
       private-key-path: classpath:keys/private_key_pkcs8.pem
       public-key-path: classpath:keys/public_key.pem
     cors:
-      enabled: ${CORS_ENABLED:true}
+      enabled: true
       allowed-origins:
         - http://localhost:5173
       allowed-methods:

@@ -239,7 +239,9 @@ CREATE TABLE vector_store
     id        UUID NOT NULL,
     content   TEXT NOT NULL,
     metadata  JSONB,
-    embedding VECTOR(768),
+    -- 768 for local development, use 1536 for openai
+    -- embedding VECTOR(768),
+    embedding VECTOR(1536),
     CONSTRAINT pk_vector_store PRIMARY KEY (id)
 );
 
@@ -271,6 +273,30 @@ CREATE TABLE notifications
 );
 
 CREATE INDEX idx_notifications_user_id ON notifications (user_id);
+
+-- Subscription
+
+CREATE TABLE subscriptions
+(
+    id                  UUID                        NOT NULL,
+    created_at          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    user_id             UUID                        NOT NULL,
+    razorpay_order_id   VARCHAR(100)                NOT NULL,
+    razorpay_payment_id VARCHAR(100),
+    razorpay_signature  VARCHAR(255),
+    amount              INTEGER                     NOT NULL,
+    currency            VARCHAR(10)                 NOT NULL,
+    status              VARCHAR(20)                 NOT NULL,
+    starts_at           TIMESTAMP WITHOUT TIME ZONE,
+    expires_at          TIMESTAMP WITHOUT TIME ZONE,
+    CONSTRAINT pk_subscriptions PRIMARY KEY (id),
+    CONSTRAINT uq_subscriptions_order_id UNIQUE (razorpay_order_id),
+    CONSTRAINT FK_SUBSCRIPTIONS_ON_USER FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT chk_subscriptions_status CHECK (status IN ('PENDING', 'ACTIVE', 'EXPIRED', 'FAILED'))
+);
+
+CREATE INDEX idx_subscription_user_id ON subscriptions (user_id);
 
 -- =============================================================================
 -- END OF MIGRATION

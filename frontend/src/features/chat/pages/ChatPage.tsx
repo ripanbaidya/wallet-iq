@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 import { chatService } from "../chatService";
 import { useAppQuery } from "../../../shared/hooks/useAppQuery";
@@ -11,46 +12,53 @@ import { QueryError } from "../../../shared/components/ui/QueryError";
 import SessionList from "../components/SessionList";
 import MessageList from "../components/MessageList";
 import MessageInput from "../components/MessageInput";
+import { useSubscriptionGuard } from "../../../features/subscription/hooks/useSubscriptionGuard";
 
 import type { ChatMessageResponse, ChatSessionResponse } from "../chat.types";
+import { subscriptionService } from "../../subscription/subscriptionService";
+import { ROUTES } from "../../../routes/routePaths";
 
 export default function ChatPage() {
+  const navigate = useNavigate();
+
+  // ── All hooks first — no early returns before this block ──
+
+  const { isLoading: isCheckingSubscription, isActive } =
+    useSubscriptionGuard();
+
+  const { data: subData } = useAppQuery({
+    queryKey: ["subscription-status"],
+    queryFn: () => subscriptionService.getStatus(),
+    staleTime: 1000 * 60 * 5,
+  });
+
   const queryClient = useQueryClient();
 
   const [activeSession, setActiveSession] =
     useState<ChatSessionResponse | null>(null);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
-
-  // Controls the mobile sidebar drawer
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Sessions
   const sessionsQuery = useAppQuery({
     queryKey: ["chat-sessions"],
     queryFn: () => chatService.getSessions(),
+    enabled: !isCheckingSubscription && isActive,
   });
 
-  const sessions = sessionsQuery.data?.data ?? [];
-
-  // Messages for active session
   const messagesQuery = useAppQuery({
     queryKey: ["chat-messages", activeSession?.id],
     queryFn: () => chatService.getMessages(activeSession!.id),
-    enabled: !!activeSession,
+    enabled: !!activeSession && !isCheckingSubscription && isActive,
   });
 
-  // Sync server messages into local state (only when not mid-query)
-  const serverMessages = messagesQuery.data?.data;
-  if (
-    serverMessages &&
-    !isQuerying &&
-    JSON.stringify(serverMessages) !== JSON.stringify(messages)
-  ) {
-    setMessages(serverMessages);
-  }
+  useEffect(() => {
+    const serverMessages = messagesQuery.data?.data;
+    if (serverMessages && !isQuerying) {
+      setMessages(serverMessages);
+    }
+  }, [messagesQuery.data?.data]);
 
-  // Create session
   const { mutate: createSession, isPending: isCreatingSession } =
     useAppMutation({
       mutationFn: () => chatService.createSession({}),
@@ -58,13 +66,12 @@ export default function ChatPage() {
         queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
         setActiveSession(res.data);
         setMessages([]);
-        setSidebarOpen(false); // close drawer on mobile after creating
+        setSidebarOpen(false);
       },
       onError: (err: AppError) =>
         console.error("Create session failed", err.message),
     });
 
-  // Delete session
   const { mutate: deleteSession, isPending: isDeletingSession } =
     useAppMutation({
       mutationFn: (id: string) => chatService.deleteSession(id),
@@ -79,7 +86,6 @@ export default function ChatPage() {
         console.error("Delete session failed", err.message),
     });
 
-  // Send query
   const { mutate: sendQuery } = useAppMutation({
     mutationFn: ({
       sessionId,
@@ -127,13 +133,23 @@ export default function ChatPage() {
     },
   });
 
-  // Handlers
+  // ── Derived values ──
+  const expiresAt = subData?.data?.expiresAt;
+  const daysLeft = expiresAt
+    ? Math.ceil(
+        (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+      )
+    : null;
+
+  const sessions = sessionsQuery.data?.data ?? [];
+
+  // ── Handlers ──
   const handleSelectSession = (session: ChatSessionResponse) => {
     if (session.id === activeSession?.id) return;
     setActiveSession(session);
     setMessages([]);
     setIsQuerying(false);
-    setSidebarOpen(false); // close drawer on mobile after selecting
+    setSidebarOpen(false);
   };
 
   const handleSend = (question: string) => {
@@ -141,7 +157,123 @@ export default function ChatPage() {
     sendQuery({ sessionId: activeSession.id, question });
   };
 
-  // Sidebar content
+  // ── Early returns AFTER all hooks ──
+
+  // 1. Still checking subscription
+  if (isCheckingSubscription) {
+    return (
+      <div className="flex justify-center py-24">
+        <Spinner />
+      </div>
+    );
+  }
+
+  // 2. No active subscription — show locked state inside the page
+  if (!isActive) {
+    return (
+      <div className="flex h-[calc(100vh_-_5rem)] rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white">
+        {/* Blurred mock sidebar */}
+        <div className="hidden md:flex w-60 shrink-0 bg-gray-50 border-r border-gray-200 flex-col items-center justify-center gap-3 opacity-40 pointer-events-none select-none">
+          {[80, 64, 72, 56, 68].map((w, i) => (
+            <div
+              key={i}
+              className="h-8 bg-gray-200 rounded-lg"
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </div>
+
+        {/* Locked state — main area */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
+          {/* Background decoration */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #e5e7eb 1px, transparent 1px)",
+              backgroundSize: "24px 24px",
+            }}
+          />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-48 bg-gray-100 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Lock icon */}
+          <div className="relative mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-[#0f0f0f] flex items-center justify-center shadow-lg">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#e8ff4f"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Heading */}
+          <h2 className="relative text-xl font-bold text-gray-900 mb-2">
+            AI Chat requires a subscription
+          </h2>
+          <p className="relative text-sm text-gray-500 max-w-sm leading-relaxed mb-8">
+            Get unlimited access to WalletIQ's RAG-powered assistant — ask
+            anything about your spending, budgets, and savings goals in plain
+            English.
+          </p>
+
+          {/* Feature pills */}
+          <div className="relative flex flex-wrap justify-center gap-2 mb-8 max-w-sm">
+            {[
+              "💬 Unlimited Q&A",
+              "📊 Spending insights",
+              "🎯 Goal tracking",
+              "🔍 Transaction search",
+            ].map((f) => (
+              <span
+                key={f}
+                className="text-xs text-gray-600 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-full"
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="relative flex flex-col sm:flex-row items-center gap-3">
+            <button
+              onClick={() => navigate(ROUTES.subscription)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#0f0f0f] text-white text-sm font-semibold rounded-xl hover:bg-black transition-colors shadow-md"
+            >
+              View subscription plans
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+
+            <span className="text-xs text-gray-400">
+              ₹199 / month · No auto-renewal
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Sidebar content (only rendered when subscribed) ──
   const sidebarContent = sessionsQuery.isLoading ? (
     <div className="flex justify-center py-10">
       <Spinner />
@@ -165,10 +297,9 @@ export default function ChatPage() {
     />
   );
 
-  // Render
+  // ── Normal chat render (subscribed users only) ──
   return (
     <div className="flex h-[calc(100vh_-_5rem)] rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white relative">
-      {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/30 z-20 md:hidden"
@@ -176,10 +307,6 @@ export default function ChatPage() {
         />
       )}
 
-      {/* Left sidebar
-          - Mobile  : fixed overlay drawer, slides in from left (z-30)
-          - md+     : static column, always visible
-      */}
       <div
         className={`
           fixed top-0 left-0 h-full w-64 bg-gray-50 border-r border-gray-200 z-30 flex flex-col
@@ -191,12 +318,9 @@ export default function ChatPage() {
         {sidebarContent}
       </div>
 
-      {/* ══ Right: conversation panel ══ */}
       <div className="flex-1 flex flex-col min-w-0 bg-gray-50/30">
         {!activeSession ? (
-          /* ── No session selected ── */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6 sm:px-8">
-            {/* Mobile: hamburger to open sidebar */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="md:hidden absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
@@ -253,7 +377,6 @@ export default function ChatPage() {
               {isCreatingSession ? "Starting..." : "Start a conversation"}
             </button>
 
-            {/* Feature hints */}
             <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3 text-xs text-gray-500 max-w-sm">
               {[
                 { icon: "🔍", label: "Semantic search over your transactions" },
@@ -271,11 +394,8 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          /* ── Active session ── */
           <>
-            {/* Conversation header */}
             <div className="shrink-0 flex items-center gap-3 px-3 sm:px-5 py-3.5 bg-white border-b border-gray-100 shadow-sm">
-              {/* Hamburger — mobile only */}
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
@@ -310,7 +430,12 @@ export default function ChatPage() {
                 </p>
               </div>
 
-              {/* New chat button */}
+              {daysLeft !== null && daysLeft <= 5 && (
+                <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg shrink-0">
+                  ⚡ {daysLeft}d left
+                </span>
+              )}
+
               <div className="shrink-0">
                 <button
                   onClick={() => createSession(undefined)}
@@ -336,7 +461,6 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Messages */}
             {messagesQuery.isLoading && messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <Spinner />
@@ -345,7 +469,6 @@ export default function ChatPage() {
               <MessageList messages={messages} isQuerying={isQuerying} />
             )}
 
-            {/* Input */}
             <MessageInput onSend={handleSend} isDisabled={isQuerying} />
           </>
         )}

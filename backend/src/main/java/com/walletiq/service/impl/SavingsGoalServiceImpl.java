@@ -7,10 +7,12 @@ import com.walletiq.entity.SavingsGoal;
 import com.walletiq.entity.User;
 import com.walletiq.enums.ErrorCode;
 import com.walletiq.enums.GoalStatus;
+import com.walletiq.enums.NotificationType;
 import com.walletiq.exception.SavingsGoalException;
 import com.walletiq.mapper.SavingsGoalMapper;
 import com.walletiq.repository.SavingsGoalRepository;
 import com.walletiq.repository.UserRepository;
+import com.walletiq.service.NotificationService;
 import com.walletiq.service.SavingsGoalService;
 import com.walletiq.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,8 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
 
     private final UserRepository userRepository;
     private final SavingsGoalRepository goalRepository;
+
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -81,8 +85,16 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
         }
 
         goal.setSavedAmount(goal.getSavedAmount().add(request.amount()));
+
+        // Check if user has reached the goal
         if (goal.getSavedAmount().compareTo(goal.getTargetAmount()) >= 0) {
             goal.setStatus(GoalStatus.ACHIEVED);
+
+            notificationService.send(
+                NotificationType.SAVINGS_GOAL,
+                "You've achieved your goal: '" + goal.getTitle() + "'. 🎉"
+            );
+
             log.info("Goal {} achieved by user {}", goalId, userId);
         }
 
@@ -108,6 +120,12 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
 
         expired.forEach(goal -> {
             goal.setStatus(GoalStatus.FAILED);
+
+            notificationService.send(
+                NotificationType.SAVINGS_GOAL,
+                "Your goal '" + goal.getTitle() + "' has failed. The deadline has passed."
+            );
+
             log.info("Goal {} marked as FAILED — deadline passed", goal.getId());
         });
 

@@ -53,7 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public CategoryResponse create(CreateCategoryRequest request) {
         User user = currentUser();
 
@@ -76,7 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
         User user = currentUser();
         Category category = findCategoryByIdAndUser(id, user);
@@ -109,7 +109,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    @CacheEvict(value = CacheNames.CATEGORIES, keyGenerator = "userKeyGenerator")
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public void delete(UUID id) {
         User currentUser = currentUser();
 

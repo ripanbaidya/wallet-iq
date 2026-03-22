@@ -86,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponse refreshToken(String refreshToken) {
-        log.debug("Refresh token attempt for refreshToken: {}", refreshToken);
+        log.debug("Refresh token attempt..");
 
         // Validate the token structure and signature
         if (!jwtService.isTokenValid(refreshToken)) {
@@ -116,15 +116,17 @@ public class AuthServiceImpl implements AuthService {
 
         User user = stored.getUser();
 
-        // Revoke old token
-        stored.revoke(Instant.now());
-        refreshTokenRepository.save(stored);
+        // Note: For refresh token we won't generate new pair (access + refresh)
+        // Rather we are generating the access token only, and will send old refresh token
+        String userId = user.getId().toString();
+        String email = user.getEmail();
 
-        // Issue new pair (rotation)
-        var tokens = issueTokens(user);
+        String newAccessToken = jwtService.generateAccessToken(userId, email);
+        long expiresIn = TimeConversionUtil.millisToSeconds(jwtProperties
+            .accessToken().expiry());
 
         log.info("Token refreshed successfully for user: {}", user.getId());
-        return tokens;
+        return TokenResponse.of(newAccessToken, refreshToken, expiresIn);
     }
 
     // TODO - Token blacklisting using Redis
