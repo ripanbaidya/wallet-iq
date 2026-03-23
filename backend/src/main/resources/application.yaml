@@ -92,7 +92,7 @@ app:
   api:
     servers:
       dev:
-        - http://localhost:${SERVER_PORT:8080}/api${API_VERSION:/v1}
+        - http://localhost:${SERVER_PORT:8080}/api/${API_VERSION:v1}
       prod:
       # - https://api.walletiq.com
 

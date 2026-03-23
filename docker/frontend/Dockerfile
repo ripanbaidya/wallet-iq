@@ -1,3 +1,5 @@
+# Frontend
+
 # ============================================================
 # Stage 1: Build React app
 # ============================================================
@@ -20,17 +22,6 @@ RUN npm run build
 # ============================================================
 # Stage 2: Serve with Nginx
 # ============================================================
-FROM nginx:alpine
-
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy our SPA-friendly nginx config
-COPY docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
-
-# Copy built React app
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+FROM alpine
+WORKDIR /app
+COPY --from=builder /app/dist .

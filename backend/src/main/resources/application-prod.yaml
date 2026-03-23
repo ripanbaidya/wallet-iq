@@ -96,7 +96,6 @@ app:
     cors:
       enabled: true
       allowed-origins:
-        # TODO: Add production URL after configuration
         - ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
       allowed-methods:
         - GET
