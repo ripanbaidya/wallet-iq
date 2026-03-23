@@ -1,25 +1,84 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
+# IDE / Editor
+.idea/
+.vscode/
 !.vscode/extensions.json
-.idea
-.DS_Store
+*.iws
+*.iml
+*.ipr
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment/ Secrets
+# NEVER commit real .env files
 *.env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Backend (Java / Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/**/src/main/**/target/
+!backend/**/src/test/**/target/
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.eslintcache
+
+# Docker
+# Don't ignore docker files, but ignore any local overrides
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Keys / Certs (never commit real keys) ────────────────────
+# *.pem files in backend/src/main/resources/keys/ are dev-only test keys
+# For production, inject via environment variables / secrets manager
+# Uncomment below if you want to block ALL pem files:
+*.pem
+*.key
+*.crt
+
+# Misc
+*.class
+*.jar
+!**/src/main/**/target/*.jar
+HELP.md
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
