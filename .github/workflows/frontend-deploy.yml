@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'frontend/**'
-      - 'docker/frontend/**'
       - '.github/workflows/frontend-deploy.yml'
 
 jobs:
@@ -41,10 +40,9 @@ jobs:
 
       # 5. Deploy to Vercel
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: frontend
-          vercel-args: '--prod'
+        working-directory: frontend
+        run: |
+          npm install -g vercel
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
