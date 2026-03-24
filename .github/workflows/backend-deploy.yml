@@ -33,19 +33,20 @@ jobs:
             echo "==> Navigating to project directory"
             cd /opt/walletiq/app
 
-            echo "==> Pulling latest code"
-            git pull origin main
+            echo "==> Force syncing with GitHub"
+            git fetch origin
+            git reset --hard origin/main
 
-            echo "==> Building and restarting backend"
+            echo "==> Building backend"
             docker compose -f docker/docker-compose.yml build --no-cache backend
 
             echo "==> Starting backend container"
             docker compose -f docker/docker-compose.yml up -d backend
 
-            echo "==> Waiting for backend health check..."
+            echo "==> Waiting for backend..."
             sleep 15
 
-            echo "==> Cleaning up unused Docker images"
+            echo "==> Cleaning unused images"
             docker image prune -f
 
-            echo "==> Backend deployment complete"
+            echo "==> Deployment done"
