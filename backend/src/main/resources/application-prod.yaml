@@ -97,8 +97,8 @@ app:
       enabled: true
       allowed-origins:
         - ${CORS_ORIGIN_LOCAL:http://localhost:5173}
-        - ${CORS_ORIGIN_VERCEL}
-        - ${CORS_ORIGIN_PRIMARY}
+        - ${CORS_ORIGIN_VERCEL:https://walletiq-eight.vercel.app}
+        - ${CORS_ORIGIN_PRIMARY:https://walletiq.online}
       allowed-methods:
         - GET
         - POST
