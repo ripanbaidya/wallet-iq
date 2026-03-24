@@ -34,7 +34,6 @@ services:
       dockerfile: docker/frontend/Dockerfile
       args:
         VITE_API_BASE_URL: /api/v1
-        # VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     container_name: walletiq-frontend
     restart: unless-stopped
     expose:
@@ -59,7 +58,20 @@ services:
       - frontend
     networks:
       - walletiq-net
+      - web # Joins Traefik's network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      # HTTPS Routes
+      - "traefik.http.routers.walletiq-api.rule=Host(`api.walletiq.online`)"
+      - "traefik.http.routers.walletiq-api.entrypoints=https"
+      - "traefik.http.routers.walletiq-api.tls=true"
+      - "traefik.http.routers.walletiq-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.walletiq-api.loadbalancer.server.port=8080" # if fails then check with 80
 
 networks:
   walletiq-net:
     driver: bridge
+  web:
+    external: true # Using the existing Traefik network
