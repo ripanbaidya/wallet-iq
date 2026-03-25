@@ -465,10 +465,10 @@ The frontend will start on `http://localhost:5173`.
 
 A default admin user is seeded by `V3__create_system_admin.sql`:
 
-| Field    | Value                 |
-| -------- | --------------------- |
-| Email    | `admin1@walletiq.com` |
-| Password | `password12345`       |
+| Field    | Value            |
+| -------- | ---------------- |
+| Email    | `admin-email`    |
+| Password | `admin-password` |
 
 > ⚠️ **Change this password immediately** if deploying to any non-local environment.
 
@@ -710,13 +710,19 @@ This runs the full production stack (backend + nginx) locally. You'll need a `.e
 ---
 
 ## Screenshots
+
 <!-- Home -->
+
 ![home](/public/images/web/home/img1.png)
 ![home-img2](/public/images/web/home/img2.png)
 ![home-img3](/public/images/web/home/img3.png)
+
 <!-- Login + Signup -->
+
 ![signup](/public/images/web/features/auth/signup.png)
+
 <!-- Dashboard -->
+
 ![dashboard](/public/images/web/features/dashboard/home.png)
 
 <h4>👉 <a href="/public/screenshots.md">Click here</a> to view more screenshots.</h4>
