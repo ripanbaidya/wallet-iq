@@ -719,7 +719,7 @@ This runs the full production stack (backend + nginx) locally. You'll need a `.e
 <!-- Dashboard -->
 ![dashboard](/public/images/web/features/dashboard/home.png)
 
-### 👉 [Click here](/public/images/web/screenshots.md) to view more screenshots.
+<h4>👉 <a href="/public/screenshots.md">Click here</a> to view more screenshots.</h4>
 
 ## License
 
