@@ -52,7 +52,7 @@ const SignupForm: React.FC<Props> = ({
             type="text"
             name="fullName"
             value={form.fullName}
-            placeholder="Ripan Baidya"
+            // placeholder="Ripan Baidya"
             onChange={onChange}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
           />
@@ -66,7 +66,7 @@ const SignupForm: React.FC<Props> = ({
             type="email"
             name="email"
             value={form.email}
-            placeholder="ripanbaidya@example.com"
+            // placeholder="ripanbaidya@example.com"
             onChange={onChange}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
           />
@@ -81,7 +81,7 @@ const SignupForm: React.FC<Props> = ({
               type={showPassword ? "text" : "password"}
               name="password"
               value={form.password}
-              placeholder="********"
+              // placeholder="********"
               onChange={onChange}
               className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
             />
