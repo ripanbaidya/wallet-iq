@@ -56,7 +56,7 @@ const LoginForm: React.FC<Props> = ({
           <input
             type="email"
             value={email}
-            // placeholder="ripanbaidya@example.com"
+            placeholder="𝘺𝘰𝘶𝘳 𝘦𝘮𝘢𝘪𝘭"
             onChange={(e) => onEmailChange(e.target.value)}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
           />
@@ -70,7 +70,7 @@ const LoginForm: React.FC<Props> = ({
             <input
               type={showPassword ? "text" : "password"}
               value={password}
-              // placeholder="********"
+              placeholder="********"
               onChange={(e) => onPasswordChange(e.target.value)}
               className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
             />
@@ -114,7 +114,7 @@ const LoginForm: React.FC<Props> = ({
         Don't have an account?{" "}
         <Link
           to={ROUTES.signup}
-          className="font-medium text-black hover:text-gray-600 transition"
+          className="font-medium text-black hover:text-indigo-500 transition underline"
         >
           Register
         </Link>

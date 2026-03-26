@@ -52,7 +52,7 @@ const SignupForm: React.FC<Props> = ({
             type="text"
             name="fullName"
             value={form.fullName}
-            // placeholder="Ripan Baidya"
+            placeholder="𝘺𝘰𝘶𝘳 𝘧𝘶𝘭𝘭 𝘯𝘢𝘮𝘦"
             onChange={onChange}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
           />
@@ -66,7 +66,7 @@ const SignupForm: React.FC<Props> = ({
             type="email"
             name="email"
             value={form.email}
-            // placeholder="ripanbaidya@example.com"
+            placeholder="𝘺𝘰𝘶𝘳 𝘦𝘮𝘢𝘪𝘭"
             onChange={onChange}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
           />
@@ -81,7 +81,7 @@ const SignupForm: React.FC<Props> = ({
               type={showPassword ? "text" : "password"}
               name="password"
               value={form.password}
-              // placeholder="********"
+              placeholder="********"
               onChange={onChange}
               className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white"
             />
@@ -139,7 +139,7 @@ const SignupForm: React.FC<Props> = ({
         Already have an account?{" "}
         <Link
           to={ROUTES.login}
-          className="font-medium text-black hover:text-gray-500 transition"
+          className="font-medium text-black hover:text-indigo-500 transition underline"
         >
           Login
         </Link>
