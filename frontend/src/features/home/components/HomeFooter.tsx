@@ -82,13 +82,21 @@ export const HomeFooter: React.FC = () => (
 
         {/* Center (perfectly centered text) */}
         <p className="text-xs text-gray-400 text-center">
-          © 2026 WalletIQ · Built by Ripan Baidya
+          © 2026 WalletIQ · Built by{" "}
+          <a
+            href="https://www.linkedin.com/in/ripanbaidya/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-gray-400 hover:text-indigo-500 transition underline"
+          >
+            Ripan Baidya
+          </a>
         </p>
 
         {/* Right (icons) */}
         <div className="flex-1 flex justify-end items-center gap-2 sm:gap-3">
           <a
-            href="https://github.com/ripanbaidya/wallet-iq"
+            href="https://github.com/ripanbaidya"
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
@@ -98,7 +106,7 @@ export const HomeFooter: React.FC = () => (
           </a>
 
           <a
-            href="#"
+            href="https://www.instagram.com/futurenoogler/"
             target="_blank"
             rel="noreferrer"
             aria-label="Instagram"
@@ -108,7 +116,7 @@ export const HomeFooter: React.FC = () => (
           </a>
 
           <a
-            href="#"
+            href="https://www.linkedin.com/in/ripanbaidya/"
             target="_blank"
             rel="noreferrer"
             aria-label="LinkedIn"
