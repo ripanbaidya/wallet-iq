@@ -44,8 +44,6 @@ frontend/*.local
 frontend/.eslintcache
 
 # Docker
-# Don't ignore docker files, but ignore any local overrides
-docker-compose.override.yml
 
 # Logs
 logs/
