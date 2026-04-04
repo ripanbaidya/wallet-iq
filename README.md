@@ -338,22 +338,26 @@ walletiq/
 
 Make sure the following are installed on your machine:
 
-| Tool           | Version | Notes                                                  |
-| -------------- | ------- | ------------------------------------------------------ |
-| Java           | 21+     | [Download Temurin](https://adoptium.net)               |
-| Maven          | 3.9+    | Or use the included `./mvnw` wrapper                   |
-| Node.js        | 20+     | [Download](https://nodejs.org)                         |
-| Docker         | 24+     | For PostgreSQL + Redis                                 |
-| Docker Compose | 2.x     | Usually bundled with Docker Desktop                    |
-| Ollama         | Latest  | Only for local AI chat — [Download](https://ollama.ai) |
-| Git            | Any     | For cloning                                            |
+| Tool           | Version | Notes                                        |
+| -------------- | ------- | -------------------------------------------- |
+| Java           | 21+     | [Download Temurin](https://adoptium.net)     |
+| Maven          | 3.9+    | Or use the included `./mvnw` wrapper         |
+| Node.js        | 20+     | [Download](https://nodejs.org)               |
+| Docker         | 24+     | For PostgreSQL + Redis                       |
+| Docker Compose | 2.x     | Usually bundled with Docker Desktop          |
+| Git            | Any     | For cloning                                  |
 
-> **Optional for AI Chat (Dev):** Pull the required Ollama models:
->
-> ```bash
-> ollama pull llama3.1:8b
-> ollama pull nomic-embed-text:v1.5
-> ```
+> **OpenAI API Key required** — AI-powered features (chat, embeddings) require an OpenAI API key.
+> New accounts receive **$5 in free credits**, which is more than sufficient for development and testing.
+> If you prefer not to use OpenAI, see the alternatives below.
+
+<details>
+<summary>Alternatives if you don't have an OpenAI key</summary>
+
+- **Ollama (local AI)** — swap the embedding and chat models in `application-dev.yml` to use Ollama. You'll need to pull the models yourself (`ollama pull nomic-embed-text`, etc.).
+- **Disable AI features** — comment out the AI-related endpoints in the controllers to run the rest of the app without AI functionality.
+
+</details>
 
 ---
 
@@ -366,113 +370,86 @@ cd wallet-iq
 
 ---
 
-### 2. Start Infrastructure (Docker)
+### 2. Configure Environment
 
-Start **PostgreSQL** (with pgvector) and **Redis** locally using Docker Compose:
+The backend reads configuration from a `.env.local` file inside the `/docker` directory.
+A template is provided — copy it and fill in your values:
 
 ```bash
-docker compose -f docker/docker-compose.dev.yml up -d
+cp docker/.env.local.template docker/.env.local
+```
+
+Open `docker/.env.local` and set at minimum:
+
+- `OPENAI_API_KEY` — your OpenAI API key
+- `MAIL_USERNAME` / `MAIL_PASSWORD` — Gmail address and [App Password](https://myaccount.google.com/apppasswords)
+
+Everything else (DB, Redis, ports) is pre-filled and works out of the box with the Docker setup.
+
+---
+
+### 3. Start the Full Stack
+
+Start the backend, PostgreSQL, and Redis with a single command:
+
+```bash
+docker compose -f docker/docker-compose.local.yml up -d
 ```
 
 This starts:
 
-- **PostgreSQL** on `localhost:5432` (database: `walletiq`, user: `postgres`, password: `postgres`)
-- **Redis** on `localhost:6379`
+| Service    | Address          | Details                                          |
+| ---------- | ---------------- | ------------------------------------------------ |
+| Backend    | `localhost:8080` | Spring Boot API                                  |
+| PostgreSQL | `localhost:5432` | Database: `walletiq` · User/Password: `postgres` |
+| Redis      | `localhost:6379` | Password: `strongPassword`                       |
 
-Verify containers are running:
+Verify all containers are running:
 
 ```bash
 docker ps
 ```
 
----
-
-### 3. Configure Backend
-
-The backend uses Spring profiles. For local development, use the `dev` profile.
-
-Create a `.env` file or set the following environment variables. The app reads them from `application-dev.yaml`:
-
-```bash
-# Required for dev profile
-MAIL_USERNAME=your-gmail@gmail.com
-MAIL_PASSWORD=your-gmail-app-password     # Google App Password, NOT your Gmail password
-REDIS_URL=redis://localhost:6379           # Local Redis (no TLS needed in dev)
-
-# Optional — defaults are provided in application-dev.yaml
-SERVER_PORT=8080
-JWT_ACCESS_TOKEN_EXPIRY=604800000          # 7 days in ms
-JWT_REFRESH_TOKEN_EXPIRY=2592000000        # 30 days in ms
-```
-
-> **Gmail App Password setup:**
-> Go to [Google Account → Security → App Passwords](https://myaccount.google.com/apppasswords), create a new app password, and use that as `MAIL_PASSWORD`. Two-Factor Authentication must be enabled on your Google account.
-
-> **Want to skip email entirely in dev?** You can temporarily mock the mail service or disable the email verification flow.
+Once up, the full API is browsable at:
+`http://localhost:8080/api/v1/swagger-ui/index.html`
 
 ---
 
-### 4. Run the Backend
+### 4. Set Up the Admin User
 
-From the `backend/` directory:
-
-```bash
-cd backend
-
-# Using Maven Wrapper (recommended — no need to install Maven separately)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-
-# OR if Maven is installed globally
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-The backend will start on `http://localhost:8080`.
-
-Flyway will automatically run the database migrations on startup (`V1__init_schema.sql`, `V2__insert_default_category_and_payment_mode.sql`, `V3__create_system_admin.sql`).
-
-**Verify the backend is running:**
+A default admin is seeded by `V3__create_system_admin.sql`. Before running the migration,
+generate a bcrypt hash for your chosen password using the hash endpoint:
 
 ```bash
-curl http://localhost:8080/api/v1/app/info
+curl -X POST http://localhost:8080/api/v1/auth/password-hash \
+  -H "Content-Type: application/json" \
+  -d '{"password": "your_password"}'
 ```
+
+Copy the returned hash into your migration file before the containers start for the first time.
+
+| Field    | Value                        |
+| -------- | ---------------------------- |
+| Email    | the email you seeded         |
+| Password | the plain-text password used |
 
 ---
 
 ### 5. Run the Frontend
 
-From the `frontend/` directory:
-
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Create a local env file
-cp .env.development.example .env.development.local
-# Or manually create frontend/.env.development.local with:
-# VITE_API_BASE_URL=http://localhost:8080/api/v1
-
-# Start the dev server
 npm run dev
 ```
 
-The frontend will start on `http://localhost:5173`.
+The frontend reads its API base URL from `.env.development`, which is already committed with the correct default:
 
----
+```env
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
 
-### Default Admin Credentials
-
-A default admin user is seeded by `V3__create_system_admin.sql`:
-
-| Field    | Value            |
-| -------- | ---------------- |
-| Email    | `admin-email`    |
-| Password | `admin-password` |
-
-> ⚠️ **Change this password immediately** if deploying to any non-local environment.
-
----
+The dev server starts at `http://localhost:5173`.
 
 ### Verify Everything Works
 
@@ -511,7 +488,7 @@ A default admin user is seeded by `V3__create_system_admin.sql`:
 | `CORS_ORIGIN_VERCEL`       | Prod only | —                              | Vercel frontend URL                                    |
 | `CORS_ORIGIN_PRIMARY`      | Prod only | —                              | Primary domain URL                                     |
 
-### Frontend (`.env.local`)
+### Frontend (`.env.devlopement`)
 
 | Variable            | Required | Default                        | Description          |
 | ------------------- | -------- | ------------------------------ | -------------------- |
