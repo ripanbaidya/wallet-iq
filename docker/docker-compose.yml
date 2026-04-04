@@ -10,7 +10,7 @@ services:
     container_name: walletiq-backend
     restart: unless-stopped
     env_file:
-      - /opt/walletiq/.env
+      - /opt/walletiq/.env.development
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: 8080

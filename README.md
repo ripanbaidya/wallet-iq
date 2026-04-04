@@ -449,8 +449,8 @@ cd frontend
 npm install
 
 # Create a local env file
-cp .env.example .env.local
-# Or manually create frontend/.env.local with:
+cp .env.development.example .env.development.local
+# Or manually create frontend/.env.development.local with:
 # VITE_API_BASE_URL=http://localhost:8080/api/v1
 
 # Start the dev server

@@ -22,12 +22,13 @@ ehthumbs.db
 Thumbs.db
 
 # Environment/ Secrets
-# NEVER commit real .env files
+# NEVER commit real .env.development files
 *.env
 .env
 .env.local
 .env.*.local
 !.env.example
+/docker/.env.local
 
 # Backend (Java / Maven)
 backend/target/

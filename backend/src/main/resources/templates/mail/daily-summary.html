@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Daily Summary - WalletIQ</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f7ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -11,7 +11,8 @@
     <tr>
         <td align="center" style="padding:40px 20px;">
 
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:560px;background-color:#ffffff;border-radius:10px;border:1px solid #e5e7eb;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                   style="max-width:560px;background-color:#ffffff;border-radius:10px;border:1px solid #e5e7eb;">
 
                 <!-- Header -->
                 <tr>
@@ -20,7 +21,8 @@
                             <tr>
                                 <td><span style="font-size:20px;font-weight:700;color:#2563eb;">WalletIQ</span></td>
                                 <td align="right">
-                                    <span th:text="${date}" style="font-size:12px;color:#9ca3af;">Monday, March 18, 2026</span>
+                                    <span th:text="${date}"
+                                          style="font-size:12px;color:#9ca3af;">Monday, March 18, 2026</span>
                                 </td>
                             </tr>
                         </table>
@@ -32,14 +34,17 @@
                     <td style="padding:40px 30px;text-align:center;">
 
                         <p style="margin:0 0 32px;font-size:14px;color:#4b5563;">
-                            Hi <strong th:text="${name}" style="color:#1f2937;">there</strong>, here is your financial summary for today:
+                            Hi <strong th:text="${name}" style="color:#1f2937;">there</strong>, here is your financial
+                            summary for today:
                         </p>
 
                         <!-- Net Balance Box -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#2563eb;border-radius:8px;margin:0 0 24px;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                               style="background-color:#2563eb;border-radius:8px;margin:0 0 24px;">
                             <tr>
                                 <td style="padding:32px 30px;text-align:center;">
-                                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.75);letter-spacing:1px;">Net Balance</p>
+                                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.75);letter-spacing:1px;">
+                                        Net Balance</p>
                                     <p th:text="'₹' + ${#numbers.formatDecimal(netBalance, 1, 'POINT', 2, 'DEFAULT')}"
                                        style="margin:0;font-size:40px;font-weight:700;color:#ffffff;">₹0.00</p>
                                 </td>
@@ -47,7 +52,8 @@
                         </table>
 
                         <!-- Stats Table -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:8px;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                               style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:8px;">
                             <tr style="border-bottom:1px solid #e5e7eb;">
                                 <td style="padding:14px 20px;text-align:left;background-color:#fafafa;border-radius:8px 0 0 0;">
                                     <p style="margin:0;font-size:13px;color:#4b5563;">Total Income</p>
@@ -75,12 +81,15 @@
                         </p>
 
                         <!-- Empty State -->
-                        <p th:if="${transactionCount == 0}" style="margin:0 0 20px;font-size:13px;color:#9ca3af;font-style:italic;">
+                        <p th:if="${transactionCount == 0}"
+                           style="margin:0 0 20px;font-size:13px;color:#9ca3af;font-style:italic;">
                             No activity to report for this period.
                         </p>
 
                         <!-- CSV Attachment Notice -->
-                        <table th:if="${transactionCount > 0}" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#dbeafe;border:1px solid #93c5fd;border-radius:6px;margin:0 0 24px;">
+                        <table th:if="${transactionCount > 0}" role="presentation" cellspacing="0" cellpadding="0"
+                               border="0" width="100%"
+                               style="background-color:#dbeafe;border:1px solid #93c5fd;border-radius:6px;margin:0 0 24px;">
                             <tr>
                                 <td style="padding:14px 20px;text-align:center;">
                                     <p style="margin:0;font-size:13px;color:#1e40af;">📎 Detailed CSV report attached</p>
@@ -89,7 +98,9 @@
                         </table>
 
                         <p style="margin:0;font-size:12px;color:#9ca3af;">
-                            Need help? <a href="mailto:support@walletiq.com" style="color:#2563eb;text-decoration:none;font-weight:600;">Contact Support</a>
+                            Need help? <a href="mailto:support@walletiq.com"
+                                          style="color:#2563eb;text-decoration:none;font-weight:600;">Contact
+                            Support</a>
                         </p>
 
                     </td>

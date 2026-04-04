@@ -1,8 +1,6 @@
-# This file is intended for local development only.
-# In production, managed services (e.g., Neon, Supabase, Upstash) should be used instead.
+# development only
 
 services:
-
   postgres:
     image: pgvector/pgvector:pg16
     container_name: walletiq-postgres-dev
@@ -14,21 +12,35 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - postgres-dev-data:/var/lib/postgresql/data
     networks:
       - walletiq-dev
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2-alpine
     container_name: walletiq-redis-dev
     restart: on-failure
     ports:
       - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass strongPassword
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "strongPassword", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-dev-data:/data
     networks:
       - walletiq-dev
 
 volumes:
-  postgres_dev_data:
+  postgres-dev-data:
+  redis-dev-data:
 
 networks:
   walletiq-dev:

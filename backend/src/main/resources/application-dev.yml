@@ -1,54 +1,47 @@
-# Development
+# dev environment
+
 spring:
   config:
     activate:
       on-profile: dev
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
 
-  # Database
   datasource:
-    url: jdbc:postgresql://localhost:5432/walletiq
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:walletiq}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
-      pool-name: WalletIQHikariPool
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
-      minimum-idle: ${DB_POOL_MIN_IDLE:2}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000} # 30 seconds
-      idle-timeout: ${DB_IDLE_TIMEOUT:600000}  # 10 minutes
-      max-lifetime: ${DB_MAX_LIFETIME:1800000} # 30 minutes
+      pool-name: ${HIKARI_POOL_NAME:WalletIQHikariPool}
       auto-commit: true
-      leak-detection-threshold: 60000 # 1 minute
+      minimum-idle: ${HIKARI_POOL_MIN_IDLE:2}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}  # 10 minutes
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000} # 30 minutes
+      maximum-pool-size: ${HIKARI_POOL_MAX_SIZE:10}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000} # 30 seconds
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION_THRESHOLD:60000} # 1 minute
 
-  # JPA
   jpa:
     show-sql: true
 
-  # Redis
   data:
     redis:
-      url: ${REDIS_URL}
+      url: ${REDIS_URL:redis://:strongPassword@localhost:6379}
       ssl:
-        enabled: true
+        enabled: ${REDIS_SSL_ENABLED:false}
 
-  # Ollama
   ai:
-    ollama:
-      base-url: http://localhost:11434
+    openai:
+      api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: llama3.1:8b
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
           temperature: 0.7
       embedding:
         options:
-          model: nomic-embed-text:v1.5
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
     vectorstore:
       pgvector:
-        dimensions: 768
+        dimensions: ${PGVECTOR_DIMENSIONS:1536}
         distance-type: cosine_distance
         index-type: hnsw
         initialize-schema: false
@@ -56,8 +49,6 @@ spring:
         table-name: vector_store
 
   # Mail (Gmail SMTP)
-  # App-specific password required — NOT your Gmail password.
-  # Setup: https://myaccount.google.com/apppasswords
   mail:
     host: smtp.gmail.com
     port: 587
@@ -78,16 +69,21 @@ spring:
         writetimeout: 5000
 
 # Razorpay
-# Visit: https://razorpay.com
 app:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_STtxF7zD3d2bmB}
     key-secret: ${RAZORPAY_KEY_SECRET:d3f4ULGJeVKDHvhJmi34VZ18}
     currency: INR
-    subscription-amount: 19900   # amount in paise (₹199)
-    subscription-days: 30        # how many days one payment gives
+    subscription-amount: ${SUBSCRIPTION_AMOUNT:19900} # 199
+    subscription-days: ${SUBSCRIPTION_DAYS:30}
+  security:
+    cors:
+      enabled: true
+      allowed-origins:
+        - ${CORS_ORIGIN_LOCAL:http://localhost:5173}
+        - ${CORS_ORIGIN_VERCEL:https://walletiq-eight.vercel.app}
+        - ${CORS_ORIGIN_PRIMARY:https://walletiq.online}
 
-# Logging
 logging:
   level:
     root: info

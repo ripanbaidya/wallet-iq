@@ -1,11 +1,9 @@
+# production
+
 spring:
   config:
     activate:
       on-profile: prod
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
 
   datasource:
     # connect_timeout is in seconds - Fail fast if NeonDB endpoint is unreachable instead of hanging
@@ -14,20 +12,18 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
-      pool-name: WalletIQHikariPool
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
-      minimum-idle: ${DB_POOL_MIN_IDLE:1}
-      # NeonDB kills connections at ~5 min. Retire them at 3 min to stay ahead
-      max-lifetime: 180000
-      # The idle time Must be less than max-lifetime
-      idle-timeout: 120000
+      pool-name: ${HIKARI_POOL_NAME}
+      auto-commit: true
+      minimum-idle: ${HIKARI_POOL_MIN_IDLE}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT}
+      max-lifetime: ${HIKARI_MAX_LIFETIME}
+      maximum-pool-size: ${HIKARI_POOL_MAX_SIZE}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT}
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION_THRESHOLD}
       # Validates connection is alive before use — catches stale ones immediately
       connection-test-query: SELECT 1
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:20000}
       # Sends a keepalive ping every 60s to prevent NeonDB from timing out active connections
       keepalive-time: 60000
-      leak-detection-threshold: 60000
-      auto-commit: true
 
   jpa:
     show-sql: false
@@ -36,21 +32,21 @@ spring:
     redis:
       url: ${REDIS_URL}
       ssl:
-        enabled: true
+        enabled: ${REDIS_SSL_ENABLED}
 
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+          model: ${OPENAI_CHAT_MODEL}
           temperature: 0.7
       embedding:
         options:
-          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+          model: ${OPENAI_EMBEDDING_MODEL}
     vectorstore:
       pgvector:
-        dimensions: ${PGVECTOR_DIMENSIONS:1536}
+        dimensions: ${PGVECTOR_DIMENSIONS}
         distance-type: cosine_distance
         index-type: hnsw
         initialize-schema: false
@@ -70,7 +66,7 @@ spring:
             enable: true
             required: true
           ssl:
-            trust: smtp.gmail.com
+            trust: ${MAIL_SSL_TRUST}
           quitwait: false
         connectiontimeout: 5000
         timeout: 5000
@@ -92,13 +88,20 @@ management:
       show-details: NEVER
 
 app:
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    currency: INR
+    subscription-amount: ${SUBSCRIPTION_AMOUNT}
+    subscription-days: ${SUBSCRIPTION_DAYS}
+
   security:
     cors:
       enabled: true
       allowed-origins:
-        - ${CORS_ORIGIN_LOCAL:http://localhost:5173}
-        - ${CORS_ORIGIN_VERCEL:https://walletiq-eight.vercel.app}
-        - ${CORS_ORIGIN_PRIMARY:https://walletiq.online}
+        - ${CORS_ORIGIN_LOCAL}
+        - ${CORS_ORIGIN_VERCEL}
+        - ${CORS_ORIGIN_PRIMARY}
       allowed-methods:
         - GET
         - POST
@@ -112,13 +115,6 @@ app:
         - Authorization
       allow-credentials: true
       max-age: 3600
-
-  razorpay:
-    key-id: ${RAZORPAY_KEY_ID}
-    key-secret: ${RAZORPAY_KEY_SECRET}
-    currency: INR
-    subscription-amount: 19900 # amount in paise (₹199)
-    subscription-days: 30 # how many days one payment gives
 
 logging:
   level:
