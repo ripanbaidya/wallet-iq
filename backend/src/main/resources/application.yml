@@ -2,24 +2,25 @@ spring:
   application:
     name: walletiq
 
+  profiles:
+    active: dev
+
   jackson:
     time-zone: Asia/Kolkata
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false # Prevents accidental lazy loading
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
-        use_sql_comments: false
-        generate_statistics: false
         order_inserts: true
         order_updates: true
         jdbc:
-          batch_size: 20 # Batch up to 20 DML statements — good for bulk insert/update
-          fetch_size: 50 # Fetch 50 rows at a time — good for pagination
+          batch_size: 20
+          fetch_size: 50
 
   flyway:
     enabled: true
@@ -37,8 +38,8 @@ server:
   error:
     whitelabel:
       enabled: false
-    include-message: never # Do not expose internal exception messages
-    include-binding-errors: never # Do not expose validation error details
+    include-message: never
+    include-binding-errors: never
     include-stacktrace: never
     include-exception: false
 
@@ -49,13 +50,10 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-    disable-swagger-default-url: true # Prevent loading default restore example
-    display-request-duration: true # Show API execution time (ms) in the UI
     operations-sorter: alpha
     tags-sorter: alpha
     doc-expansion: none
     filter: true
-    show-actuator: true
 
 app:
   name: Wallet-IQ
@@ -97,10 +95,12 @@ app:
         expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000} # 1h
       refresh-token:
         expiry: ${JWT_REFRESH_TOKEN_EXPIRY:604800000} # 7d
+
     rsa:
       algorithm: "RSA"
-      private-key-path: classpath:keys/private_key_pkcs8.pem
+      private-key-path: classpath:keys/private_key.pem
       public-key-path: classpath:keys/public_key.pem
+
     cors:
       enabled: true
       allowed-origins:

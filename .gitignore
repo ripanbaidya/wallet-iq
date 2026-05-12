@@ -1,18 +1,4 @@
-# IDE / Editor
-.idea/
-.vscode/
-!.vscode/extensions.json
-*.iws
-*.iml
-*.ipr
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.swp
-
-# OS
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -21,29 +7,19 @@
 ehthumbs.db
 Thumbs.db
 
-# Environment/ Secrets
-# NEVER commit real .env.development files
-*.env
-.env
-.env.local
-.env.*.local
-!.env.example
-/docker/.env.local
-
-# Backend (Java / Maven)
-backend/target/
-backend/.mvn/wrapper/maven-wrapper.jar
-!backend/**/src/main/**/target/
-!backend/**/src/test/**/target/
-
-# Frontend (Node)
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/*.local
-frontend/.eslintcache
-
-# Docker
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
 
 # Logs
 logs/
@@ -53,31 +29,39 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ── Keys / Certs (never commit real keys) ────────────────────
-# *.pem files in backend/src/main/resources/keys/ are dev-only test keys
-# For production, inject via environment variables / secrets manager
-# Uncomment below if you want to block ALL pem files:
-*.pem
-*.key
-*.crt
+# Environment / local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+docker/docker-compose/local/.env.local
+backend/*.env
+frontend/.env
 
-# Misc
+# Keep project profile/compose templates and shared env config trackable
+!backend/.env.dev
+!frontend/.env.development
+!frontend/.env.production
+!docker/.env.template
+!docker/docker-compose/compose/.env.compose
+
+# Frontend (Vite / Node)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/coverage/
+frontend/.eslintcache
+
+# Backend (Java / Maven)
+backend/target/
 *.class
-*.jar
-!**/src/main/**/target/*.jar
-HELP.md
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+
+# Build outputs
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+out/
+
+# Runtime artifacts
+*.pid
+*.pid.lock
+*.seed

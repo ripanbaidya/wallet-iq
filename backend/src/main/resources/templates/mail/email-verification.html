@@ -1,100 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Email Verification - WalletIQ</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f4f7ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Email Verification</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333">
+    <h2>WalletIQ - Email Verification</h2>
 
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f7ff;">
-    <tr>
-        <td align="center" style="padding:40px 20px;">
+    <p>Hello <span th:text="${name}">User</span>,</p>
+    <p>Your verification code is:</p>
+    <h1 th:text="${otp}" style="letter-spacing: 5px">000000</h1>
+    <p>
+      This code will expire in
+      <strong th:text="${expiryMinutes}">10</strong>
+      minutes.
+    </p>
 
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                   style="max-width:560px;background-color:#ffffff;border-radius:10px;border:1px solid #e5e7eb;">
+    <p>If you did not request this email, you can safely ignore it.</p>
 
-                <!-- Header -->
-                <!-- Header -->
-                <tr>
-                    <td style="padding:24px 30px;border-bottom:1px solid #e5e7eb;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                                <td><span style="font-size:20px;font-weight:700;color:#2563eb;">WalletIQ</span></td>
-                                <td align="right">
-                                    <span th:text="${date}" style="font-size:12px;color:#9ca3af;">Monday, March 18, 2026</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+    <hr />
 
-                <!-- Body -->
-                <tr>
-                    <td style="padding:40px 30px;text-align:center;">
-
-                        <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1f2937;">Verify Your Email</h1>
-
-                        <p style="margin:0 0 8px;font-size:14px;color:#4b5563;">
-                            Hi <strong th:text="${name}" style="color:#1f2937;">User</strong>,
-                        </p>
-
-                        <p style="margin:0 0 32px;font-size:14px;color:#6b7280;line-height:1.6;">
-                            Use the code below to verify your email. It expires in
-                            <strong th:text="${expiryMinutes}" style="color:#1f2937;">10</strong> minutes.
-                        </p>
-
-                        <!-- OTP Box -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                               style="background-color:#f0f9ff;border:2px solid #2563eb;border-radius:8px;margin:0 0 32px;">
-                            <tr>
-                                <td style="padding:28px;text-align:center;">
-                                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:1px;">
-                                        Verification Code</p>
-                                    <p th:text="${otp}"
-                                       style="margin:0;font-size:38px;font-weight:700;color:#2563eb;letter-spacing:16px;font-family:'Courier New',monospace;">
-                                        000000</p>
-                                    <p style="margin:8px 0 0;font-size:12px;color:#9ca3af;">
-                                        Expires in <strong th:text="${expiryMinutes}" style="color:#6b7280;">10</strong>
-                                        minutes
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <!-- Security Note -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                               style="background-color:#fffbeb;border:1px solid #fbbf24;border-radius:6px;margin:0 0 24px;">
-                            <tr>
-                                <td style="padding:14px 18px;text-align:left;">
-                                    <p style="margin:0;font-size:12px;color:#92400e;line-height:1.6;">
-                                        <strong style="color:#78350f;">🔒 Security Note:</strong>
-                                        Never share this code with anyone. WalletIQ will never ask for it.
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <p style="margin:0;font-size:12px;color:#9ca3af;">
-                            Need help? <a href="mailto:support@walletiq.com"
-                                          style="color:#2563eb;text-decoration:none;font-weight:600;">Contact
-                            Support</a>
-                        </p>
-
-                    </td>
-                </tr>
-
-                <!-- Footer -->
-                <tr>
-                    <td style="padding:16px 30px;border-top:1px solid #e5e7eb;text-align:center;background-color:#f9fafb;border-radius:0 0 10px 10px;">
-                        <p style="margin:0;font-size:11px;color:#9ca3af;">© 2026 WalletIQ. All rights reserved.</p>
-                    </td>
-                </tr>
-
-            </table>
-        </td>
-    </tr>
-</table>
-
-</body>
+    <p style="font-size: 12px; color: #777">© 2026 WalletIQ</p>
+  </body>
 </html>

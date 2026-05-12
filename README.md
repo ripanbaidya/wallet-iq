@@ -376,7 +376,7 @@ The backend reads configuration from a `.env.local` file inside the `/docker` di
 A template is provided — copy it and fill in your values:
 
 ```bash
-cp docker/.env.local.template docker/.env.local
+cp docker/.env.template docker/.env.local
 ```
 
 Open `docker/.env.local` and set at minimum:

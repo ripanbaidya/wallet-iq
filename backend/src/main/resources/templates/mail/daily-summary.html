@@ -1,122 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <head>
+    <meta charset="UTF-8" />
     <title>Daily Summary - WalletIQ</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f4f7ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+  </head>
 
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f7ff;">
-    <tr>
-        <td align="center" style="padding:40px 20px;">
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333">
+    <h2>WalletIQ - Daily Summary</h2>
 
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                   style="max-width:560px;background-color:#ffffff;border-radius:10px;border:1px solid #e5e7eb;">
+    <p>Hello <strong th:text="${name}">User</strong>,</p>
 
-                <!-- Header -->
-                <tr>
-                    <td style="padding:24px 30px;border-bottom:1px solid #e5e7eb;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                                <td><span style="font-size:20px;font-weight:700;color:#2563eb;">WalletIQ</span></td>
-                                <td align="right">
-                                    <span th:text="${date}"
-                                          style="font-size:12px;color:#9ca3af;">Monday, March 18, 2026</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+    <p>Here is your financial summary for today.</p>
 
-                <!-- Body -->
-                <tr>
-                    <td style="padding:40px 30px;text-align:center;">
+    <hr />
 
-                        <p style="margin:0 0 32px;font-size:14px;color:#4b5563;">
-                            Hi <strong th:text="${name}" style="color:#1f2937;">there</strong>, here is your financial
-                            summary for today:
-                        </p>
+    <p>
+      <strong>Net Balance:</strong>
+      <span
+        th:text="'₹' + ${#numbers.formatDecimal(netBalance, 1, 'POINT', 2, 'DEFAULT')}"
+      >
+        ₹0.00
+      </span>
+    </p>
 
-                        <!-- Net Balance Box -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                               style="background-color:#2563eb;border-radius:8px;margin:0 0 24px;">
-                            <tr>
-                                <td style="padding:32px 30px;text-align:center;">
-                                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.75);letter-spacing:1px;">
-                                        Net Balance</p>
-                                    <p th:text="'₹' + ${#numbers.formatDecimal(netBalance, 1, 'POINT', 2, 'DEFAULT')}"
-                                       style="margin:0;font-size:40px;font-weight:700;color:#ffffff;">₹0.00</p>
-                                </td>
-                            </tr>
-                        </table>
+    <p>
+      <strong>Total Income:</strong>
+      <span
+        th:text="'+₹' + ${#numbers.formatDecimal(totalIncome, 1, 'POINT', 2, 'DEFAULT')}"
+      >
+        +₹0.00
+      </span>
+    </p>
 
-                        <!-- Stats Table -->
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                               style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:8px;">
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:14px 20px;text-align:left;background-color:#fafafa;border-radius:8px 0 0 0;">
-                                    <p style="margin:0;font-size:13px;color:#4b5563;">Total Income</p>
-                                </td>
-                                <td style="padding:14px 20px;text-align:right;background-color:#fafafa;border-radius:0 8px 0 0;">
-                                    <p th:text="'+₹' + ${#numbers.formatDecimal(totalIncome, 1, 'POINT', 2, 'DEFAULT')}"
-                                       style="margin:0;font-size:14px;font-weight:700;color:#16a34a;">+₹0.00</p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:14px 20px;text-align:left;">
-                                    <p style="margin:0;font-size:13px;color:#4b5563;">Total Expenses</p>
-                                </td>
-                                <td style="padding:14px 20px;text-align:right;">
-                                    <p th:text="'-₹' + ${#numbers.formatDecimal(totalExpenses, 1, 'POINT', 2, 'DEFAULT')}"
-                                       style="margin:0;font-size:14px;font-weight:700;color:#dc2626;">-₹0.00</p>
-                                </td>
-                            </tr>
-                        </table>
+    <p>
+      <strong>Total Expenses:</strong>
+      <span
+        th:text="'-₹' + ${#numbers.formatDecimal(totalExpenses, 1, 'POINT', 2, 'DEFAULT')}"
+      >
+        -₹0.00
+      </span>
+    </p>
 
-                        <!-- Transaction Count -->
-                        <p style="margin:0 0 20px;font-size:14px;color:#4b5563;">
-                            <strong th:text="${transactionCount}" style="color:#1f2937;font-size:16px;">0</strong>
-                            transaction<span th:if="${transactionCount != 1}">s</span> recorded today
-                        </p>
+    <p>
+      <strong>Transactions:</strong>
+      <span th:text="${transactionCount}">0</span>
+    </p>
 
-                        <!-- Empty State -->
-                        <p th:if="${transactionCount == 0}"
-                           style="margin:0 0 20px;font-size:13px;color:#9ca3af;font-style:italic;">
-                            No activity to report for this period.
-                        </p>
+    <p th:if="${transactionCount == 0}">No transactions recorded today.</p>
 
-                        <!-- CSV Attachment Notice -->
-                        <table th:if="${transactionCount > 0}" role="presentation" cellspacing="0" cellpadding="0"
-                               border="0" width="100%"
-                               style="background-color:#dbeafe;border:1px solid #93c5fd;border-radius:6px;margin:0 0 24px;">
-                            <tr>
-                                <td style="padding:14px 20px;text-align:center;">
-                                    <p style="margin:0;font-size:13px;color:#1e40af;">📎 Detailed CSV report attached</p>
-                                </td>
-                            </tr>
-                        </table>
+    <p th:if="${transactionCount > 0}">
+      Detailed CSV report attached with this email.
+    </p>
 
-                        <p style="margin:0;font-size:12px;color:#9ca3af;">
-                            Need help? <a href="mailto:support@walletiq.com"
-                                          style="color:#2563eb;text-decoration:none;font-weight:600;">Contact
-                            Support</a>
-                        </p>
+    <hr />
 
-                    </td>
-                </tr>
-
-                <!-- Footer -->
-                <tr>
-                    <td style="padding:16px 30px;border-top:1px solid #e5e7eb;text-align:center;background-color:#f9fafb;border-radius:0 0 10px 10px;">
-                        <p style="margin:0;font-size:11px;color:#9ca3af;">© 2026 WalletIQ. All rights reserved.</p>
-                    </td>
-                </tr>
-
-            </table>
-        </td>
-    </tr>
-</table>
-
-</body>
+    <p style="font-size: 12px; color: #777">© 2026 WalletIQ</p>
+  </body>
 </html>

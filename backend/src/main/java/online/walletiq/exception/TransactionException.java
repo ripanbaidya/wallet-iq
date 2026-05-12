@@ -1,0 +1,19 @@
+package online.walletiq.exception;
+
+import online.walletiq.enums.ErrorCode;
+
+/**
+ * Exception thrown for transaction related failures.
+ * <p>This exception occurs when financial transaction operations fail,
+ * such as creating, updating, retrieving, or validating transaction data.
+ */
+public class TransactionException extends BusinessException {
+
+    public TransactionException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
+    public TransactionException(ErrorCode errorCode, String customMessage) {
+        super(errorCode, customMessage);
+    }
+}

@@ -1,0 +1,83 @@
+spring:
+
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/walletiq
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+          temperature: 0.7
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+    vectorstore:
+      pgvector:
+        dimensions: ${PGVECTOR_DIMENSIONS:1536}
+        distance-type: cosine_distance
+        index-type: hnsw
+        initialize-schema: false
+        schema-name: public
+        table-name: vector_store
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: ${MAIL_SSL_TRUST:*}
+          quitwait: false
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
+
+app:
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_STtxF7zD3d2bmB}
+    key-secret: ${RAZORPAY_KEY_SECRET:d3f4ULGJeVKDHvhJmi34VZ18}
+    currency: INR
+    subscription-amount: ${SUBSCRIPTION_AMOUNT:19900} # 199
+    subscription-days: ${SUBSCRIPTION_DAYS:30}
+  security:
+    cors:
+      enabled: true
+      allowed-origins:
+        - ${CORS_ORIGIN_LOCAL:http://localhost:5173}
+        - ${CORS_ORIGIN_VERCEL:https://walletiq-eight.vercel.app}
+        - ${CORS_ORIGIN_PRIMARY:https://walletiq.online}
+
+logging:
+  level:
+    root: info
+    com.walletiq: debug
+    org.springframework.web: debug
+    org.springframework.security: debug
+    org.springframework.ai.chat.client.advisor: debug
+    org.springframework.data.redis: debug
+    org.springframework.cache: trace

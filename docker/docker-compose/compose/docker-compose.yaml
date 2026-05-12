@@ -1,0 +1,69 @@
+# Contains configuration for docker environment
+# Use this configuration when you want to run the application as a docker container
+# Execute the command 'docker compose up -d' and you can access the api's directly
+# without running your backend manually with IDE.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: walletiq-postgres
+    mem_limit: 512m
+    mem_reservation: 216m
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-walletiq}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - walletiq_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d walletiq" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: walletiq-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - walletiq_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    image: ripanbaidya/walletiq-backend:1.0.0
+    container_name: walletiq-backend
+    env_file:
+      - .env.compose
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - walletiq_network
+
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  walletiq_network:
+    driver: bridge

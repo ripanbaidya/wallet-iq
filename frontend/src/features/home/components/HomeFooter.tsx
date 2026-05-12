@@ -82,15 +82,7 @@ export const HomeFooter: React.FC = () => (
 
         {/* Center (perfectly centered text) */}
         <p className="text-xs text-gray-400 text-center">
-          © 2026 WalletIQ · Built by{" "}
-          <a
-            href="https://www.linkedin.com/in/ripanbaidya/"
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-gray-400 hover:text-indigo-500 transition underline"
-          >
-            Ripan Baidya
-          </a>
+          © 2026 WalletIQ · All rights reserved
         </p>
 
         {/* Right (icons) */}
