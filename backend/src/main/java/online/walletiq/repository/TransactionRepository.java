@@ -67,11 +67,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findAllByUserAndDateOrderByDateDesc(User user, LocalDate date);
 
     @Query("""
-            select COALESCE(sum(t.amount), 0)
+            select coalesce(sum(t.amount), 0)
             from Transaction t
             where t.user.id     = :userId
               AND t.category.id = :categoryId
-              AND t.type        = com.walletiq.enums.TxnType.EXPENSE
+              AND t.type        = online.walletiq.enums.TxnType.EXPENSE
               AND t.date >= :startDate
               AND t.date <= :endDate
         """)
@@ -97,7 +97,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     );
 
     @Query("""
-        select new com.walletiq.dto.dashboard.CategoryBreakdownItem(
+        select new online.walletiq.dto.dashboard.CategoryBreakdownItem(
             c.name,
             sum(t.amount)
         )
@@ -117,10 +117,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     );
 
     @Query("""
-        select new com.walletiq.dto.dashboard.DailyTrendItem(
+        select new online.walletiq.dto.dashboard.DailyTrendItem(
             t.date,
-            sum(case when t.type = com.walletiq.enums.TxnType.INCOME  then t.amount else 0 end),
-            sum(case when t.type = com.walletiq.enums.TxnType.EXPENSE then t.amount else 0 end)
+            sum(case when t.type = online.walletiq.enums.TxnType.INCOME  then t.amount else 0 end),
+            sum(case when t.type = online.walletiq.enums.TxnType.EXPENSE then t.amount else 0 end)
         )
         from Transaction t
         where t.user.id = :userId
@@ -135,7 +135,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     );
 
     @Query("""
-        SELECT new com.walletiq.dto.dashboard.TopExpenseItem(
+        SELECT new online.walletiq.dto.dashboard.TopExpenseItem(
             t.id,
             t.amount,
             c.name,
@@ -145,7 +145,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
         FROM Transaction t
         LEFT JOIN t.category c
         WHERE t.user.id = :userId
-          AND t.type = com.walletiq.enums.TxnType.EXPENSE
+          AND t.type = online.walletiq.enums.TxnType.EXPENSE
           AND t.date BETWEEN :from AND :to
         ORDER BY t.amount DESC
         LIMIT 5

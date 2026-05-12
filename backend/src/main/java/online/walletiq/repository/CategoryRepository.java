@@ -11,18 +11,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for managing Category entities.
- */
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     /**
      * Retrieves all categories visible to a user, including system defaults
-     * (where user is null) and the user's own categories, filtered by type.
-     *
-     * @param user         the user whose categories to fetch
-     * @param type the type of categories to filter by
-     * @return list of categories sorted by name
+     * (where the user is null) and the user's own categories, filtered by type.
      */
     @Query("""
             select c from Category c
@@ -30,10 +23,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
             and (c.user is null or c.user = :user)
             order by c.name asc
         """)
-    List<Category> findAllVisibleToUser(
-        @Param("user") User user,
-        @Param("type") CategoryType type
-    );
+    List<Category> findAllVisibleToUser(@Param("user") User user,
+                                        @Param("type") CategoryType type);
 
     /**
      * Checks if a category with the given name already exists for the user.
@@ -43,8 +34,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      * @param user the user to check for
      * @return true if a duplicate exists, false otherwise
      */
-    boolean existsByNameIgnoreCaseAndUserAndCategoryType(String name, User user,
-                                                         CategoryType categoryType);
+    boolean existsByNameIgnoreCaseAndUserAndCategoryType(String name, User user, CategoryType categoryType);
 
     /**
      * Finds a category by ID that belongs to the specified user.
@@ -52,7 +42,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      *
      * @param id   the category ID
      * @param user the owner user
-     * @return Optional containing the category if found and owned by user
+     * @return Optional containing the category if found and owned by a user
      */
     Optional<Category> findByIdAndUser(UUID id, User user);
 }

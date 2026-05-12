@@ -9,10 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for managing {@link Budget} entities.
- * Provides user-scoped lookups and expense aggregation for budget tracking.
- */
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, UUID> {
 

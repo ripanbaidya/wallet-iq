@@ -11,21 +11,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for {@link Subscription} entities.
- * Provides derived and JPQL queries for subscription lifecycle management,
- * including active subscription lookup and expiry detection for the scheduler.
- */
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, UUID> {
 
-    /**
-     * Finds a subscription by its Razorpay order ID.
-     * Used during payment verification to locate the corresponding subscription record.
-     *
-     * @param orderId the Razorpay order ID
-     * @return the matching subscription, or empty if not found
-     */
     Optional<Subscription> findByRazorpayOrderId(String orderId);
 
     /**
@@ -40,7 +28,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     @Query("""
         select s from Subscription s
         where s.user.id = :userId
-          and s.status = com.walletiq.enums.SubscriptionStatus.ACTIVE
+          and s.status = online.walletiq.enums.SubscriptionStatus.ACTIVE
           and s.expiresAt > :now
         order by s.expiresAt desc
         """)
@@ -59,7 +47,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
      */
     @Query("""
         select s from Subscription s
-        where s.status = com.walletiq.enums.SubscriptionStatus.ACTIVE
+        where s.status = online.walletiq.enums.SubscriptionStatus.ACTIVE
           and s.expiresAt < :now
         """)
     List<Subscription> findAllExpired(@Param("now") Instant now);

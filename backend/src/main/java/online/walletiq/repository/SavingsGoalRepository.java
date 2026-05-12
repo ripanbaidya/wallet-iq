@@ -17,8 +17,5 @@ public interface SavingsGoalRepository extends JpaRepository<SavingsGoal, UUID> 
 
     Optional<SavingsGoal> findByIdAndUser_Id(UUID id, UUID userId);
 
-    // Used by scheduler to mark overdue goals as FAILED
-    List<SavingsGoal> findByStatusAndDeadlineBefore(
-        GoalStatus status,
-        LocalDate date);
+    List<SavingsGoal> findByStatusAndDeadlineBefore(GoalStatus status, LocalDate date);
 }

@@ -11,10 +11,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for managing {@link RecurringTransaction} entities.
- * Provides queries for scheduler execution, user-scoped lookups, and forecasting.
- */
 @Repository
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, UUID> {
 
