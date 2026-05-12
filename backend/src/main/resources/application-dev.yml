@@ -23,14 +23,14 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+          model: gpt-4o-mini
           temperature: 0.7
       embedding:
         options:
-          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+          model: text-embedding-3-small
     vectorstore:
       pgvector:
-        dimensions: ${PGVECTOR_DIMENSIONS:1536}
+        dimensions: 1536
         distance-type: cosine_distance
         index-type: hnsw
         initialize-schema: false
@@ -50,7 +50,7 @@ spring:
             enable: true
             required: true
           ssl:
-            trust: ${MAIL_SSL_TRUST:*}
+            trust: smtp.gmail.com
           quitwait: false
         connectiontimeout: 5000
         timeout: 5000
@@ -69,8 +69,8 @@ app:
       enabled: true
       allowed-origins:
         - http://localhost:5173
-        - https://walletiq-eight.vercel.app
         - https://walletiq.online
+        - https://walletiq-eight.vercel.app
 
 logging:
   level:

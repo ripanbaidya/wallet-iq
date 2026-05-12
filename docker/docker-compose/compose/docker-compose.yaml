@@ -1,8 +1,3 @@
-# Contains configuration for docker environment
-# Use this configuration when you want to run the application as a docker container
-# Execute the command 'docker compose up -d' and you can access the api's directly
-# without running your backend manually with IDE.
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -46,7 +41,7 @@ services:
     image: ripanbaidya/walletiq-backend:1.0.0
     container_name: walletiq-backend
     env_file:
-      - .env.compose
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
