@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { RiRepeat2Line } from "react-icons/ri";
@@ -19,11 +19,11 @@ import {
   RiCloseLine,
   RiShieldUserLine,
   RiVipCrownLine,
+  RiMoonLine,
+  RiSunLine,
 } from "react-icons/ri";
 
 import NotificationBell from "../../../features/notifications/components/NotificationBell";
-
-// Nav items
 
 type NavItem = {
   label: string;
@@ -36,10 +36,6 @@ type NavGroup = {
   items: NavItem[];
 };
 
-/**
- * Grouped nav structure — rendered in both desktop sidebar and mobile drawer.
- * Headings are shown in full-label mode; hidden in icon-only (tablet) mode.
- */
 const NAV_GROUPS: NavGroup[] = [
   {
     heading: "Overview",
@@ -82,7 +78,6 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-// Flat list — used for the icon-only tablet sidebar and the bottom tab bar
 const NAV_ITEMS_FLAT: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 const ADMIN_NAV_ITEM: NavItem = {
@@ -91,10 +86,6 @@ const ADMIN_NAV_ITEM: NavItem = {
   icon: RiShieldUserLine,
 };
 
-/**
- * Bottom tab bar — 5 most important destinations, always visible on mobile.
- * Everything else is reachable via the drawer.
- */
 const BOTTOM_TAB_PATHS = [
   "/dashboard",
   "/transactions",
@@ -106,8 +97,6 @@ const BOTTOM_TAB_ITEMS = NAV_ITEMS_FLAT.filter((item) =>
   BOTTOM_TAB_PATHS.includes(item.path),
 );
 
-// Helpers
-
 const getInitials = (fullName?: string): string => {
   if (!fullName) return "U";
   return fullName
@@ -118,9 +107,6 @@ const getInitials = (fullName?: string): string => {
     .join("");
 };
 
-// Shared nav link renderers
-
-/** Full nav link — icon + label — used in desktop sidebar and mobile drawer */
 const FullNavLink: React.FC<{ item: NavItem; onClick?: () => void }> = ({
   item,
   onClick,
@@ -150,7 +136,6 @@ const FullNavLink: React.FC<{ item: NavItem; onClick?: () => void }> = ({
   );
 };
 
-/** Icon-only nav link — used in collapsed tablet sidebar */
 const IconNavLink: React.FC<{ item: NavItem }> = ({ item }) => {
   const Icon = item.icon;
   return (
@@ -169,8 +154,6 @@ const IconNavLink: React.FC<{ item: NavItem }> = ({ item }) => {
     </NavLink>
   );
 };
-
-// Grouped nav renderer — desktop sidebar + mobile drawer
 
 const GroupedNav: React.FC<{
   onItemClick?: () => void;
@@ -200,8 +183,6 @@ const GroupedNav: React.FC<{
     )}
   </nav>
 );
-
-// User footer
 
 const UserFooter: React.FC<{
   user: ReturnType<typeof useAuth>["user"];
@@ -260,26 +241,39 @@ const UserFooter: React.FC<{
   );
 };
 
-// Main Sidebar
+const ThemeToggle: React.FC<{ isDark: boolean; onToggle: () => void }> = ({
+  isDark,
+  onToggle,
+}) => (
+  <button
+    onClick={onToggle}
+    className="p-2 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
+    aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+    title={isDark ? "Light mode" : "Dark mode"}
+  >
+    {isDark ? <RiSunLine size={20} /> : <RiMoonLine size={20} />}
+  </button>
+);
 
-/**
- * Three responsive modes
- *
- * Mobile  (< md)  : fixed top bar + bottom tab bar (5 key items)
- *                   + hamburger → full drawer with all nav items
- * Tablet  (md)    : icon-only collapsed sidebar (w-16)
- * Desktop (lg+)   : full sidebar with grouped labels (w-60)
- */
 const Sidebar: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
 
   const closeDrawer = () => setDrawerOpen(false);
+  const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
     <>
-      {/* DESKTOP sidebar (lg+) */}
       <aside className="hidden lg:flex w-60 min-h-screen bg-white border-r border-gray-100 flex-col">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <span
@@ -291,7 +285,10 @@ const Sidebar: React.FC = () => {
               IQ
             </span>
           </span>
-          <NotificationBell align="left" />
+          <div className="flex items-center gap-1">
+            <NotificationBell align="left" />
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+          </div>
         </div>
 
         <GroupedNav showAdmin={isAdmin} />
@@ -299,7 +296,6 @@ const Sidebar: React.FC = () => {
         <UserFooter user={user} logout={logout} />
       </aside>
 
-      {/* TABLET sidebar (md → lg) — icon only */}
       <aside className="hidden md:flex lg:hidden w-16 min-h-screen bg-white border-r border-gray-100 flex-col items-center">
         <div
           className="w-full flex items-center justify-center py-5 border-b border-gray-100 cursor-pointer select-none"
@@ -310,8 +306,9 @@ const Sidebar: React.FC = () => {
           </span>
         </div>
 
-        <div className="py-2 flex justify-center border-b border-gray-100 w-full">
+        <div className="py-2 flex flex-col items-center gap-1 border-b border-gray-100 w-full">
           <NotificationBell size="sm" align="left" />
+          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
         </div>
 
         <nav className="flex-1 flex flex-col items-center py-4 gap-1 overflow-y-auto w-full">
@@ -329,7 +326,6 @@ const Sidebar: React.FC = () => {
         <UserFooter user={user} logout={logout} collapsed />
       </aside>
 
-      {/* MOBILE top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100 flex items-center justify-between px-4 h-14">
         <span
           className="text-lg font-bold tracking-tight text-gray-900 cursor-pointer select-none"
@@ -341,6 +337,7 @@ const Sidebar: React.FC = () => {
           </span>
         </span>
         <div className="flex items-center gap-1">
+          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
           <NotificationBell align="right" />
           <button
             onClick={() => setDrawerOpen(true)}
@@ -352,10 +349,8 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Spacer — keeps content below the fixed top bar */}
       <div className="md:hidden h-14 shrink-0" />
 
-      {/* MOBILE drawer */}
       {drawerOpen && (
         <>
           <div
@@ -363,7 +358,6 @@ const Sidebar: React.FC = () => {
             onClick={closeDrawer}
           />
           <div className="md:hidden fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col shadow-2xl">
-            {/* Drawer header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <span
                 className="text-xl font-bold tracking-tight text-gray-900 cursor-pointer"
@@ -386,7 +380,6 @@ const Sidebar: React.FC = () => {
               </button>
             </div>
 
-            {/* Grouped nav — same as desktop */}
             <GroupedNav onItemClick={closeDrawer} showAdmin={isAdmin} />
 
             <UserFooter user={user} logout={logout} />
@@ -394,7 +387,6 @@ const Sidebar: React.FC = () => {
         </>
       )}
 
-      {/* MOBILE bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex items-center justify-around px-2 h-[calc(4rem_+_env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]">
         {BOTTOM_TAB_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -430,7 +422,6 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Spacer — keeps content above the fixed bottom tab bar */}
       <div className="md:hidden h-[calc(4rem_+_env(safe-area-inset-bottom))] shrink-0 order-last" />
     </>
   );

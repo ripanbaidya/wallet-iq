@@ -1,11 +1,20 @@
 import { TESTIMONIALS, type Testimonial } from "../../../shared/constants/homeData";
 
 /* Card */
-const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item }) => {
+const TestimonialCard: React.FC<{ item: Testimonial; mobile?: boolean }> = ({
+  item,
+  mobile = false,
+}) => {
   const initial = item.author.charAt(0).toUpperCase();
 
   return (
-    <div className="flex-shrink-0 w-64 sm:w-72 bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 mx-2 sm:mx-3 hover:bg-white/[0.08] transition-colors">
+    <div
+      className={`flex-shrink-0 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/[0.08] transition-colors ${
+        mobile
+          ? "w-full p-4"
+          : "w-64 sm:w-72 p-5 sm:p-6 mx-2 sm:mx-3"
+      }`}
+    >
       {/* Opening quote */}
       <span className="text-3xl text-[#e8ff4f] font-serif leading-none select-none">
         &ldquo;
@@ -64,7 +73,7 @@ const MarqueeRow: React.FC<{ items: Testimonial[]; reversed?: boolean }> = ({
 const TestimonialsSection: React.FC = () => (
   <section
     id="testimonials"
-    className="py-16 sm:py-24 bg-[#0f0f0f] border-y border-white/5 overflow-hidden"
+    className="py-16 sm:py-24 bg-[#0f0f0f] border-y border-white/5 overflow-x-hidden"
   >
     <style>{`
       @keyframes marquee-ltr {
@@ -80,6 +89,7 @@ const TestimonialsSection: React.FC = () => (
       /* Slower overall */
       .marquee-row          { animation: marquee-ltr 80s linear infinite; }
       .marquee-row-reversed { animation: marquee-rtl 80s linear infinite; }
+      .marquee-row-mobile   { animation: marquee-ltr 52s linear infinite; }
 
       /* Slightly faster on desktop, but still slow */
       @media (min-width: 640px) {
@@ -90,14 +100,10 @@ const TestimonialsSection: React.FC = () => (
       /* Respect reduced motion */
       @media (prefers-reduced-motion: reduce) {
         .marquee-row,
-        .marquee-row-reversed { animation-play-state: paused; }
+        .marquee-row-reversed,
+        .marquee-row-mobile { animation-play-state: paused; }
       }
 
-      /* Pause on hover */
-      .marquee-row:hover,
-      .marquee-row-reversed:hover {
-        animation-play-state: paused;
-      }
     `}</style>
 
     {/* Section header */}
@@ -114,13 +120,23 @@ const TestimonialsSection: React.FC = () => (
       </h2>
     </div>
 
-    {/* Row 1 — left to right */}
-    <MarqueeRow items={TESTIMONIALS} />
+    {/* Mobile: auto-moving marquee */}
+    <div className="sm:hidden overflow-hidden">
+      <div className="marquee-row-mobile flex w-max">
+        {[...TESTIMONIALS, ...TESTIMONIALS].map((item, index) => (
+          <div key={`${item.author}-${index}`} className="w-[84vw] max-w-[20rem] mx-2 first:ml-4 last:mr-4">
+            <TestimonialCard item={item} mobile />
+          </div>
+        ))}
+      </div>
+    </div>
 
-    <div className="h-3 sm:h-4" />
-
-    {/* Row 2 — right to left */}
-    <MarqueeRow items={[...TESTIMONIALS].reverse()} reversed />
+    {/* Desktop/tablet: marquee rows */}
+    <div className="hidden sm:block">
+      <MarqueeRow items={TESTIMONIALS} />
+      <div className="h-3 sm:h-4" />
+      <MarqueeRow items={[...TESTIMONIALS].reverse()} reversed />
+    </div>
   </section>
 );
 

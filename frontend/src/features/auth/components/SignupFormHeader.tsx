@@ -3,9 +3,14 @@ import { motion, type Variants } from "framer-motion";
 interface Props {
   variants: Variants;
   success: string;
+  redirectCountdown: number | null;
 }
 
-const SignupFormHeader: React.FC<Props> = ({ variants, success }) => (
+const SignupFormHeader: React.FC<Props> = ({
+  variants,
+  success,
+  redirectCountdown,
+}) => (
   <>
     <motion.div variants={variants} className="mb-8">
       <h2 className="text-3xl font-semibold tracking-tight">
@@ -22,7 +27,12 @@ const SignupFormHeader: React.FC<Props> = ({ variants, success }) => (
         animate={{ opacity: 1, y: 0 }}
         className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
       >
-        {success}
+        <p>{success}</p>
+        {redirectCountdown !== null && (
+          <p className="mt-1 font-medium">
+            Redirecting to login in {redirectCountdown}...
+          </p>
+        )}
       </motion.div>
     )}
   </>

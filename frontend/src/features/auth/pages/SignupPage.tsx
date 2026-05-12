@@ -22,6 +22,7 @@ export default function SignupPage() {
     fieldErrors,
     formError,
     success,
+    redirectCountdown,
     agreeToTerms,
     isPending,
     handleChange,
@@ -73,7 +74,11 @@ export default function SignupPage() {
               animate="show"
               className="w-full max-w-md"
             >
-              <SignupFormHeader variants={itemVariants} success={success} />
+              <SignupFormHeader
+                variants={itemVariants}
+                success={success}
+                redirectCountdown={redirectCountdown}
+              />
 
               <SignupForm
                 form={form}

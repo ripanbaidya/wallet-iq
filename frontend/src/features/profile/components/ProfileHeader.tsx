@@ -3,7 +3,7 @@ import { AppError } from "../../../api/errorParser";
 import { FieldErrorMessage } from "../../../shared/components/ui/FieldErrorMessage";
 import { FormError } from "../../../shared/components/ui/FormError";
 import type { UserProfileResponse } from "../profile.types";
-import { getInitials } from "../../../shared/utils/profileHelpers";
+import { getAvatarUrl } from "../../../shared/utils/profileHelpers";
 
 interface Props {
   profile: UserProfileResponse;
@@ -25,7 +25,11 @@ const ProfileHeader: React.FC<Props> = ({
   const [fieldError, setFieldError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const initials = getInitials(profile.fullName);
+  const avatarUrl = getAvatarUrl({
+    id: profile.id,
+    email: profile.email,
+    fullName: profile.fullName,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,11 +70,11 @@ const ProfileHeader: React.FC<Props> = ({
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4 -mt-8 sm:-mt-9 mb-4 sm:mb-5">
           {/* Avatar */}
           <div className="relative shrink-0 group self-start">
-            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#e8ff4f] flex items-center justify-center shadow-lg border-4 border-white overflow-hidden">
-              <span className="text-gray-900 text-lg font-black tracking-tight select-none">
-                {initials}
-              </span>
-            </div>
+            <img
+              src={avatarUrl}
+              alt={profile.fullName}
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl shadow-lg border-4 border-white object-cover"
+            />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
