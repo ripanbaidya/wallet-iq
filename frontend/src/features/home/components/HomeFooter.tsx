@@ -74,25 +74,19 @@ export const CTASection: React.FC = () => (
 );
 
 export const HomeFooter: React.FC = () => (
-  <footer className="bg-black border-t border-gray-100">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
-      <div className="flex items-center">
-        {/* Left spacer */}
-        <div className="flex-1" />
-
-        {/* Center (perfectly centered text) */}
-        <p className="text-xs text-gray-400 text-center">
+  <footer className="bg-black border-t border-white/10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs text-gray-400 text-center sm:text-left order-2 sm:order-1">
           © 2026 WalletIQ · All rights reserved
         </p>
-
-        {/* Right (icons) */}
-        <div className="flex-1 flex justify-end items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 order-1 sm:order-2">
           <a
             href="https://github.com/ripanbaidya"
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-gray-400 border border-gray-200 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50 transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 border border-white/20 hover:text-white hover:border-white/40 hover:bg-white/10 transition-all"
           >
             <FaGithub size={14} />
           </a>
@@ -102,7 +96,7 @@ export const HomeFooter: React.FC = () => (
             target="_blank"
             rel="noreferrer"
             aria-label="Instagram"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-gray-400 border border-gray-200 hover:text-pink-500 hover:border-pink-200 hover:bg-pink-50 transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 border border-white/20 hover:text-pink-400 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all"
           >
             <FaInstagram size={14} />
           </a>
@@ -112,7 +106,7 @@ export const HomeFooter: React.FC = () => (
             target="_blank"
             rel="noreferrer"
             aria-label="LinkedIn"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-gray-400 border border-gray-200 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 border border-white/20 hover:text-blue-400 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all"
           >
             <FaLinkedin size={14} />
           </a>

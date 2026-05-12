@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../shared/hooks/useAuth";
+import { getAvatarUrl } from "../../../shared/utils/profileHelpers";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -14,6 +16,12 @@ const NAV_LINKS = [
  */
 const HomeNavbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated, user } = useAuth();
+  const avatarUrl = getAvatarUrl({
+    id: user?.id,
+    email: user?.email,
+    fullName: user?.fullName,
+  });
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -57,22 +65,52 @@ const HomeNavbar: React.FC = () => {
 
         {/* Auth */}
         <div className="flex items-center gap-3">
-          <Link
-            to="/login"
-            className={`text-sm transition-colors px-3 py-2 ${
-              scrolled
-                ? "text-gray-600 hover:text-gray-900"
-                : "text-white/80 hover:text-white"
-            }`}
-          >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="text-sm font-semibold bg-[#e8ff4f] text-gray-900 px-4 py-2 rounded-lg hover:bg-[#d4eb3a] transition-colors"
-          >
-            Get started
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/dashboard"
+                className={`text-sm transition-colors px-3 py-2 ${
+                  scrolled
+                    ? "text-gray-600 hover:text-gray-900"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/profile"
+                className="rounded-full border border-white/20 hover:border-[#e8ff4f] transition-colors"
+                aria-label="Go to profile"
+                title="Profile"
+              >
+                <img
+                  src={avatarUrl}
+                  alt="Profile"
+                  className="w-9 h-9 rounded-full bg-white object-cover"
+                  loading="lazy"
+                />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className={`text-sm transition-colors px-3 py-2 ${
+                  scrolled
+                    ? "text-gray-600 hover:text-gray-900"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="text-sm font-semibold bg-[#e8ff4f] text-gray-900 px-4 py-2 rounded-lg hover:bg-[#d4eb3a] transition-colors"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
