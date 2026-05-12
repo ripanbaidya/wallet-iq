@@ -17,6 +17,17 @@ export const getInitials = (name: string): string =>
     .map((w) => w[0].toUpperCase())
     .join("");
 
+type AvatarSeedInput = {
+  id?: string;
+  email?: string;
+  fullName?: string;
+};
+
+export const getAvatarUrl = ({ id, email, fullName }: AvatarSeedInput): string => {
+  const seed = id ?? email ?? fullName ?? "walletiq-user";
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}`;
+};
+
 /**
  * Formats a seconds value as MM:SS.
  * e.g. 305 → "05:05"

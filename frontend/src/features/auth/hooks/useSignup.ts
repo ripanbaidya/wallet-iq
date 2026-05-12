@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppMutation } from "../../../shared/hooks/useAppMutation";
 import { authService } from "../authService";
@@ -22,6 +22,7 @@ export function useSignup() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const { mutate: signup, isPending } = useAppMutation({
@@ -29,7 +30,7 @@ export function useSignup() {
 
     onSuccess: () => {
       setSuccess("Account created successfully 🎉");
-      setTimeout(() => navigate(ROUTES.login), 2500);
+      setRedirectCountdown(3);
     },
 
     onError: (error: AppError) => {
@@ -70,11 +71,26 @@ export function useSignup() {
     signup(undefined);
   };
 
+  useEffect(() => {
+    if (!success || redirectCountdown === null) return;
+    if (redirectCountdown === 0) {
+      navigate(ROUTES.login);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectCountdown((prev) => (prev === null ? prev : prev - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [success, redirectCountdown, navigate]);
+
   return {
     form,
     fieldErrors,
     formError,
     success,
+    redirectCountdown,
     agreeToTerms,
     isPending,
     handleChange,
