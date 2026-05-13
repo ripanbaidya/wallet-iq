@@ -1,0 +1,33 @@
+# WalletIQ — Production Docker Compose
+# Use this on GCP VM: docker compose up -d
+# All external services (DB, Redis) are configured via .env
+
+services:
+  backend:
+    image: ${DOCKER_IMAGE:-ripanbaidya/walletiq-backend}:${IMAGE_TAG:-latest}
+    container_name: walletiq-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${SERVER_PORT:-8080}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/v1/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - walletiq_network
+
+networks:
+  walletiq_network:
+    driver: bridge

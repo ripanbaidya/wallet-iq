@@ -1,6 +1,5 @@
-# production
-
 spring:
+
   config:
     activate:
       on-profile: prod

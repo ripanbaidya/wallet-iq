@@ -1,1 +1,2 @@
 /docker-compose/compose/.env
+/docker-compose/prod/.env
