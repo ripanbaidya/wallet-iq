@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore';
 
 /**
  * Centralized Axios instance for all API calls.
- * It Configure the base URL and default headers and attach authentication token
+ * It Configures the base URL and default headers and attaches authentication token
  * automatically.
  * On 401: attempt a silent token refresh before giving up.
  * Serialize concurrent 401s so only one refresh call is made.
