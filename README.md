@@ -6,7 +6,7 @@
 
 Track expenses, set budgets, manage savings goals, and get AI-driven financial insights through a natural language chat assistant — all grounded in your real transaction data.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-walletiq.online-black?style=for-the-badge&logo=vercel)](https://walletiq-eight.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-walletiq.online-black?style=for-the-badge&logo=vercel)](https://www.walletiq.online)
 [![Backend API](https://img.shields.io/badge/API%20Docs-Swagger%20UI-green?style=for-the-badge&logo=swagger)](http://localhost:8080/api/v1/swagger-ui.html)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue?style=for-the-badge)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)](https://openjdk.org/projects/jdk/21/)
@@ -17,735 +17,836 @@ Track expenses, set budgets, manage savings goals, and get AI-driven financial i
 
 ---
 
-## Table of Contents
+## 1. Project Purpose
 
-- [What is WalletIQ?](#what-is-walletiq)
-- [Problem It Solves](#problem-it-solves)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-  - [Backend](#backend)
-  - [Frontend](#frontend)
-  - [Infrastructure](#infrastructure)
-- [Architecture Overview](#architecture-overview)
-- [Project Structure](#project-structure)
-- [Getting Started (Local Development)](#getting-started-local-development)
-  - [Prerequisites](#prerequisites)
-  - [1. Clone the Repository](#1-clone-the-repository)
-  - [2. Start Infrastructure (Docker)](#2-start-infrastructure-docker)
-  - [3. Configure Backend](#3-configure-backend)
-  - [4. Run the Backend](#4-run-the-backend)
-  - [5. Run the Frontend](#5-run-the-frontend)
-- [Environment Variables Reference](#environment-variables-reference)
-- [API Documentation (Swagger)](#api-documentation-swagger)
-- [Key Design Decisions & Best Practices](#key-design-decisions--best-practices)
-- [Database Schema](#database-schema)
-  - [Class Diagram](#class-diagram)
-- [Deployment](#deployment)
-- [Screenshots](#screenshots)
-- [License](#license)
-- [Author](#author)
+This project is designed as a senior-level full-stack portfolio system with:
 
----
+- Enterprise-style backend architecture (layered services, validation, exception handling, schedulers, security, observability)
+- Modern frontend architecture (feature modules, typed API layer, route guards, state + server-cache separation)
+- Production deployment practices (Docker, CI/CD, cloud VM rollout)
+- Applied AI engineering (RAG pipeline over user-scoped financial data)
 
-## What is WalletIQ?
+## 2. Core Business Features
 
-WalletIQ is a **full-stack personal finance management application** that combines traditional expense tracking with **Retrieval-Augmented Generation (RAG)** to give users AI-powered financial insights. Instead of generic advice, the AI assistant reads and reasons over the user's _actual_ transaction data to answer questions like:
+- JWT authentication with refresh-token flow and role-based access (`USER`, `ADMIN`)
+- Transaction tracking (income/expense), filtering, pagination, CSV export
+- Category and payment mode management (defaults + custom)
+- Monthly budgets with threshold and limit breach tracking
+- Savings goals with contribution workflow and automatic status transitions
+- Recurring transactions with forecast engine (1 to 365 days)
+- Real-time notifications (REST + WebSocket STOMP/SockJS)
+- Dashboard analytics (summary, category breakdown, trends, top expenses)
+- Subscription workflow (Razorpay order + signature verification)
+- AI chat assistant powered by RAG over user transactions, budget, goals, and recent chat context
 
-> _"How much did I spend on food this month?"_
-> _"Am I on track with my savings goals?"_
-> _"What's my biggest expense category this week?"_
+## 3. Tech Stack (with Versions and Selection Rationale)
 
-Every answer is grounded in real data — not guesswork.
+### 3.1 Backend
 
----
+| Area            | Stack                        |                               Version | Why this was chosen                                              |
+| --------------- | ---------------------------- | ------------------------------------: | ---------------------------------------------------------------- |
+| Language        | Java                         |                                    21 | LTS performance, records/sealed types, mature ecosystem          |
+| Framework       | Spring Boot                  |                                3.5.11 | Production-ready web/security/data/scheduling stack              |
+| Security        | Spring Security + JWT (JJWT) | Spring Security via Boot, JJWT 0.12.6 | Stateless auth, token-based API security, rotation support       |
+| API Docs        | SpringDoc OpenAPI            |                                2.8.14 | Auto-generated contract docs for interview/demo usage            |
+| DB              | PostgreSQL                   |                   16 (pgvector image) | Reliable relational store + SQL analytics                        |
+| ORM             | Spring Data JPA / Hibernate  |                          Boot-managed | Clean repository + domain mapping model                          |
+| Migrations      | Flyway                       |                          Boot-managed | Versioned schema migration for reproducible environments         |
+| Cache           | Redis                        |                            7.2-alpine | Low-latency caching for dashboard and static-ish data            |
+| AI Integration  | Spring AI                    |                                 1.1.2 | Unified LLM + embedding + vector-store abstraction               |
+| Vector Store    | PgVector                     |                 via Spring AI starter | Native vector similarity search near transactional data          |
+| Mail            | Spring Mail + Thymeleaf      |                          Boot-managed | Templated transactional emails                                   |
+| CSV             | Apache Commons CSV           |                                1.10.0 | Stable CSV generation with encoding control                      |
+| Payments        | Razorpay Java SDK            |                                 1.4.8 | Indian payment gateway integration for subscription monetization |
+| Container Build | Google Jib Maven Plugin      |                                 3.4.2 | Daemonless, reproducible image builds in CI                      |
 
-## Problem It Solves
+### 3.2 Frontend
 
-Most personal finance apps show you charts and numbers, but they don't _talk_ to you. You still have to interpret the data yourself. WalletIQ bridges this gap:
+| Area             | Stack                | Version | Why this was chosen                               |
+| ---------------- | -------------------- | ------: | ------------------------------------------------- |
+| Framework        | React                |  19.2.4 | Component model + ecosystem maturity              |
+| Language         | TypeScript           |   5.9.3 | Strong typing for API/domain correctness          |
+| Router           | React Router DOM     |  7.13.1 | Declarative route layout and guards               |
+| Server State     | TanStack React Query | 5.90.21 | Fetch lifecycle, cache, retries, invalidation     |
+| Client State     | Zustand              |  5.0.12 | Lightweight auth/session state management         |
+| HTTP             | Axios                |  1.13.6 | Interceptors for JWT injection and silent refresh |
+| Charts           | Recharts             |   3.8.0 | Dashboard visualizations                          |
+| Motion           | Framer Motion        | 12.38.0 | UX polish and transitions                         |
+| UI Notifications | Sonner               |   2.0.7 | Simple toast system                               |
+| Styling          | Tailwind CSS         |   3.4.3 | Utility-first, scalable UI implementation         |
+| Build Tool       | Vite                 |   8.0.0 | Fast local dev + optimized production bundles     |
 
-| Traditional Finance Apps    | WalletIQ                                        |
-| --------------------------- | ----------------------------------------------- |
-| Shows raw charts and tables | Gives you conversational insights               |
-| Generic advice              | Answers based on YOUR data                      |
-| Passive dashboards          | Active AI assistant                             |
-| Siloed features             | Integrated: transactions + budgets + goals + AI |
-| No natural language queries | Ask anything in plain English                   |
+### 3.3 Infra / DevOps
 
----
+| Area                      | Stack                       | Why this was chosen                                                  |
+| ------------------------- | --------------------------- | -------------------------------------------------------------------- |
+| Local Orchestration       | Docker Compose              | Quick reproducible local infra (Postgres + Redis + optional backend) |
+| Backend Container Runtime | Docker                      | Standard deployment artifact/runtime                                 |
+| CI/CD                     | GitHub Actions              | Automated build/push/deploy on `main`                                |
+| Registry                  | Docker Hub                  | Central image distribution for VM pull deployments                   |
+| Cloud VM                  | Google Compute Engine (GCP) | Direct control of runtime host and Docker operations                 |
+| Frontend Hosting          | Vercel                      | Fast static hosting + easy React deployment                          |
+| Production DB             | Neon PostgreSQL             | Managed Postgres with SSL and developer-friendly workflow            |
+| Production Redis          | Upstash Redis               | Managed Redis with TLS URL support                                   |
 
-## Features
+## 4. High-Level Architecture
 
-### 💬 RAG-Powered AI Chat
+```mermaid
+flowchart LR
+  U[User Browser] --> FE[React Frontend on Vercel]
+  FE -->|REST /api/v1| BE[Spring Boot Backend]
+  FE -->|WebSocket /ws SockJS STOMP| BE
 
-- Ask natural language questions about your finances
-- Answers are retrieved from your actual transaction embeddings (PgVector)
-- Context includes budget status, savings goals, and conversation history
-- Powered by Ollama (dev) or OpenAI GPT-4o-mini (prod)
+  BE --> PG[(PostgreSQL + pgvector)]
+  BE --> RD[(Redis Cache)]
+  BE --> AI[OpenAI via Spring AI]
+  BE --> M[SMTP Gmail]
+  BE --> RZ[Razorpay]
 
-### 📊 Financial Dashboard
-
-- Monthly income, expenses, and net balance summary
-- Category-wise spending breakdown with percentages
-- Daily trend chart (income vs expenses)
-- Top 5 expenses for the month
-- Month navigator to view historical data
-- Results cached in **Redis**
-
-### 💳 Transaction Management
-
-- Create, edit, delete **income** and **expense** transactions
-- Filter by type, category, and date range
-- Paginated table view (20 per page)
-- Export all transactions as **UTF-8 CSV** (Excel-compatible with BOM)
-
-### 🔁 Recurring Transactions
-
-- Set up **daily**, **weekly**, **monthly**, or **yearly** recurring rules
-- Automatic transaction generation via scheduled jobs (8 AM daily)
-- Cash flow forecast for **7 to 365 days** ahead
-- Estimated monthly income/expense summary
-
-### 📦 Budget Management
-
-- Monthly category budgets with configurable **alert thresholds**
-- Real-time spending status (spent, remaining, usage %)
-- Alerts sent as in-app **notifications + WebSocket push** when threshold or limit is breached
-- Duplicate prevention (one budget per category per month)
-
-### 🎯 Savings Goals
-
-- Create goals with target amount and deadline
-- Contribute incrementally; quick-fill at **25%**, **50%**, or full remaining
-- Auto-mark as ACHIEVED when target is reached
-- Scheduler marks overdue **IN_PROGRESS** goals as **FAILED at 12:30 AM** daily
-- Real-time notifications on achievement
-
-### 🔔 Real-Time Notifications
-
-- WebSocket (**STOMP over SockJS**) push notifications
-- Budget threshold and limit breach alerts
-- Recurring transaction execution confirmations
-- Savings goal achievement and failure alerts
-- In-app notification bell with unread count badge
-
-### 🔐 Authentication & Security
-
-- JWT-based authentication with **RS512 signing (RSA key pair)**
-- Access token + refresh token with rotation (token-per-session)
-- Email verification via **6-digit OTP** (5-minute expiry, Thymeleaf email template)
-- **BCrypt** password hashing
-- Spring Security with role-based access control (**USER / ADMIN**)
-- CORS configuration per environment(dev/prod)
-
-### 💳 Subscription System (Razorpay)
-
-- **₹199/month** subscription to unlock AI chat
-- Razorpay **HMAC-SHA256** signature verification
-- Subscription lifecycle: **PENDING → ACTIVE → EXPIRED**
-- Scheduler auto-expires subscriptions past their expiry timestamp
-
-### 📧 Daily Email Summary
-
-- Automated daily financial summary email at **9 PM**
-- Includes total income, expenses, net balance, transaction count
-- CSV attachment of day's transactions
-- Rendered with **Thymeleaf** HTML email template
-- Sent only to **active, non-admin** users
-
-### 👤 User Profile & Admin Panel
-
-- Edit display name with inline form
-- Email verification flow built into the profile page
-- Admin panel: **paginated** user list, user stats by role and status
-
-### 📂 Categories & Payment Modes
-
-- System-wide defaults (**Food, Rent, UPI**, etc.) visible to all users
-- User-defined custom categories and payment modes
-- Redis-cached (**24-hour TTL**)
-
----
-
-## Tech Stack
-
-### Backend
-
-| Layer        | Technology                                                                  |
-| ------------ | --------------------------------------------------------------------------- |
-| Language     | **Java 21**                                                                 |
-| Framework    | **Spring Boot 3.5**                                                         |
-| Security     | **Spring Security + JWT (JJWT 0.12.6, RS512)**                              |
-| Database     | **PostgreSQL 16 (via pgvector/pgvector Docker image)**                      |
-| Vector Store | **PgVector (for RAG embeddings)**                                           |
-| ORM          | **Spring Data JPA / Hibernate**                                             |
-| Migrations   | **Flyway**                                                                  |
-| Cache        | **Redis (Spring Cache + Spring Data Redis)**                                |
-| AI (Dev)     | **Spring AI + Ollama (llama3.1:8b chat, nomic-embed-text:v1.5 embeddings)** |
-| AI (Prod)    | **Spring AI + OpenAI (gpt-4o-mini chat, text-embedding-3-small)**           |
-| Messaging    | **WebSocket (STOMP + SockJS)**                                              |
-| Email        | **Spring Mail + Thymeleaf HTML templates**                                  |
-| CSV Export   | **Apache Commons CSV**                                                      |
-| API Docs     | **SpringDoc OpenAPI 3 (Swagger UI)**                                        |
-| Build        | **Maven 3.9**                                                               |
-| Payments     | **Razorpay Java SDK**                                                       |
-
-### Frontend
-
-| Layer            | Technology                                          |
-| ---------------- | --------------------------------------------------- |
-| Language         | **TypeScript (strict)**                             |
-| Framework        | **React 19**                                        |
-| Routing          | **React Router DOM 7**                              |
-| State Management | **Zustand (auth store, persisted)**                 |
-| Server State     | **TanStack React Query v5**                         |
-| HTTP Client      | **Axios (with interceptors, silent token refresh)** |
-| Styling          | **Tailwind CSS 3**                                  |
-| Charts           | **Recharts**                                        |
-| Animations       | **Framer Motion**                                   |
-| Notifications    | **Sonner (toast)**                                  |
-| Build Tool       | **Vite 8**                                          |
-
-### Infrastructure
-
-| Component        | Technology                       |
-| ---------------- | -------------------------------- |
-| Containerization | **Docker + Docker Compose**      |
-| Reverse Proxy    | **Nginx**                        |
-| CI/CD            | **GitHub Actions**               |
-| Frontend Hosting | **Vercel**                       |
-| Backend Hosting  | **VPS (via Docker + Traefik)**   |
-| Database Hosting | **Neon (managed PostgreSQL)**    |
-| Redis Hosting    | **Upstash (managed Redis, TLS)** |
-
----
-
-## Architecture Overview
-
-![Architecture Overview](/public/diagrams/readme-img-architecture-overview.png)
-
-### RAG Pipeline
-
-```
-User Question
-     │
-     ▼
-[Semantic Search] ──► PgVector (filter by userId, top-K=8)
-     │
-     ▼
-[Context Assembly]
-  ├─ Budget status (current month spending vs limits)
-  ├─ Savings goals (progress, deadlines)
-  ├─ Retrieved transactions (semantic matches)
-  └─ Conversation history (last 10 messages)
-     │
-     ▼
-[LLM Prompt] ──► System prompt + full context + question
-     │
-     ▼
-[Sanitized Response] ──► Strips preamble, normalizes markdown
-     │
-     ▼
-User receives grounded, data-backed answer
+  GH[GitHub Actions] --> DH[(Docker Hub)]
+  GH --> GCE[GCP Compute Engine VM]
+  DH --> GCE
+  GCE --> BE
 ```
 
----
+## 5. RAG Pipeline (AI Chat)
 
-## Project Structure
+### 5.1 What the implementation does
 
-```
-walletiq/
-├── backend/                          # Spring Boot application
-│   ├── src/main/java/com/walletiq/
-│   │   ├── Application.java
-│   │   ├── cache/                    # Custom Spring Cache key generators
-│   │   ├── config/                   # Spring configs (Security, Redis, AI, CORS, Razorpay)
-│   │   │   └── properties/           # @ConfigurationProperties records
-│   │   ├── constant/                 # CacheNames, OpenAPIConstant
-│   │   ├── controller/               # REST controllers
-│   │   ├── converter/                # JPA attribute converters (YearMonth)
-│   │   ├── dto/                      # Request/Response records grouped by domain
-│   │   ├── entity/                   # JPA entities (BaseEntity → UUID, timestamps)
-│   │   ├── enums/                    # Domain enums (TxnType, ErrorCode, ErrorType...)
-│   │   ├── exception/                # Domain exceptions extending BaseException
-│   │   │   └── handler/              # GlobalExceptionHandler (@RestControllerAdvice)
-│   │   ├── mapper/                   # Pure static mapper classes (no MapStruct)
-│   │   ├── repository/               # Spring Data JPA repositories
-│   │   ├── schedular/                # @Scheduled jobs (recurring, goals, cleanup)
-│   │   ├── security/                 # JWT filter, service, entry points
-│   │   ├── service/                  # Service interfaces + impl/ package
-│   │   ├── util/                     # SecurityUtils, ResponseUtil, KeyUtils...
-│   │   └── websocket/                # WebSocket notification publisher
-│   ├── src/main/resources/
-│   │   ├── application.yaml          # Shared config
-│   │   ├── application-dev.yaml      # Dev profile (Ollama, local DB)
-│   │   ├── application-prod.yaml     # Prod profile (OpenAI, NeonDB, Upstash)
-│   │   ├── db/migration/             # Flyway SQL migrations (V1, V2, V3)
-│   │   ├── keys/                     # RSA key pair (PKCS8 private + X.509 public)
-│   │   ├── prompts/                  # walletiq-system-prompt.txt (LLM system prompt)
-│   │   └── templates/mail/           # Thymeleaf HTML email templates
-│   └── pom.xml
-│
-├── frontend/                         # React + TypeScript + Vite
-│   └── src/
-│       ├── api/                      # errorParser.ts (AppError class)
-│       ├── features/                 # Feature-first folder structure
-│       │   ├── auth/                 # Login, Signup, hooks, service, types
-│       │   ├── dashboard/            # Dashboard page + components + service
-│       │   ├── transactions/         # Transactions page + table + form + service
-│       │   ├── recurring/            # Recurring page + forecast panel + service
-│       │   ├── budgets/              # Budgets page + form + card + service
-│       │   ├── savings/              # Savings goals page + form + modal + service
-│       │   ├── categories/           # Categories page + row + service
-│       │   ├── payment-modes/        # Payment modes page + row + service
-│       │   ├── chat/                 # Chat page + session list + message components
-│       │   ├── notifications/        # Notification bell + service
-│       │   ├── profile/              # Profile page + email verify panel + service
-│       │   ├── admin/                # Admin page + stats grid + user table
-│       │   ├── subscription/         # Subscription page + Razorpay hook + service
-│       │   ├── about/                # About page + app info components
-│       │   └── home/                 # Landing page (hero, features, testimonials)
-│       ├── lib/axios.ts              # Axios instance + interceptors + silent refresh
-│       ├── routes/                   # AppRoutes.tsx + routePaths.ts
-│       ├── shared/
-│       │   ├── components/           # Layout (Sidebar, MonthNavigator), UI (Spinner, QueryError)
-│       │   ├── constants/            # homeData.ts (features, steps, stats, testimonials)
-│       │   ├── hooks/                # useAppQuery, useAppMutation, useAuth
-│       │   └── utils/                # errorUtils.ts, profileHelpers.ts, animationHooks.ts
-│       ├── store/authStore.ts        # Zustand auth store (persisted)
-│       └── types/api.types.ts        # ResponseWrapper, ErrorResponse, FieldError
-│
-├── docker/
-│   ├── backend/Dockerfile            # Multi-stage build (Maven builder + JRE runtime)
-│   ├── frontend/Dockerfile           # Multi-stage build (Node builder + static output)
-│   ├── nginx/
-│   │   ├── nginx.conf                # Reverse proxy (API + WebSocket + frontend)
-│   │   └── spa.conf                  # SPA fallback config
-│   ├── docker-compose.yml            # Production compose (backend + frontend + nginx)
-│   └── docker-compose.dev.yml        # Local dev infrastructure (PostgreSQL + Redis only)
-│
-├── .github/workflows/
-│   ├── backend-deploy.yml            # SSH deploy to VPS on backend changes
-│   └── frontend-deploy.yml           # Vercel deploy on frontend changes
-│
-└── README.md
+- Every user question is processed inside a chat session.
+- System checks active subscription before AI access.
+- Semantic retrieval is done from vector store with user-level filter.
+- Additional financial context is assembled from budgets and goals.
+- Recent chat history is included (last 10 messages).
+- LLM response is sanitized before returning to UI.
+
+### 5.2 RAG flow diagram
+
+```mermaid
+flowchart TD
+  Q[User question] --> S{Active subscription?}
+  S -- No --> E[Return SUBSCRIPTION_REQUIRED]
+  S -- Yes --> V[Vector similarity search topK=8]
+  V --> F[Filter by metadata userId]
+  F --> C1[Budget context builder]
+  F --> C2[Savings goal context builder]
+  F --> C3[Relevant transaction chunks]
+  H[Last up to 10 chat messages] --> P
+  C1 --> P
+  C2 --> P
+  C3 --> P
+  P[Prompt assembly with system prompt] --> LLM[Chat model call]
+  LLM --> X[Response sanitization]
+  X --> R[Persist assistant message + return response]
 ```
 
----
+### 5.3 Prompting model in code
 
-## Getting Started (Local Development)
+- System prompt file: `backend/src/main/resources/prompts/walletiq-system-prompt.txt`
+- Retrieval config in service: `TOP_K = 8`, `MAX_HISTORY = 10`
+- Filter expression: `userId == '<currentUserId>'`
 
-### Prerequisites
+## 6. CI/CD Pipeline (Backend)
 
-Make sure the following are installed on your machine:
+### 6.1 Implemented workflow
 
-| Tool           | Version | Notes                                        |
-| -------------- | ------- | -------------------------------------------- |
-| Java           | 21+     | [Download Temurin](https://adoptium.net)     |
-| Maven          | 3.9+    | Or use the included `./mvnw` wrapper         |
-| Node.js        | 20+     | [Download](https://nodejs.org)               |
-| Docker         | 24+     | For PostgreSQL + Redis                       |
-| Docker Compose | 2.x     | Usually bundled with Docker Desktop          |
-| Git            | Any     | For cloning                                  |
+File: `.github/workflows/deploy.yaml`
 
-> **OpenAI API Key required** — AI-powered features (chat, embeddings) require an OpenAI API key.
-> New accounts receive **$5 in free credits**, which is more than sufficient for development and testing.
-> If you prefer not to use OpenAI, see the alternatives below.
+- Trigger: push to `main` (only when backend/workflow files change) or manual dispatch
+- Build: Maven package + Jib image build
+- Push: Docker Hub image `walletiq-backend:latest`
+- Deploy: SSH into GCP VM and run pull + compose restart
 
-<details>
-<summary>Alternatives if you don't have an OpenAI key</summary>
+### 6.2 CI/CD diagram
 
-- **Ollama (local AI)** — swap the embedding and chat models in `application-dev.yml` to use Ollama. You'll need to pull the models yourself (`ollama pull nomic-embed-text`, etc.).
-- **Disable AI features** — comment out the AI-related endpoints in the controllers to run the rest of the app without AI functionality.
+```mermaid
+flowchart LR
+  A[Push to main] --> B[GitHub Actions]
+  B --> C[Setup JDK 21 + Maven cache]
+  C --> D[mvn clean package jib:build -DskipTests]
+  D --> E[Push image to Docker Hub]
+  E --> F[SSH to GCP Compute Engine VM]
+  F --> G[docker pull latest image]
+  G --> H[docker-compose down --remove-orphans]
+  H --> I[docker-compose up -d]
+  I --> J[docker image prune -f]
+```
 
-</details>
+## 7. Repository Structure
 
----
+## 7.1 Top-level
 
-### 1. Clone the Repository
+```text
+wallet-iq/
+├── backend/                    # Spring Boot backend
+├── frontend/                   # React + TypeScript frontend
+├── docker/                     # Docker compose setups (local/prod/combined)
+├── public/                     # diagrams, docs, screenshots assets
+├── .github/workflows/          # CI/CD pipeline definitions
+├── README.md
+└── SCREENSHOTS.md
+```
+
+### 7.2 Backend (`backend/`)
+
+```text
+backend/
+├── pom.xml
+├── src/main/java/online/walletiq/
+│   ├── controller/             # REST APIs
+│   ├── service/ + service/impl # business logic
+│   ├── repository/             # persistence access
+│   ├── entity/                 # JPA domain models
+│   ├── dto/                    # request/response contracts
+│   ├── config/                 # security, mail, ai, redis, websocket, openapi
+│   ├── security/               # JWT filters/services/handlers
+│   ├── schedular/              # cron jobs
+│   ├── mapper/                 # entity-dto mappers
+│   ├── exception/              # domain exceptions + global handler
+│   └── util/                   # helpers (response, security, cache, etc.)
+└── src/main/resources/
+    ├── application*.yml
+    ├── db/migration/           # Flyway SQL migrations
+    ├── prompts/                # AI system prompts
+    ├── templates/mail/         # email templates
+    └── keys/                   # RSA key resources
+```
+
+### 7.3 Frontend (`frontend/`)
+
+```text
+frontend/
+├── package.json
+├── src/
+│   ├── features/
+│   │   ├── auth/ dashboard/ transactions/ recurring/
+│   │   ├── budgets/ savings/ categories/ payment-modes/
+│   │   ├── chat/ notifications/ profile/ subscription/
+│   │   └── admin/ about/ home/
+│   ├── lib/axios.ts            # HTTP client + token refresh queue
+│   ├── store/authStore.ts      # persisted auth state
+│   ├── routes/                 # route constants + route tree
+│   ├── shared/                 # reusable UI/hooks/utils
+│   └── types/                  # generic API wrapper/error types
+└── vercel.json
+```
+
+### 7.4 Docker & deployment files
+
+```text
+docker/
+└── docker-compose/
+    ├── local/                  # Postgres + Redis for local IDE backend runs
+    ├── compose/                # full local stack compose (db+redis+backend)
+    └── prod/                   # production backend container compose
+```
+
+## 8. Backend API Reference
+
+Base URL (local): `http://localhost:8080/api/v1`
+
+Swagger (non-prod):
+
+- UI: `/api/v1/swagger-ui.html`
+- OpenAPI JSON: `/api/v1/api-docs`
+
+All protected APIs require:
+
+- Header: `Authorization: Bearer <access_token>`
+
+### 8.1 Authentication APIs
+
+#### `POST /auth/signup`
+
+- Description: Register a user.
+- Request body:
+
+```json
+{
+  "fullName": "Ripan Baidya",
+  "email": "ripan@gmail.com",
+  "password": "MySecure123"
+}
+```
+
+#### `POST /auth/login`
+
+- Description: Login and issue access + refresh tokens.
+- Request body:
+
+```json
+{
+  "email": "ripanbaidya@gmail.com",
+  "password": "MySecurePassword123!"
+}
+```
+
+#### `POST /auth/logout`
+
+- Description: Revoke refresh token.
+- Request body:
+
+```json
+{
+  "refreshToken": "<refresh_token>"
+}
+```
+
+#### `POST /auth/refresh-token`
+
+- Description: Rotate refresh token and issue new token pair.
+- Request body:
+
+```json
+{
+  "refreshToken": "<refresh_token>"
+}
+```
+
+#### `POST /auth/password-hash`
+
+- Description: Utility endpoint for hashing passwords.
+- Request body:
+
+```json
+{
+  "password": "MySecurePassword123!"
+}
+```
+
+#### `POST /auth/email/send-otp`
+
+- Description: Send 6-digit OTP for email verification.
+- Request body:
+
+```json
+{
+  "email": "ripan@gmail.com"
+}
+```
+
+#### `POST /auth/email/verify-otp`
+
+- Description: Verify OTP and mark email verified.
+- Request body:
+
+```json
+{
+  "email": "ripan@gmail.com",
+  "otp": "123456"
+}
+```
+
+### 8.2 User Profile APIs
+
+#### `GET /users/me`
+
+- Description: Get current user profile.
+- Request body: none.
+
+#### `PATCH /users/me`
+
+- Description: Update profile name.
+- Request body:
+
+```json
+{
+  "fullName": "John Doe"
+}
+```
+
+### 8.3 Transaction APIs
+
+#### `GET /transactions`
+
+- Description: Paginated filtered transactions.
+- Query params: `type`, `categoryId`, `dateFrom`, `dateTo`, pageable params (`page`, `size`, `sort`).
+- Request body: none.
+
+#### `GET /transactions/{id}`
+
+- Description: Fetch transaction by ID.
+- Request body: none.
+
+#### `POST /transactions`
+
+- Description: Create transaction.
+- Request body:
+
+```json
+{
+  "amount": 1250.5,
+  "type": "EXPENSE",
+  "date": "2026-03-16",
+  "note": "Dinner with friends",
+  "categoryId": "9c5c0f4c-9a3d-4b22-9a11-8f8c9b0c1234",
+  "paymentModeId": "2d9a93df-8d2e-4b32-9f7e-1d7c7a12c567"
+}
+```
+
+#### `PUT /transactions/{id}`
+
+- Description: Update transaction.
+- Request body:
+
+```json
+{
+  "amount": 950.75,
+  "type": "EXPENSE",
+  "date": "2026-03-16",
+  "note": "Dinner updated",
+  "categoryId": "9c5c0f4c-9a3d-4b22-9a11-8f8c9b0c1234",
+  "paymentModeId": "7b1fce20-8e9a-4a45-9b73-3a2dfecb8a21"
+}
+```
+
+#### `DELETE /transactions/{id}`
+
+- Description: Delete transaction.
+- Request body: none.
+
+#### `GET /transactions/export/csv`
+
+- Description: Export all transactions to UTF-8 CSV (with BOM for Excel compatibility).
+- Request body: none.
+
+### 8.4 Category APIs
+
+#### `GET /categories?type=EXPENSE|INCOME`
+
+- Description: Fetch categories by type.
+- Request body: none.
+
+#### `POST /categories`
+
+- Description: Create category.
+- Request body:
+
+```json
+{
+  "name": "Food",
+  "categoryType": "EXPENSE"
+}
+```
+
+#### `PUT /categories/{id}`
+
+- Description: Update category.
+- Request body:
+
+```json
+{
+  "name": "Groceries",
+  "categoryType": "EXPENSE"
+}
+```
+
+#### `DELETE /categories/{id}`
+
+- Description: Delete category.
+- Request body: none.
+
+### 8.5 Payment Mode APIs
+
+#### `GET /payment-modes`
+
+- Description: Fetch payment modes.
+- Request body: none.
+
+#### `POST /payment-modes`
+
+- Description: Create payment mode.
+- Request body:
+
+```json
+{
+  "name": "UPI"
+}
+```
+
+#### `PUT /payment-modes/{id}`
+
+- Description: Update payment mode.
+- Request body:
+
+```json
+{
+  "name": "Credit Card"
+}
+```
+
+#### `DELETE /payment-modes/{id}`
+
+- Description: Delete payment mode.
+- Request body: none.
+
+### 8.6 Budget APIs
+
+#### `POST /budgets`
+
+- Description: Create budget for category + month.
+- Request body:
+
+```json
+{
+  "categoryId": "b3c4d5e6-7f8a-4b2c-9d1e-0a2b3c4d5e6f",
+  "month": "2026-04",
+  "limitAmount": 5000,
+  "alertThreshold": 80
+}
+```
+
+#### `GET /budgets?month=YYYY-MM`
+
+- Description: Fetch month budgets.
+- Request body: none.
+
+#### `GET /budgets/{id}/status`
+
+- Description: Get spent/remaining/usage status for one budget.
+- Request body: none.
+
+### 8.7 Savings Goal APIs
+
+#### `POST /goals`
+
+- Description: Create savings goal.
+- Request body:
+
+```json
+{
+  "title": "Buy MacBook Pro",
+  "targetAmount": 150000,
+  "deadline": "2026-12-31",
+  "note": "Saving monthly"
+}
+```
+
+#### `GET /goals`
+
+- Description: List all goals.
+- Request body: none.
+
+#### `PATCH /goals/{id}/contribute`
+
+- Description: Contribute to goal.
+- Request body:
+
+```json
+{
+  "amount": 500
+}
+```
+
+#### `GET /goals/{id}/progress`
+
+- Description: Goal progress details.
+- Request body: none.
+
+### 8.8 Recurring Transaction APIs
+
+#### `POST /recurring`
+
+- Description: Create recurring rule.
+- Request body:
+
+```json
+{
+  "title": "Wifi Bill",
+  "amount": 500,
+  "type": "EXPENSE",
+  "frequency": "MONTHLY",
+  "startDate": "2026-04-01",
+  "endDate": "2027-04-01",
+  "note": "Monthly wifi bill",
+  "categoryId": "c7d8e9f1-6b2a-4c5d-8f3e-2a1b0c9d8e7f",
+  "paymentModeId": "b3c4d5e6-7f8a-4b2c-9d1e-0a2b3c4d5e6f"
+}
+```
+
+#### `GET /recurring`
+
+- Description: List active recurring transactions.
+- Request body: none.
+
+#### `GET /recurring/{id}`
+
+- Description: Get recurring transaction by ID.
+- Request body: none.
+
+#### `PATCH /recurring/{id}`
+
+- Description: Partial update recurring transaction.
+- Request body:
+
+```json
+{
+  "title": "Updated Wifi Bill",
+  "amount": 650,
+  "frequency": "MONTHLY",
+  "endDate": "2027-05-01",
+  "note": "Updated note",
+  "categoryId": "c7d8e9f1-6b2a-4c5d-8f3e-2a1b0c9d8e7f",
+  "paymentModeId": "b3c4d5e6-7f8a-4b2c-9d1e-0a2b3c4d5e6f"
+}
+```
+
+#### `DELETE /recurring/{id}`
+
+- Description: Deactivate recurring transaction.
+- Request body: none.
+
+#### `GET /recurring/forecast?days=30`
+
+- Description: Forecast recurring cashflow for 1 to 365 days.
+- Request body: none.
+
+### 8.9 Dashboard APIs
+
+#### `GET /dashboard?month=YYYY-MM`
+
+- Description: Dashboard analytics for selected/current month.
+- Request body: none.
+
+### 8.10 Notifications APIs
+
+#### `GET /notifications`
+
+- Description: List user notifications.
+- Request body: none.
+
+#### `DELETE /notifications/{id}`
+
+- Description: Delete one notification.
+- Request body: none.
+
+#### `DELETE /notifications`
+
+- Description: Delete all notifications for current user.
+- Request body: none.
+
+### 8.11 Chat APIs (RAG)
+
+#### `GET /chat/sessions`
+
+- Description: Fetch all chat sessions.
+- Request body: none.
+
+#### `POST /chat/sessions`
+
+- Description: Create chat session.
+- Request body:
+
+```json
+{
+  "title": "New Chat"
+}
+```
+
+#### `DELETE /chat/sessions/{id}`
+
+- Description: Delete session + messages.
+- Request body: none.
+
+#### `GET /chat/sessions/{id}/messages`
+
+- Description: Fetch ordered session messages.
+- Request body: none.
+
+#### `POST /chat/sessions/{id}/query`
+
+- Description: Ask AI assistant inside session.
+- Request body:
+
+```json
+{
+  "question": "How much did I spend on food this month?"
+}
+```
+
+### 8.12 Subscription APIs
+
+#### `POST /subscriptions/order`
+
+- Description: Create Razorpay order for subscription.
+- Request body: none.
+
+#### `POST /subscriptions/verify`
+
+- Description: Verify Razorpay signature and activate subscription.
+- Request body:
+
+```json
+{
+  "razorpayOrderId": "order_Ma8J9x7k2YpQz1",
+  "razorpayPaymentId": "pay_Ma8K3l9ZxYpQw2",
+  "razorpaySignature": "<signature>"
+}
+```
+
+#### `GET /subscriptions/status`
+
+- Description: Get current subscription state/expiry.
+- Request body: none.
+
+### 8.13 Admin APIs (ADMIN role)
+
+#### `GET /admin/users?page=0&size=10`
+
+- Description: Paginated user list.
+- Request body: none.
+
+#### `GET /admin/users/{id}`
+
+- Description: Get user by ID.
+- Request body: none.
+
+#### `GET /admin/users/count?role=USER&active=true`
+
+- Description: Count users by role and active status.
+- Request body: none.
+
+### 8.14 App Info APIs
+
+#### `GET /app/info`
+
+- Description: Application metadata for About page.
+- Request body: none.
+
+## 9. WebSocket Notifications
+
+- Endpoint: `/api/v1/ws` (SockJS)
+- Broker topic format: `/topic/notifications/{userId}`
+- Use case: push budget alerts, recurring execution notices, savings goal updates
+
+## 10. Schedulers and Background Jobs
+
+- Recurring execution scheduler: daily at `08:00` server time
+- Goal expiry scheduler: daily at `00:30`
+- Refresh token cleanup scheduler: daily at `02:00`
+- Daily summary mail scheduler exists but cron annotation is currently commented out
+
+## 11. Environment Configuration
+
+### 11.1 Backend profiles
+
+- `dev`: local DB/Redis and OpenAI model settings
+- `docker`: container-network DB/Redis profile
+- `prod`: managed services (Neon/Upstash), hardened logs, actuator-safe exposure
+
+### 11.2 Key environment variables
 
 ```bash
-git clone https://github.com/ripanbaidya/wallet-iq.git
-cd wallet-iq
+# AI
+OPENAI_API_KEY=
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+PGVECTOR_DIMENSIONS=1536
+
+# Mail
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_SSL_TRUST=smtp.gmail.com
+
+# Razorpay
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+SUBSCRIPTION_AMOUNT=19900
+SUBSCRIPTION_DAYS=30
+
+# Production DB
+DB_HOST=
+DB_PORT=
+DB_NAME=
+DB_USERNAME=
+DB_PASSWORD=
+
+# Redis
+REDIS_URL=
+REDIS_SSL_ENABLED=true
+
+# CORS
+CORS_ORIGIN_LOCAL=
+CORS_ORIGIN_VERCEL=
+CORS_ORIGIN_PRIMARY=
+
+# JWT expiry
+JWT_ACCESS_TOKEN_EXPIRY=3600000
+JWT_REFRESH_TOKEN_EXPIRY=604800000
 ```
 
----
+## 12. Local Development Setup
 
-### 2. Configure Environment
+### 12.1 Prerequisites
 
-The backend reads configuration from a `.env.local` file inside the `/docker` directory.
-A template is provided — copy it and fill in your values:
+- Java 21
+- Maven 3.9+
+- Node.js 20+
+- Docker Desktop
+
+### 12.2 Run local infra
 
 ```bash
-cp docker/.env.template docker/.env.local
+cd /Users/ripanbaidya/Documents/projects/wallet-iq/docker/docker-compose/local
+docker compose up -d
 ```
 
-Open `docker/.env.local` and set at minimum:
-
-- `OPENAI_API_KEY` — your OpenAI API key
-- `MAIL_USERNAME` / `MAIL_PASSWORD` — Gmail address and [App Password](https://myaccount.google.com/apppasswords)
-
-Everything else (DB, Redis, ports) is pre-filled and works out of the box with the Docker setup.
-
----
-
-### 3. Start the Full Stack
-
-Start the backend, PostgreSQL, and Redis with a single command:
+### 12.3 Run backend
 
 ```bash
-docker compose -f docker/docker-compose.local.yml up -d
+cd /Users/ripanbaidya/Documents/projects/wallet-iq/backend
+./mvnw spring-boot:run
 ```
 
-This starts:
+Backend URL: `http://localhost:8080/api/v1`
 
-| Service    | Address          | Details                                          |
-| ---------- | ---------------- | ------------------------------------------------ |
-| Backend    | `localhost:8080` | Spring Boot API                                  |
-| PostgreSQL | `localhost:5432` | Database: `walletiq` · User/Password: `postgres` |
-| Redis      | `localhost:6379` | Password: `strongPassword`                       |
-
-Verify all containers are running:
+### 12.4 Run frontend
 
 ```bash
-docker ps
-```
-
-Once up, the full API is browsable at:
-`http://localhost:8080/api/v1/swagger-ui/index.html`
-
----
-
-### 4. Set Up the Admin User
-
-A default admin is seeded by `V3__create_system_admin.sql`. Before running the migration,
-generate a bcrypt hash for your chosen password using the hash endpoint:
-
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/password-hash \
-  -H "Content-Type: application/json" \
-  -d '{"password": "your_password"}'
-```
-
-Copy the returned hash into your migration file before the containers start for the first time.
-
-| Field    | Value                        |
-| -------- | ---------------------------- |
-| Email    | the email you seeded         |
-| Password | the plain-text password used |
-
----
-
-### 5. Run the Frontend
-
-```bash
-cd frontend
+cd /Users/ripanbaidya/Documents/projects/wallet-iq/frontend
 npm install
 npm run dev
 ```
 
-The frontend reads its API base URL from `.env.development`, which is already committed with the correct default:
+Frontend URL: `http://localhost:5173`
 
-```env
-VITE_API_BASE_URL=http://localhost:8080/api/v1
-```
+## 13. Deployment (GCP + Docker)
 
-The dev server starts at `http://localhost:5173`.
+### 13.1 Backend runtime model
 
-### Verify Everything Works
+- GCP Compute Engine VM hosts Docker runtime
+- Workflow SSHs into VM path `/opt/walletiq`
+- VM pulls latest Docker image and restarts compose services
 
-| Service        | URL                                            | Expected               |
-| -------------- | ---------------------------------------------- | ---------------------- |
-| Backend health | `http://localhost:8080/api/v1/actuator/health` | `{"status":"UP"}`      |
-| App info       | `http://localhost:8080/api/v1/app/info`        | JSON with app metadata |
-| Swagger UI     | `http://localhost:8080/api/v1/swagger-ui.html` | Interactive API docs   |
-| Frontend       | `http://localhost:5173`                        | Landing page           |
-| Frontend app   | `http://localhost:5173/login`                  | Login page             |
+### 13.2 Production compose file
 
----
+- File: `docker/docker-compose/prod/docker-compose.yaml`
+- Runtime env from `.env`
+- Backend healthcheck: `/api/v1/actuator/health`
 
-## Environment Variables Reference
+## 14. Database and Migration
 
-### Backend (`application-dev.yaml` / `application-prod.yaml`)
+- Schema migrations: `backend/src/main/resources/db/migration/`
+  - `V1__init_schema.sql`
+  - `V2__insert_default_category_and_payment_mode.sql`
+  - `V3__create_system_admin.sql`
 
-| Variable                   | Required  | Default                        | Description                                            |
-| -------------------------- | --------- | ------------------------------ | ------------------------------------------------------ |
-| `MAIL_USERNAME`            | ✅        | —                              | Gmail address for sending emails                       |
-| `MAIL_PASSWORD`            | ✅        | —                              | Gmail App Password (not your login password)           |
-| `REDIS_URL`                | ✅        | —                              | Redis connection URL (`redis://...` or `rediss://...`) |
-| `DB_HOST`                  | Prod only | —                              | PostgreSQL host                                        |
-| `DB_PORT`                  | Prod only | `5432`                         | PostgreSQL port                                        |
-| `DB_NAME`                  | Prod only | —                              | Database name                                          |
-| `DB_USERNAME`              | Prod only | —                              | Database user                                          |
-| `DB_PASSWORD`              | Prod only | —                              | Database password                                      |
-| `OPENAI_API_KEY`           | Prod only | —                              | OpenAI API key                                         |
-| `OPENAI_CHAT_MODEL`        | Prod only | `gpt-4o-mini`                  | OpenAI chat model                                      |
-| `OPENAI_EMBEDDING_MODEL`   | Prod only | `text-embedding-3-small`       | OpenAI embedding model                                 |
-| `RAZORPAY_KEY_ID`          | ✅        | `rzp_test_*` (test key in dev) | Razorpay key ID                                        |
-| `RAZORPAY_KEY_SECRET`      | ✅        | test secret (in dev)           | Razorpay key secret                                    |
-| `JWT_ACCESS_TOKEN_EXPIRY`  | ❌        | `604800000` (7d)               | Access token TTL in ms                                 |
-| `JWT_REFRESH_TOKEN_EXPIRY` | ❌        | `2592000000` (30d)             | Refresh token TTL in ms                                |
-| `SERVER_PORT`              | ❌        | `8080`                         | HTTP server port                                       |
-| `CORS_ORIGIN_VERCEL`       | Prod only | —                              | Vercel frontend URL                                    |
-| `CORS_ORIGIN_PRIMARY`      | Prod only | —                              | Primary domain URL                                     |
+## 15. Engineering Standards Already Applied
 
-### Frontend (`.env.devlopement`)
+- Domain-specific exception classes + global exception handler
+- DTO-level validation (`jakarta.validation`) with clear constraints
+- Stateless security with JWT filter chain and role authorization
+- Reusable response envelope pattern (`ResponseWrapper`)
+- Cache key generation strategy for expensive query shapes
+- Service layer ownership checks to prevent cross-user data access
+- OpenAPI annotations for maintainable API contracts
+- Scheduler responsibilities separated from service logic
 
-| Variable            | Required | Default                        | Description          |
-| ------------------- | -------- | ------------------------------ | -------------------- |
-| `VITE_API_BASE_URL` | ✅       | `http://localhost:8080/api/v1` | Backend API base URL |
+## 17. Useful Links
 
----
+- Live Link: [https://www.walletiq.online](https://www.walletiq.online)
+- Github Repository: [https://github.com/ripanbaidya/wallet-iq](https://github.com/ripanbaidya/wallet-iq)
 
-## API Documentation (Swagger)
+## 18. License
 
-When running in `dev` profile, the full interactive Swagger UI is available at:
-
-```
-http://localhost:8080/api/v1/swagger-ui.html
-```
-
-And the raw OpenAPI JSON spec at:
-
-```
-http://localhost:8080/api/v1/api-docs
-```
-
-The Swagger UI lets you:
-
-- Browse all endpoints grouped by controller tag
-- Execute requests directly from the browser
-- Authenticate with a JWT token via the **Authorize** button (top right)
-- See request/response schemas and examples
-
-> **Swagger is disabled in production** (`springdoc.swagger-ui.enabled: false` in `application-prod.yaml`) for security.
-
-### Getting a JWT to Test APIs
-
-1. Hit `POST /api/v1/auth/login` with admin credentials
-2. Copy the `accessToken` from the response
-3. Click **Authorize** in Swagger UI
-4. Enter `Bearer <your-token>` and click Authorize
-5. All protected endpoints will now work
-
-**Or**, You can simply create a new account and then use that account to login and get the JWT token.
-
----
-
-## Key Design Decisions & Best Practices
-
-### Backend
-
-**Layered Architecture with Clean Separation**
-
-- Controllers only delegate to services — no business logic
-- Services are interface-driven (`CategoryService` ← `CategoryServiceImpl`)
-- Repositories contain only queries — no business logic
-- Mappers are pure static methods — no Spring beans, no state
-
-**Standardized Error Handling**
-
-- All custom exceptions extend `BaseException` with an `ErrorCode` enum
-- `GlobalExceptionHandler` catches all exceptions and formats them into a consistent `ErrorResponse`
-- `ErrorCode` contains the `ErrorType` (which maps to HTTP status) and a default message
-- Field validation errors from `@Valid` are surfaced in a structured `errors` array
-
-**Security**
-
-- RSA key pair (RS512) for JWT signing — asymmetric, harder to forge than HS256
-- Refresh token rotation on every `/auth/refresh-token` call
-- Refresh tokens are stored in DB and can be individually revoked
-- Path validation on key loading prevents directory traversal attacks
-- A `shouldNotFilter` override in the JWT filter skips public routes without touching the security context
-
-**Caching Strategy**
-
-- Dashboard results cached per `userId:month` key (10-minute TTL) — invalidated on any transaction create/update
-- Categories and payment modes cached per `userId-type` (24-hour TTL) — invalidated on any CRUD
-- Custom `KeyGenerator` beans generate compound cache keys from `SecurityContext` + method params
-
-**Pagination Safety**
-
-- `PageableValidator` whitelists allowed sort fields before passing to JPA — prevents SQL injection via sort parameters
-
-**Budget Alerts Never Block Transactions**
-
-- `BudgetAlertService.checkAndAlert()` is called after transaction save and never throws
-- Designed intentionally so a budget check failure cannot roll back a transaction
-
-**Scheduled Jobs**
-
-- Recurring transaction processor: 8 AM daily
-- Savings goal expiry checker: 12:30 AM daily
-- Refresh token cleanup: 2 AM daily
-- Daily email summary: 9 PM daily
-- Subscription expiry processor: configurable
-
-### Frontend
-
-**Feature-First Folder Structure**
-
-- Each feature contains its own page, components, service, types, and hooks
-- No "global components" unless truly shared (Spinner, QueryError, Layout)
-- Easy to add or remove features without touching unrelated code
-
-**Axios with Silent Token Refresh**
-
-- A single Axios instance with request/response interceptors
-- On a 401 response, the interceptor automatically calls `/auth/refresh-token`
-- All in-flight requests during refresh are queued and replayed after the new token is received
-- No user sees a logout unless the refresh token itself has expired
-
-**React Query for Server State**
-
-- All API calls use `useAppQuery` / `useAppMutation` wrappers around React Query
-- `staleTime` and `placeholderData` configured for smooth navigation (no flickering)
-- Cache invalidation is explicit and surgical after mutations
-
-**Type Safety**
-
-- `ResponseWrapper<T>` and `ErrorResponse` typed from the backend contract
-- `AppError` class wraps `ErrorDetail` with convenience predicates (`isValidation`, `isConflict`, etc.)
-- No `any` in production code paths
-
-**Zustand Auth Store**
-
-- Persisted to `localStorage` via `zustand/middleware/persist`
-- Only the minimum auth state is persisted (user, accessToken, refreshToken)
-- An `auth:unauthorized` custom event bridges the Axios interceptor to the React component tree without coupling
-
----
-
-## Database Schema
-
-The database is managed entirely by Flyway migrations. The full schema is in `V1__init_schema.sql`. Key tables:
-
-| Table                    | Purpose                                                      |
-| ------------------------ | ------------------------------------------------------------ |
-| `users`                  | User accounts, roles, email verification status              |
-| `categories`             | Income/expense categories (system defaults + user-defined)   |
-| `payment_modes`          | Payment methods (system defaults + user-defined)             |
-| `transactions`           | All financial transactions with optional embedding ID        |
-| `recurring_transactions` | Recurring rules with next execution date tracking            |
-| `budgets`                | Monthly category budgets with alert thresholds               |
-| `savings_goals`          | Long-term savings targets with progress tracking             |
-| `refresh_token`          | Stored refresh tokens for revocation support                 |
-| `email_verification_otp` | Time-limited OTPs for email verification                     |
-| `chat_sessions`          | AI chat session metadata                                     |
-| `chat_messages`          | Individual messages per session (USER / ASSISTANT)           |
-| `vector_store`           | Transaction embeddings (1536-dim for OpenAI, 768 for Ollama) |
-| `notifications`          | In-app notification log                                      |
-| `subscriptions`          | Razorpay subscription records                                |
-
----
-
-### **Class Diagram**
-
-![class-diagram](/public/diagrams/postgres@production.png)
-
----
-
-## Deployment
-
-### Production Stack
-
-| Component | Platform                                          |
-| --------- | ------------------------------------------------- |
-| Backend   | VPS (Docker + Traefik for HTTPS)                  |
-| Frontend  | Vercel                                            |
-| Database  | Neon (serverless PostgreSQL with pgvector)        |
-| Cache     | Upstash (serverless Redis with TLS)               |
-| Email     | Gmail SMTP via App Password                       |
-| AI        | OpenAI API (gpt-4o-mini + text-embedding-3-small) |
-| Payments  | Razorpay                                          |
-
-### CI/CD
-
-Two GitHub Actions workflows handle automated deployment:
-
-**`frontend-deploy.yml`** — Triggers on any push to `main` that changes `frontend/**`:
-
-1. Installs Node.js dependencies
-2. Builds the React app with `VITE_API_BASE_URL` from GitHub Secrets
-3. Deploys to Vercel via the Vercel CLI
-
-**`backend-deploy.yml`** — Triggers on any push to `main` that changes `backend/**` or Docker files:
-
-1. SSHs into the VPS using a stored private key
-2. Pulls latest changes from GitHub
-3. Rebuilds the backend Docker image (no cache)
-4. Restarts the container with `docker compose up -d`
-
-### Run Production Locally with Docker
-
-```bash
-# From the project root
-docker compose -f docker/docker-compose.yml up --build
-```
-
-This runs the full production stack (backend + nginx) locally. You'll need a `.env` file at `/opt/walletiq/.env` or adjust the `env_file` path in `docker-compose.yml`.
-
----
-
-## Screenshots
-
-<!-- Home -->
-
-![home](/public/images/web/home/img1.png)
-![home-img2](/public/images/web/home/img2.png)
-![home-img3](/public/images/web/home/img3.png)
-
-<!-- Login + Signup -->
-
-![signup](/public/images/web/features/auth/signup.png)
-
-<!-- Dashboard -->
-
-![dashboard](/public/images/web/features/dashboard/home.png)
-
-<h4>👉 <a href="/public/screenshots.md">Click here</a> to view more screenshots.</h4>
-
-## License
-
-This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
-
-**What this means:**
-
-✅ You **CAN**:
-
-- View, study, and learn from this code
-- Fork the repository for personal learning or educational purposes
-- Share the code with proper attribution
-
-❌ You **CANNOT**:
-
-- Use this project (or any derivative) for commercial purposes
-- Submit this project as your own academic or professional work
-- Redistribute modified versions under a different license
-- Remove or alter attribution notices
-
-**In plain terms:** You're welcome to read, learn from, and reference this code. You cannot take this project and claim it as your own portfolio project, sell it, or use it commercially.
-
-[Read the full license →](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-
-> **Note:** If you wish to use this project for commercial purposes or need a different licensing arrangement, please contact the author directly.
-
----
-
-## Author
-
-**Ripan Baidya**
-
-- GitHub: [@ripanbaidya](https://github.com/ripanbaidya)
-- LinkedIn: [linkedin.com/in/ripanbaidya](https://www.linkedin.com/in/ripanbaidya/)
-- Instagram: [@futurenoogler](https://www.instagram.com/futurenoogler)
-- Email: official.ripanbaidya@gmail.com
-
----
-
-<div align="center">
-
-Built with ❤️ by Ripan Baidya
-
-_If you find this project useful for learning, please consider giving it a ⭐ on GitHub!_
-
-</div>
+This repository includes `LICENSE` at root.
