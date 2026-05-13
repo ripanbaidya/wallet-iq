@@ -41,7 +41,7 @@ public class DailySummaryScheduler {
      * Fetches all active users and sends each a daily summary email.
      * <br>Runs daily at <b>9:00 PM</b>
      */
-    @Scheduled(cron = "0 0 21 * * *")
+    // @Scheduled(cron = "0 0 21 * * *")
     public void sendDailySummaries() {
         LocalDate today = LocalDate.now();
         log.info("Running daily summary scheduler for date: {}", today);
