@@ -1,0 +1,53 @@
+name: WalletIQ Backend - Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yaml'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  WORKING_DIR: ./backend
+
+jobs:
+  build-and-deploy:
+    name: Build -> Push -> Deploy
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and Push Docker image via Jib
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          mvn clean package jib:build -DskipTests \
+            -Djib.to.image=${{ secrets.DOCKERHUB_USERNAME }}/walletiq-backend:latest \
+            -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy to GCP VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_VM_HOST }}
+          username: ${{ secrets.GCP_VM_USER }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/walletiq
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/walletiq-backend:latest
+            docker-compose down --remove-orphans || true
+            docker-compose up -d
+            docker image prune -f
+            docker ps --filter name=walletiq-backend
